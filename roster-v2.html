@@ -1022,135 +1022,560 @@
         </div>
     </div>
 
-    <script>
-        // Configuration - REPLACE WITH YOUR WEB APP URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+    // Replace the entire <script> section in roster-v2.html with this:
+
+<script>
+    // ============================================================================
+    // FILTER FUNCTIONS
+    // ============================================================================
+    
+    function setupFilters() {
+        const searchBox = document.getElementById('searchBox');
+        const squadFilter = document.getElementById('squadFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const positionFilter = document.getElementById('positionFilter');
         
-        let allPlayers = [];
-        let currentCoach = 'Luke Teeling'; // This would come from login
-        
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            if (!sessionStorage.getItem('authenticated')) {
-                window.location.href = 'index.html';
-                return;
+        function applyFilters() {
+            let filteredPlayers = allPlayers;
+            
+            // Search filter
+            const searchTerm = searchBox.value.toLowerCase();
+            if (searchTerm) {
+                filteredPlayers = filteredPlayers.filter(player => 
+                    `${player['First Name']} ${player['Last Name']}`.toLowerCase().includes(searchTerm)
+                );
             }
             
-            // In real implementation, would load actual data
-            console.log('Roster loaded with sample data');
-        });
+            // Squad filter
+            const squadValue = squadFilter.value;
+            if (squadValue) {
+                if (squadValue === 'unassigned') {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        !(player['Squad Tags'] || '').includes('4ths') && 
+                        !(player['Squad Tags'] || '').includes('5ths')
+                    );
+                } else {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        (player['Squad Tags'] || '').includes(squadValue)
+                    );
+                }
+            }
+            
+            // Status filter
+            const statusValue = statusFilter.value;
+            if (statusValue) {
+                filteredPlayers = filteredPlayers.filter(player => 
+                    (player['Status'] || 'Active') === statusValue
+                );
+            }
+            
+            // Position filter
+            const positionValue = positionFilter.value;
+            if (positionValue) {
+                filteredPlayers = filteredPlayers.filter(player => 
+                    (player['Positions'] || '').includes(positionValue)
+                );
+            }
+            
+            displayPlayers(filteredPlayers);
+        }
         
-        function logout() {
-            sessionStorage.removeItem('authenticated');
+        searchBox.addEventListener('input', applyFilters);
+        squadFilter.addEventListener('change', applyFilters);
+        statusFilter.addEventListener('change', applyFilters);
+        positionFilter.addEventListener('change', applyFilters);
+    }
+    
+    // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+    
+    function showLoading(show) {
+        const loadingDiv = document.getElementById('loadingMessage');
+        const playerTable = document.getElementById('playerTable');
+        
+        if (show) {
+            if (loadingDiv) loadingDiv.style.display = 'block';
+            playerTable.style.display = 'none';
+        } else {
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            playerTable.style.display = 'table';
+        }
+    }
+    
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        showLoading(false);
+    }
+    
+    // ============================================================================
+    // EVENT LISTENERS
+    // ============================================================================
+    
+    // Initialize filters when data is loaded
+    setTimeout(setupFilters, 1000);
+    
+    // Close modal when clicking outside
+    document.getElementById('playerModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePlayerModal();
+        }
+    });
+    
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePlayerModal();
+        }
+    });
+</script> Configuration - REPLACE WITH YOUR WEB APP URL
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3raxDN92Js-fZF8jZpnvNVO2emGPxl7LAwL-lubYF5kTZCeW4vLRahaowY-HlyGIX/exec';
+    
+    let allPlayers = [];
+    let currentCoach = 'Luke Teeling'; // This would come from login selection
+    let currentPlayerData = null;
+    
+    // Check authentication on page load
+    window.addEventListener('load', function() {
+        if (!sessionStorage.getItem('authenticated')) {
             window.location.href = 'index.html';
+            return;
         }
         
-        // Player Modal Functions
-        function openPlayerModal(playerName, activeTab = 'info') {
-            document.getElementById('modalPlayerName').textContent = playerName;
-            document.getElementById('playerModal').classList.add('active');
-            showTab(activeTab);
+        loadData();
+    });
+    
+    function logout() {
+        sessionStorage.removeItem('authenticated');
+        window.location.href = 'index.html';
+    }
+    
+    // ============================================================================
+    // DATA LOADING FUNCTIONS
+    // ============================================================================
+    
+    async function loadData() {
+        try {
+            showLoading(true);
             
-            // In real implementation, would load player data here
-            console.log(`Opening modal for ${playerName}, tab: ${activeTab}`);
-        }
-        
-        function closePlayerModal() {
-            document.getElementById('playerModal').classList.remove('active');
-        }
-        
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Load stats
+            const statsResponse = await fetch(`${WEB_APP_URL}?action=getTeamStats`);
+            const statsData = await statsResponse.json();
             
-            // Show selected tab
-            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        }
-        
-        // Quick Status Toggle - REMOVED (status updates only through modal)
-        
-        // Notes Functions
-        function addNote() {
-            const category = document.getElementById('noteCategory').value;
-            const content = document.getElementById('noteContent').value;
-            
-            if (!content.trim()) {
-                alert('Please enter a note');
-                return;
+            if (statsData.success) {
+                displayStats(statsData.data);
             }
             
-            // In real implementation, would save via API
-            console.log(`Adding note: ${category} - ${content}`);
+            // Load players
+            const playersResponse = await fetch(`${WEB_APP_URL}?action=getAllPlayers`);
+            const playersData = await playersResponse.json();
             
-            // Clear form
-            document.getElementById('noteContent').value = '';
-            
-            // Show success message
-            alert('Note added successfully!');
-        }
-        
-        // Availability Functions
-        function updateAvailability() {
-            const status = document.getElementById('playerStatus').value;
-            const until = document.getElementById('unavailableUntil').value;
-            const reason = document.getElementById('unavailableReason').value;
-            const notes = document.getElementById('availabilityNotes').value;
-            
-            // In real implementation, would save via API
-            console.log(`Updating availability: ${status}, until: ${until}, reason: ${reason}`);
-            
-            alert('Availability updated successfully!');
-        }
-        
-        // Squad Management Functions
-        function updateSquadAssignment() {
-            const squad4ths = document.getElementById('squad4ths').checked;
-            const squad5ths = document.getElementById('squad5ths').checked;
-            const positionNotes = document.getElementById('positionNotes').value;
-            
-            let squadTags = [];
-            if (squad4ths) squadTags.push('4ths');
-            if (squad5ths) squadTags.push('5ths');
-            
-            // In real implementation, would save via API
-            console.log(`Updating squad assignment: ${squadTags.join(', ')}`);
-            console.log(`Position notes: ${positionNotes}`);
-            
-            alert('Squad assignment updated successfully!');
-        }
-        
-        // Filter Functions (simplified for demo)
-        function setupFilters() {
-            const searchBox = document.getElementById('searchBox');
-            const squadFilter = document.getElementById('squadFilter');
-            const statusFilter = document.getElementById('statusFilter');
-            const positionFilter = document.getElementById('positionFilter');
-            
-            // In real implementation, would filter actual data
-            searchBox.addEventListener('input', () => console.log('Filtering by search:', searchBox.value));
-            squadFilter.addEventListener('change', () => console.log('Filtering by squad:', squadFilter.value));
-            statusFilter.addEventListener('change', () => console.log('Filtering by status:', statusFilter.value));
-            positionFilter.addEventListener('change', () => console.log('Filtering by position:', positionFilter.value));
-        }
-        
-        // Initialize filters
-        setTimeout(setupFilters, 1000);
-        
-        // Close modal when clicking outside
-        document.getElementById('playerModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closePlayerModal();
+            if (playersData.success) {
+                allPlayers = playersData.data;
+                displayPlayers(allPlayers);
+                showLoading(false);
+            } else {
+                showError('Failed to load players: ' + playersData.error);
             }
-        });
-        
-        // ESC key to close modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePlayerModal();
+            
+        } catch (error) {
+            showError('Connection error: ' + error.message);
+        }
+    }
+    
+    async function loadPlayerDetails(playerName) {
+        try {
+            const response = await fetch(`${WEB_APP_URL}?action=getPlayerDetails&playerName=${encodeURIComponent(playerName)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                currentPlayerData = data.data;
+                populatePlayerModal(data.data);
+                await loadPlayerNotes(playerName);
+            } else {
+                console.error('Failed to load player details:', data.error);
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Error loading player details:', error);
+        }
+    }
+    
+    async function loadPlayerNotes(playerName) {
+        try {
+            const response = await fetch(`${WEB_APP_URL}?action=getPlayerNotes&playerName=${encodeURIComponent(playerName)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                displayPlayerNotes(data.data);
+            } else {
+                console.error('Failed to load player notes:', data.error);
+            }
+        } catch (error) {
+            console.error('Error loading player notes:', error);
+        }
+    }
+    
+    // ============================================================================
+    // DISPLAY FUNCTIONS
+    // ============================================================================
+    
+    function displayStats(stats) {
+        const statsGrid = document.getElementById('statsGrid');
+        statsGrid.innerHTML = `
+            <div class="stat-card">
+                <h3>Total Players</h3>
+                <div class="value">${stats.totalPlayers}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Players</h3>
+                <div class="value">${stats.activePlayers}</div>
+            </div>
+            <div class="stat-card">
+                <h3>4ths Squad</h3>
+                <div class="value">${stats.fourthsPlayers}</div>
+            </div>
+            <div class="stat-card">
+                <h3>5ths Squad</h3>
+                <div class="value">${stats.fifthsPlayers}</div>
+            </div>
+            <div class="stat-card">
+                <h3>WhatsApp Enabled</h3>
+                <div class="value">${stats.whatsappEnabled}</div>
+            </div>
+        `;
+    }
+    
+    function displayPlayers(players) {
+        const tbody = document.querySelector('#playerTable tbody');
+        
+        tbody.innerHTML = players.map(player => {
+            const squadTags = player['Squad Tags'] || '';
+            let squadBadges = '';
+            
+            if (squadTags.includes('4ths')) {
+                squadBadges += '<span class="team-badge fourths">4ths</span>';
+            }
+            if (squadTags.includes('5ths')) {
+                squadBadges += '<span class="team-badge fifths">5ths</span>';
+            }
+            if (!squadBadges) {
+                squadBadges = '<span style="color: #999; font-size: 0.75rem;">Unassigned</span>';
+            }
+            
+            const status = player['Status'] || 'Active';
+            const statusClass = status.toLowerCase().replace(' ', '');
+            const playerName = `${player['First Name']} ${player['Last Name']}`;
+            
+            // Format availability info
+            let availabilityInfo = '';
+            if (status !== 'Active' && player['Unavailable Until']) {
+                const returnDate = new Date(player['Unavailable Until']).toLocaleDateString();
+                const reason = player['Unavailable Reason'] || '';
+                availabilityInfo = `<div class="availability-info">${reason} until: ${returnDate}</div>`;
+            }
+            
+            // Format notes indicator
+            const notesCount = player['Notes Count'] || 0;
+            let notesIndicator = '';
+            if (notesCount > 0) {
+                notesIndicator = `<span class="notes-indicator" onclick="openPlayerModal('${playerName}', 'notes')">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
+            } else {
+                notesIndicator = '<span style="color: #999; font-size: 0.75rem;">No notes</span>';
+            }
+            
+            return `
+                <tr>
+                    <td>
+                        <a href="#" class="player-name" onclick="openPlayerModal('${playerName}'); return false;">${playerName}</a>
+                    </td>
+                    <td>${squadBadges}</td>
+                    <td>${player['Positions'] || ''}</td>
+                    <td>
+                        <div>${player['Phone'] || ''}</div>
+                        <div style="color: #666; font-size: 0.75rem;">${player['Email'] || ''}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${status}</span>
+                        ${availabilityInfo}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.75rem;">
+                            4ths: ${player['4ths All Games'] || 0} games (${player['4ths League Games'] || 0} league)
+                            <br>5ths: ${player['5ths All Games'] || 0} games
+                        </div>
+                    </td>
+                    <td>${notesIndicator}</td>
+                </tr>
+            `;
+        }).join('');
+        
+        document.getElementById('playerTable').style.display = 'table';
+    }
+    
+    function populatePlayerModal(playerData) {
+        document.getElementById('modalPlayerName').textContent = `${playerData['First Name']} ${playerData['Last Name']}`;
+        
+        // Update all the form fields with real data
+        document.getElementById('playerStatus').value = playerData['Status'] || 'Active';
+        
+        if (playerData['Unavailable Until']) {
+            const date = new Date(playerData['Unavailable Until']);
+            document.getElementById('unavailableUntil').value = date.toISOString().split('T')[0];
+        }
+        
+        document.getElementById('unavailableReason').value = playerData['Unavailable Reason'] || '';
+        
+        // Squad checkboxes
+        const squadTags = playerData['Squad Tags'] || '';
+        document.getElementById('squad4ths').checked = squadTags.includes('4ths');
+        document.getElementById('squad5ths').checked = squadTags.includes('5ths');
+        
+        // Populate info tab with real data
+        const infoTab = document.getElementById('infoTab');
+        infoTab.innerHTML = `
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">${playerData['Email'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">${playerData['Phone'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">WhatsApp</div>
+                    <div class="info-value">${playerData['WhatsApp'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">IRFU Number</div>
+                    <div class="info-value">${playerData['IRFU Number'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">${playerData['Age'] || 'Unknown'} years</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Registration Date</div>
+                    <div class="info-value">${playerData['Registration Date'] ? new Date(playerData['Registration Date']).toLocaleDateString() : 'Unknown'}</div>
+                </div>
+            </div>
+
+            <h3>Emergency Contact</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value">${playerData['Emergency Contact'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Relationship</div>
+                    <div class="info-value">${playerData['Emergency Relationship'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">${playerData['Emergency Phone'] || 'Not provided'}</div>
+                </div>
+            </div>
+
+            <h3>Season Statistics</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">4ths Games</div>
+                    <div class="info-value">${playerData['4ths All Games'] || 0} total (${playerData['4ths League Games'] || 0} league)</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">5ths Games</div>
+                    <div class="info-value">${playerData['5ths All Games'] || 0} total</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">League Eligibility</div>
+                    <div class="info-value">Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function displayPlayerNotes(notes) {
+        const notesSection = document.querySelector('#notesTab .notes-section');
+        
+        if (notes.length === 0) {
+            notesSection.innerHTML = '<h3>Player Notes</h3><p style="color: #666; font-style: italic;">No notes on file for this player.</p>';
+            return;
+        }
+        
+        const notesHtml = notes.map(note => {
+            const date = new Date(note.dateAdded).toLocaleDateString();
+            return `
+                <div class="note-item">
+                    <div class="note-header">
+                        <div class="note-meta">
+                            <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
+                            <span>${note.coachName} • ${date}</span>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.content}</div>
+                </div>
+            `;
+        }).join('');
+        
+        notesSection.innerHTML = `<h3>Player Notes</h3>${notesHtml}`;
+    }
+    
+    // ============================================================================
+    // PLAYER MODAL FUNCTIONS
+    // ============================================================================
+    
+    async function openPlayerModal(playerName, activeTab = 'info') {
+        document.getElementById('playerModal').classList.add('active');
+        showTab(activeTab);
+        
+        await loadPlayerDetails(playerName);
+    }
+    
+    function closePlayerModal() {
+        document.getElementById('playerModal').classList.remove('active');
+        currentPlayerData = null;
+    }
+    
+    function showTab(tabName) {
+        document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+    
+    // ============================================================================
+    // UPDATE FUNCTIONS
+    // ============================================================================
+    
+    async function addNote() {
+        const category = document.getElementById('noteCategory').value;
+        const content = document.getElementById('noteContent').value.trim();
+        
+        if (!content) {
+            alert('Please enter a note');
+            return;
+        }
+        
+        if (!currentPlayerData) {
+            alert('No player selected');
+            return;
+        }
+        
+        const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+        
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'addPlayerNote',
+                    playerName: playerName,
+                    category: category,
+                    content: content,
+                    coachName: currentCoach
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('noteContent').value = '';
+                await loadPlayerNotes(playerName);
+                await loadData(); // Refresh to update notes count
+                alert('Note added successfully!');
+            } else {
+                alert('Error adding note: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error adding note: ' + error.message);
+        }
+    }
+    
+    async function updateAvailability() {
+        const status = document.getElementById('playerStatus').value;
+        const until = document.getElementById('unavailableUntil').value;
+        const reason = document.getElementById('unavailableReason').value;
+        const notes = document.getElementById('availabilityNotes').value;
+        
+        if (!currentPlayerData) {
+            alert('No player selected');
+            return;
+        }
+        
+        const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+        
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'updatePlayerStatus',
+                    playerName: playerName,
+                    status: status,
+                    unavailableUntil: until,
+                    unavailableReason: reason,
+                    notes: notes
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                await loadData(); // Refresh main table
+                await loadPlayerDetails(playerName); // Refresh modal
+                alert('Availability updated successfully!');
+            } else {
+                alert('Error updating availability: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error updating availability: ' + error.message);
+        }
+    }
+    
+    async function updateSquadAssignment() {
+        const squad4ths = document.getElementById('squad4ths').checked;
+        const squad5ths = document.getElementById('squad5ths').checked;
+        
+        let squadTags = [];
+        if (squad4ths) squadTags.push('4ths');
+        if (squad5ths) squadTags.push('5ths');
+        
+        if (!currentPlayerData) {
+            alert('No player selected');
+            return;
+        }
+        
+        const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+        
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'updateSquadTags',
+                    playerName: playerName,
+                    squadTags: squadTags.join(', ')
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                await loadData(); // Refresh main table
+                alert('Squad assignment updated successfully!');
+            } else {
+                alert('Error updating squad assignment: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error updating squad assignment: ' + error.message);
+        }
+    }
+    
+    //
 </body>
 </html>
