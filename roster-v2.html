@@ -259,6 +259,25 @@
             background: #bbdefb;
         }
 
+        /* Success/Error Messages */
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #f5c6cb;
+        }
+
         /* Player Modal */
         .modal {
             display: none;
@@ -553,66 +572,6 @@
             color: #666;
         }
 
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .filter-row {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                margin: 0.5rem;
-                max-height: 95vh;
-            }
-
-            .modal-tabs {
-                overflow-x: auto;
-            }
-
-            .modal-tab {
-                white-space: nowrap;
-                min-width: 100px;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .date-range {
-                grid-template-columns: 1fr;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .activity-header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .activity-controls {
-                justify-content: center;
-            }
-        }
-
         /* Activity Log Styles */
         .activity-log {
             background: white;
@@ -742,39 +701,56 @@
             white-space: nowrap;
         }
 
-        .quick-actions {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
 
-        .quick-actions h3 {
-            margin-bottom: 1rem;
-            color: #1e3c72;
-        }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
 
-        .action-buttons {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
 
-        .action-btn {
-            padding: 0.5rem 1rem;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-            text-decoration: none;
-            color: #333;
-        }
+            .modal-content {
+                margin: 0.5rem;
+                max-height: 95vh;
+            }
 
-        .action-btn:hover {
-            background: #f5f5f5;
-            border-color: #1e3c72;
+            .modal-tabs {
+                overflow-x: auto;
+            }
+
+            .modal-tab {
+                white-space: nowrap;
+                min-width: 100px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .date-range {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .activity-controls {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -823,6 +799,7 @@
         <!-- Loading/Error Messages -->
         <div id="loadingMessage" class="loading" style="display: none;">Loading players...</div>
         <div id="errorMessage" class="error" style="display: none;"></div>
+        <div id="successMessage" class="success" style="display: none;"></div>
         
         <!-- Stats Cards -->
         <div class="stats-grid" id="statsGrid">
@@ -1028,6 +1005,60 @@
         let currentCoach = 'Luke Teeling';
         let currentPlayerData = null;
         
+        // ============================================================================
+        // CORS-FRIENDLY API FUNCTIONS
+        // ============================================================================
+        
+        async function fetchData(action, params = {}) {
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', action);
+            
+            // Add any additional parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // Use GET requests for all operations to avoid CORS issues
+        async function postData(action, data) {
+            console.log('Converting POST to GET for CORS compatibility');
+            
+            const params = {
+                action: action,
+                ...data,
+                coachName: currentCoach,
+                coachEmail: 'luketeeling@gmail.com'
+            };
+
+            try {
+                const result = await fetchData(action, params);
+                console.log('GET request result:', result);
+                return result;
+            } catch (error) {
+                console.error('GET request error:', error);
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // AUTHENTICATION & INITIALIZATION
+        // ============================================================================
+        
         // Check authentication on page load
         window.addEventListener('load', function() {
             if (!sessionStorage.getItem('authenticated')) {
@@ -1050,8 +1081,7 @@
         
         async function loadActivityLog() {
             try {
-                const response = await fetch(`${WEB_APP_URL}?action=getActivityLog`);
-                const data = await response.json();
+                const data = await fetchData('getActivityLog');
                 
                 if (data.success) {
                     displayActivityLog(data.data);
@@ -1150,16 +1180,14 @@
                 showLoading(true);
                 
                 // Load stats
-                const statsResponse = await fetch(`${WEB_APP_URL}?action=getTeamStats`);
-                const statsData = await statsResponse.json();
+                const statsData = await fetchData('getTeamStats');
                 
                 if (statsData.success) {
                     displayStats(statsData.data);
                 }
                 
                 // Load players
-                const playersResponse = await fetch(`${WEB_APP_URL}?action=getAllPlayers`);
-                const playersData = await playersResponse.json();
+                const playersData = await fetchData('getAllPlayers');
                 
                 if (playersData.success) {
                     allPlayers = playersData.data;
@@ -1176,8 +1204,7 @@
         
         async function loadPlayerDetails(playerName) {
             try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPlayerDetails&playerName=${encodeURIComponent(playerName)}`);
-                const data = await response.json();
+                const data = await fetchData('getPlayerDetails', { playerName: playerName });
                 
                 if (data.success) {
                     currentPlayerData = data.data;
@@ -1193,8 +1220,7 @@
         
         async function loadPlayerNotes(playerName) {
             try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPlayerNotes&playerName=${encodeURIComponent(playerName)}`);
-                const data = await response.json();
+                const data = await fetchData('getPlayerNotes', { playerName: playerName });
                 
                 if (data.success) {
                     displayPlayerNotes(data.data);
@@ -1228,10 +1254,6 @@
                 <div class="stat-card">
                     <h3>5ths Squad</h3>
                     <div class="value">${stats.fifthsPlayers}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>WhatsApp Enabled</h3>
-                    <div class="value">${stats.whatsappEnabled}</div>
                 </div>
             `;
         }
@@ -1475,7 +1497,7 @@
         }
         
         // ============================================================================
-        // UPDATE FUNCTIONS
+        // UPDATE FUNCTIONS - NOW USING GET REQUESTS
         // ============================================================================
         
         async function addNote() {
@@ -1483,43 +1505,37 @@
             const content = document.getElementById('noteContent').value.trim();
             
             if (!content) {
-                alert('Please enter a note');
+                showError('Please enter a note');
                 return;
             }
             
             if (!currentPlayerData) {
-                alert('No player selected');
+                showError('No player selected');
                 return;
             }
             
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'addPlayerNote',
-                        playerName: playerName,
-                        category: category,
-                        content: content,
-                        coachName: currentCoach
-                    })
+                const result = await fetchData('addPlayerNote', {
+                    playerName: playerName,
+                    category: category,
+                    content: content,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     document.getElementById('noteContent').value = '';
                     await loadPlayerNotes(playerName);
                     await loadData(); // Refresh to update notes count
                     logActivity('note', `Added note to <strong>${playerName}</strong>`, playerName);
-                    alert('Note added successfully!');
+                    showSuccess('Note added successfully!');
                 } else {
-                    alert('Error adding note: ' + result.error);
+                    showError('Error adding note: ' + result.error);
                 }
             } catch (error) {
-                alert('Error adding note: ' + error.message);
+                showError('Error adding note: ' + error.message);
             }
         }
         
@@ -1530,38 +1546,33 @@
             const notes = document.getElementById('availabilityNotes').value;
             
             if (!currentPlayerData) {
-                alert('No player selected');
+                showError('No player selected');
                 return;
             }
             
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'updatePlayerStatus',
-                        playerName: playerName,
-                        status: status,
-                        unavailableUntil: until,
-                        unavailableReason: reason,
-                        notes: notes
-                    })
+                const result = await fetchData('updatePlayerStatus', {
+                    playerName: playerName,
+                    status: status,
+                    unavailableUntil: until,
+                    unavailableReason: reason,
+                    notes: notes,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     await loadData(); // Refresh main table
                     await loadPlayerDetails(playerName); // Refresh modal
                     logActivity('status', `Updated <strong>${playerName}</strong> status to ${status}`, playerName);
-                    alert('Availability updated successfully!');
+                    showSuccess('Availability updated successfully!');
                 } else {
-                    alert('Error updating availability: ' + result.error);
+                    showError('Error updating availability: ' + result.error);
                 }
             } catch (error) {
-                alert('Error updating availability: ' + error.message);
+                showError('Error updating availability: ' + error.message);
             }
         }
         
@@ -1574,34 +1585,29 @@
             if (squad5ths) squadTags.push('5ths');
             
             if (!currentPlayerData) {
-                alert('No player selected');
+                showError('No player selected');
                 return;
             }
             
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'updateSquadTags',
-                        playerName: playerName,
-                        squadTags: squadTags.join(', ')
-                    })
+                const result = await fetchData('updateSquadTags', {
+                    playerName: playerName,
+                    squadTags: squadTags.join(', '),
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     await loadData(); // Refresh main table
                     logActivity('squad', `Updated <strong>${playerName}</strong> squad assignment to ${squadTags.join(', ') || 'Unassigned'}`, playerName);
-                    alert('Squad assignment updated successfully!');
+                    showSuccess('Squad assignment updated successfully!');
                 } else {
-                    alert('Error updating squad assignment: ' + result.error);
+                    showError('Error updating squad assignment: ' + result.error);
                 }
             } catch (error) {
-                alert('Error updating squad assignment: ' + error.message);
+                showError('Error updating squad assignment: ' + error.message);
             }
         }
         
@@ -1684,10 +1690,24 @@
         }
         
         function showError(message) {
+            hideMessages();
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            showLoading(false);
+            setTimeout(hideMessages, 5000);
+        }
+        
+        function showSuccess(message) {
+            hideMessages();
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(hideMessages, 3000);
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
         }
         
         // ============================================================================
