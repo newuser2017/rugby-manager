@@ -223,12 +223,6 @@
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .status-badge:hover {
-            transform: scale(1.05);
         }
 
         .status-badge.active {
@@ -728,7 +722,7 @@
                             <div style="color: #666; font-size: 0.75rem;">john.murphy@email.com</div>
                         </td>
                         <td>
-                            <span class="status-badge active" onclick="togglePlayerStatus('John Murphy', 'Active')">Active</span>
+                            <span class="status-badge active">Active</span>
                         </td>
                         <td>
                             <div style="font-size: 0.75rem;">
@@ -754,7 +748,7 @@
                             <div style="color: #666; font-size: 0.75rem;">sean.oconnor@email.com</div>
                         </td>
                         <td>
-                            <span class="status-badge injured" onclick="togglePlayerStatus('Seán O\'Connor', 'Injured')">Injured</span>
+                            <span class="status-badge injured">Injured</span>
                             <div class="availability-info">Returns: 28 Jan 2025</div>
                         </td>
                         <td>
@@ -780,7 +774,7 @@
                             <div style="color: #666; font-size: 0.75rem;">pat.ryan@email.com</div>
                         </td>
                         <td>
-                            <span class="status-badge unavailable" onclick="togglePlayerStatus('Patrick Ryan', 'Unavailable')">Unavailable</span>
+                            <span class="status-badge unavailable">Unavailable</span>
                             <div class="availability-info">Holiday until: 22 Jan 2025</div>
                         </td>
                         <td>
@@ -806,7 +800,7 @@
                             <div style="color: #666; font-size: 0.75rem;">michael.kelly@email.com</div>
                         </td>
                         <td>
-                            <span class="status-badge active" onclick="togglePlayerStatus('Michael Kelly', 'Active')">Active</span>
+                            <span class="status-badge active">Active</span>
                         </td>
                         <td>
                             <div style="font-size: 0.75rem;">
@@ -970,12 +964,8 @@
                             <select id="unavailableReason">
                                 <option value="">Select reason...</option>
                                 <option value="Holiday">Holiday</option>
-                                <option value="Work commitments">Work commitments</option>
-                                <option value="Family obligations">Family obligations</option>
-                                <option value="Ankle injury">Ankle injury</option>
-                                <option value="Shoulder injury">Shoulder injury</option>
-                                <option value="Knee injury">Knee injury</option>
-                                <option value="Personal reasons">Personal reasons</option>
+                                <option value="Injury">Injury</option>
+                                <option value="Retired">Retired</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
@@ -1079,19 +1069,7 @@
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
         
-        // Quick Status Toggle
-        function togglePlayerStatus(playerName, currentStatus) {
-            const statusOptions = ['Active', 'Injured', 'Unavailable'];
-            const currentIndex = statusOptions.indexOf(currentStatus);
-            const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
-            
-            // In real implementation, would update via API
-            console.log(`Toggling ${playerName} from ${currentStatus} to ${nextStatus}`);
-            
-            // Show visual feedback
-            event.target.textContent = nextStatus;
-            event.target.className = `status-badge ${nextStatus.toLowerCase()}`;
-        }
+        // Quick Status Toggle - REMOVED (status updates only through modal)
         
         // Notes Functions
         function addNote() {
