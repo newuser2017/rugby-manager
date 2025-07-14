@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Roster - Clontarf Rugby</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #1e3c72;
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .search-box, select {
+            padding: 0.625rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        /* Player Table */
+        .player-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e5e5e5;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .player-name {
+            font-weight: 500;
+            color: #1e3c72;
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.25rem;
+        }
+
+        .team-badge.fourths {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .team-badge.fifths {
+            background: #dc2626;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.injured {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.unavailable {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">🏉</div>
+                <div>
+                    <h1>Clontarf Rugby</h1>
+                    <p style="font-size: 0.875rem; opacity: 0.9;">Team Roster</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Search Players</label>
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search by name...">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Squad</label>
+                    <select id="squadFilter">
+                        <option value="">All Squads</option>
+                        <option value="4ths">4ths Only</option>
+                        <option value="5ths">5ths Only</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Injured">Injured</option>
+                        <option value="Unavailable">Unavailable</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Position</label>
+                    <select id="positionFilter">
+                        <option value="">All Positions</option>
+                        <option value="1">1 - Loosehead Prop</option>
+                        <option value="2">2 - Hooker</option>
+                        <option value="3">3 - Tighthead Prop</option>
+                        <option value="4">4 - Lock</option>
+                        <option value="5">5 - Lock</option>
+                        <option value="6">6 - Blindside Flanker</option>
+                        <option value="7">7 - Openside Flanker</option>
+                        <option value="8">8 - Number 8</option>
+                        <option value="9">9 - Scrum-half</option>
+                        <option value="10">10 - Fly-half</option>
+                        <option value="11">11 - Left Wing</option>
+                        <option value="12">12 - Inside Centre</option>
+                        <option value="13">13 - Outside Centre</option>
+                        <option value="14">14 - Right Wing</option>
+                        <option value="15">15 - Fullback</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Table -->
+        <div class="player-table">
+            <div id="loadingMessage" class="loading">Loading players...</div>
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            
+            <table id="playerTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Squad(s)</th>
+                        <th>Positions</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Game Counts</th>
+                        <th>Registration</th>
+                    </tr>
+                </thead>
+                <tbody id="playerTableBody">
+                    <!-- Players will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - REPLACE WITH YOUR WEB APP URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxnWNaptiXbtmswuM0lqlfDfq2ZrYL-Y9AON-ASn3wYmzMEZJkrEIdKtnUEmQJ-07JM/exec';
+        
+        let allPlayers = [];
+        
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            if (!sessionStorage.getItem('authenticated')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            loadData();
+        });
+        
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            window.location.href = 'index.html';
+        }
+        
+        async function loadData() {
+            try {
+                // Load stats
+                const statsResponse = await fetch(`${WEB_APP_URL}?action=getTeamStats`);
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    displayStats(statsData.data);
+                }
+                
+                // Load players
+                const playersResponse = await fetch(`${WEB_APP_URL}?action=getAllPlayers`);
+                const playersData = await playersResponse.json();
+                
+                if (playersData.success) {
+                    allPlayers = playersData.data;
+                    displayPlayers(allPlayers);
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('playerTable').style.display = 'table';
+                } else {
+                    showError('Failed to load players: ' + playersData.error);
+                }
+                
+            } catch (error) {
+                showError('Connection error: ' + error.message);
+            }
+        }
+        
+        function displayStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Players</h3>
+                    <div class="value">${stats.totalPlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Players</h3>
+                    <div class="value">${stats.activePlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>4ths Squad</h3>
+                    <div class="value">${stats.fourthsPlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>5ths Squad</h3>
+                    <div class="value">${stats.fifthsPlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>WhatsApp Enabled</h3>
+                    <div class="value">${stats.whatsappEnabled}</div>
+                </div>
+            `;
+        }
+        
+        function displayPlayers(players) {
+            const tbody = document.getElementById('playerTableBody');
+            
+            tbody.innerHTML = players.map(player => {
+                const squadTags = player['Squad Tags'] || '';
+                let squadBadges = '';
+                
+                if (squadTags.includes('4ths')) {
+                    squadBadges += '<span class="team-badge fourths">4ths</span>';
+                }
+                if (squadTags.includes('5ths')) {
+                    squadBadges += '<span class="team-badge fifths">5ths</span>';
+                }
+                if (!squadBadges) {
+                    squadBadges = '<span style="color: #999; font-size: 0.75rem;">Unassigned</span>';
+                }
+                
+                const status = player['Status'] || 'Active';
+                const statusClass = status.toLowerCase().replace(' ', '');
+                
+                return `
+                    <tr>
+                        <td class="player-name">${player['First Name']} ${player['Last Name']}</td>
+                        <td>${squadBadges}</td>
+                        <td>${player['Positions'] || ''}</td>
+                        <td>
+                            <div>${player['Phone'] || ''}</div>
+                            <div style="color: #666; font-size: 0.75rem;">${player['Email'] || ''}</div>
+                        </td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                4ths: ${player['4ths All Games'] || 0} games
+                                <br>5ths: ${player['5ths All Games'] || 0} games
+                            </div>
+                        </td>
+                        <td style="font-size: 0.75rem;">
+                            ${player['Registration Date'] ? new Date(player['Registration Date']).toLocaleDateString() : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loadingMessage').style.display = 'none';
+        }
+        
+        // Filter functionality
+        function setupFilters() {
+            const searchBox = document.getElementById('searchBox');
+            const squadFilter = document.getElementById('squadFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const positionFilter = document.getElementById('positionFilter');
+            
+            function applyFilters() {
+                let filteredPlayers = allPlayers;
+                
+                // Search filter
+                const searchTerm = searchBox.value.toLowerCase();
+                if (searchTerm) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        `${player['First Name']} ${player['Last Name']}`.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                // Squad filter
+                const squadValue = squadFilter.value;
+                if (squadValue) {
+                    if (squadValue === 'unassigned') {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            !(player['Squad Tags'] || '').includes('4ths') && 
+                            !(player['Squad Tags'] || '').includes('5ths')
+                        );
+                    } else {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            (player['Squad Tags'] || '').includes(squadValue)
+                        );
+                    }
+                }
+                
+                // Status filter
+                const statusValue = statusFilter.value;
+                if (statusValue) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        (player['Status'] || 'Active') === statusValue
+                    );
+                }
+                
+                // Position filter
+                const positionValue = positionFilter.value;
+                if (positionValue) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        (player['Positions'] || '').includes(positionValue)
+                    );
+                }
+                
+                displayPlayers(filteredPlayers);
+            }
+            
+            searchBox.addEventListener('input', applyFilters);
+            squadFilter.addEventListener('change', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+            positionFilter.addEventListener('change', applyFilters);
+        }
+        
+        // Initialize filters when data is loaded
+        setTimeout(setupFilters, 1000);
+    </script>
+</body>
+</html>
