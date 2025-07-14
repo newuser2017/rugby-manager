@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Roster v2 - Clontarf Junior Rugby</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .coach-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #1e3c72;
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .search-box, select {
+            padding: 0.625rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        /* Player Table */
+        .player-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            border-bottom: 2px solid #e5e5e5;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .player-name {
+            font-weight: 500;
+            color: #1e3c72;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .player-name:hover {
+            text-decoration: underline;
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.25rem;
+        }
+
+        .team-badge.fourths {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .team-badge.fifths {
+            background: #dc2626;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.injured {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.unavailable {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .availability-info {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .notes-indicator {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .notes-indicator:hover {
+            background: #bbdefb;
+        }
+
+        /* Player Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-summary {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 0;
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* Modal Tabs */
+        .modal-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .modal-tab {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .modal-tab.active {
+            background: white;
+            color: #1e3c72;
+            border-bottom: 2px solid #1e3c72;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            margin-bottom: 2rem;
+        }
+
+        .add-note-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a5298;
+        }
+
+        .btn-secondary {
+            background: #e5e5e5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d4d4d4;
+        }
+
+        .note-item {
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .note-meta {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .note-category {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .note-category.performance {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .note-category.medical {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .note-category.general {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .note-content {
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* Availability Section */
+        .availability-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        input[type="date"], input[type="text"] {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        /* Squad Management */
+        .squad-management {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .squad-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .squad-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 0.5rem;
+                max-height: 95vh;
+            }
+
+            .modal-tabs {
+                overflow-x: auto;
+            }
+
+            .modal-tab {
+                white-space: nowrap;
+                min-width: 100px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .date-range {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">🏉</div>
+                <div>
+                    <h1>Clontarf Junior Rugby</h1>
+                    <p style="font-size: 0.875rem; opacity: 0.9;">Team Roster v2.0 (Beta)</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <span class="coach-badge">Coach: Luke Teeling</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total Players</h3>
+                <div class="value">47</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Players</h3>
+                <div class="value">42</div>
+            </div>
+            <div class="stat-card">
+                <h3>4ths Squad</h3>
+                <div class="value">28</div>
+            </div>
+            <div class="stat-card">
+                <h3>5ths Squad</h3>
+                <div class="value">23</div>
+            </div>
+            <div class="stat-card">
+                <h3>Currently Unavailable</h3>
+                <div class="value">5</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Search Players</label>
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search by name...">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Squad</label>
+                    <select id="squadFilter">
+                        <option value="">All Squads</option>
+                        <option value="4ths">4ths Only</option>
+                        <option value="5ths">5ths Only</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Injured">Injured</option>
+                        <option value="Unavailable">Unavailable</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Position</label>
+                    <select id="positionFilter">
+                        <option value="">All Positions</option>
+                        <option value="1">1 - Loosehead Prop</option>
+                        <option value="2">2 - Hooker</option>
+                        <option value="3">3 - Tighthead Prop</option>
+                        <option value="9">9 - Scrum-half</option>
+                        <option value="10">10 - Fly-half</option>
+                        <option value="15">15 - Fullback</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Table -->
+        <div class="player-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Squad(s)</th>
+                        <th>Positions</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Game Counts</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample Data -->
+                    <tr>
+                        <td>
+                            <a href="#" class="player-name" onclick="openPlayerModal('John Murphy'); return false;">John Murphy</a>
+                        </td>
+                        <td>
+                            <span class="team-badge fourths">4ths</span>
+                            <span class="team-badge fifths">5ths</span>
+                        </td>
+                        <td>1, 3</td>
+                        <td>
+                            <div>087 123 4567</div>
+                            <div style="color: #666; font-size: 0.75rem;">john.murphy@email.com</div>
+                        </td>
+                        <td>
+                            <span class="status-badge active" onclick="togglePlayerStatus('John Murphy', 'Active')">Active</span>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                4ths: 8 games (2 league)
+                                <br>5ths: 3 games
+                            </div>
+                        </td>
+                        <td>
+                            <span class="notes-indicator" onclick="openPlayerModal('John Murphy', 'notes')">2 notes</span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <a href="#" class="player-name" onclick="openPlayerModal('Seán O\'Connor'); return false;">Seán O'Connor</a>
+                        </td>
+                        <td>
+                            <span class="team-badge fourths">4ths</span>
+                        </td>
+                        <td>9</td>
+                        <td>
+                            <div>086 234 5678</div>
+                            <div style="color: #666; font-size: 0.75rem;">sean.oconnor@email.com</div>
+                        </td>
+                        <td>
+                            <span class="status-badge injured" onclick="togglePlayerStatus('Seán O\'Connor', 'Injured')">Injured</span>
+                            <div class="availability-info">Returns: 28 Jan 2025</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                4ths: 12 games (3 league)
+                            </div>
+                        </td>
+                        <td>
+                            <span class="notes-indicator" onclick="openPlayerModal('Seán O\'Connor', 'notes')">1 note</span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <a href="#" class="player-name" onclick="openPlayerModal('Patrick Ryan'); return false;">Patrick Ryan</a>
+                        </td>
+                        <td>
+                            <span class="team-badge fifths">5ths</span>
+                        </td>
+                        <td>10, 12</td>
+                        <td>
+                            <div>085 345 6789</div>
+                            <div style="color: #666; font-size: 0.75rem;">pat.ryan@email.com</div>
+                        </td>
+                        <td>
+                            <span class="status-badge unavailable" onclick="togglePlayerStatus('Patrick Ryan', 'Unavailable')">Unavailable</span>
+                            <div class="availability-info">Holiday until: 22 Jan 2025</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                5ths: 6 games
+                            </div>
+                        </td>
+                        <td>
+                            <span style="color: #999; font-size: 0.75rem;">No notes</span>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <a href="#" class="player-name" onclick="openPlayerModal('Michael Kelly'); return false;">Michael Kelly</a>
+                        </td>
+                        <td>
+                            <span style="color: #999; font-size: 0.75rem;">Unassigned</span>
+                        </td>
+                        <td>15</td>
+                        <td>
+                            <div>087 901 2345</div>
+                            <div style="color: #666; font-size: 0.75rem;">michael.kelly@email.com</div>
+                        </td>
+                        <td>
+                            <span class="status-badge active" onclick="togglePlayerStatus('Michael Kelly', 'Active')">Active</span>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                New player
+                            </div>
+                        </td>
+                        <td>
+                            <span class="notes-indicator" onclick="openPlayerModal('Michael Kelly', 'notes')">1 note</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Player Modal -->
+    <div class="modal" id="playerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closePlayerModal()">&times;</button>
+                <h2 id="modalPlayerName">John Murphy</h2>
+                <div class="player-summary">
+                    <span class="team-badge fourths">4ths</span>
+                    <span class="team-badge fifths">5ths</span>
+                    <span class="status-badge active">Active</span>
+                    <span style="opacity: 0.8;">Positions: 1, 3</span>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Tabs -->
+                <div class="modal-tabs">
+                    <button class="modal-tab active" onclick="showTab('info')">Basic Info</button>
+                    <button class="modal-tab" onclick="showTab('notes')">Notes</button>
+                    <button class="modal-tab" onclick="showTab('availability')">Availability</button>
+                    <button class="modal-tab" onclick="showTab('squad')">Squad Management</button>
+                </div>
+
+                <!-- Basic Info Tab -->
+                <div class="tab-content active" id="infoTab">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">john.murphy@email.com</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">087 123 4567</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">WhatsApp</div>
+                            <div class="info-value">087 123 4567</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">IRFU Number</div>
+                            <div class="info-value">IRF2024001</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Age</div>
+                            <div class="info-value">29 years</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Registration Date</div>
+                            <div class="info-value">15 Sept 2024</div>
+                        </div>
+                    </div>
+
+                    <h3>Emergency Contact</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Name</div>
+                            <div class="info-value">Sarah Murphy</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Relationship</div>
+                            <div class="info-value">Spouse</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">086 987 6543</div>
+                        </div>
+                    </div>
+
+                    <h3>Season Statistics</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">4ths Games</div>
+                            <div class="info-value">8 total (2 league)</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">5ths Games</div>
+                            <div class="info-value">3 total</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">League Eligibility</div>
+                            <div class="info-value">Can play 2 more league games for 4ths</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Tab -->
+                <div class="tab-content" id="notesTab">
+                    <div class="add-note-form">
+                        <h3 style="margin-bottom: 1rem;">Add New Note</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select id="noteCategory">
+                                    <option value="general">General</option>
+                                    <option value="performance">Performance</option>
+                                    <option value="medical">Medical/Injury</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Note</label>
+                            <textarea id="noteContent" placeholder="Add your note here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="addNote()">Add Note</button>
+                    </div>
+
+                    <div class="notes-section">
+                        <h3>Player Notes</h3>
+                        
+                        <!-- Sample Notes -->
+                        <div class="note-item">
+                            <div class="note-header">
+                                <div class="note-meta">
+                                    <span class="note-category general">General</span>
+                                    <span>Luke Teeling • 8 Jan 2025</span>
+                                </div>
+                            </div>
+                            <div class="note-content">
+                                Very committed player. Always first to training and helps with equipment setup. Great team spirit.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Availability Tab -->
+                <div class="tab-content" id="availabilityTab">
+                    <div class="availability-form">
+                        <h3 style="margin-bottom: 1rem;">Update Player Availability</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Current Status</label>
+                            <select id="playerStatus">
+                                <option value="Active">Active</option>
+                                <option value="Injured">Injured</option>
+                                <option value="Unavailable">Unavailable</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Unavailable Until (if applicable)</label>
+                            <input type="date" id="unavailableUntil">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Reason for Unavailability</label>
+                            <select id="unavailableReason">
+                                <option value="">Select reason...</option>
+                                <option value="Holiday">Holiday</option>
+                                <option value="Work commitments">Work commitments</option>
+                                <option value="Family obligations">Family obligations</option>
+                                <option value="Ankle injury">Ankle injury</option>
+                                <option value="Shoulder injury">Shoulder injury</option>
+                                <option value="Knee injury">Knee injury</option>
+                                <option value="Personal reasons">Personal reasons</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea id="availabilityNotes" placeholder="Additional details about availability..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="updateAvailability()">Update Availability</button>
+                    </div>
+
+                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                        <h4>Current Availability Status</h4>
+                        <p><strong>Status:</strong> Active</p>
+                        <p><strong>Last Updated:</strong> 14 Jan 2025 by Luke Teeling</p>
+                    </div>
+                </div>
+
+                <!-- Squad Management Tab -->
+                <div class="tab-content" id="squadTab">
+                    <div class="squad-management">
+                        <h3 style="margin-bottom: 1rem;">Squad Assignments</h3>
+                        
+                        <div class="squad-options">
+                            <div class="squad-checkbox">
+                                <input type="checkbox" id="squad4ths" checked>
+                                <label for="squad4ths">4ths Squad</label>
+                            </div>
+                            <div class="squad-checkbox">
+                                <input type="checkbox" id="squad5ths" checked>
+                                <label for="squad5ths">5ths Squad</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Position Notes</label>
+                            <textarea id="positionNotes" placeholder="Any notes about position preferences or capabilities...">Can play both prop positions effectively. Prefers loosehead but comfortable at tighthead.</textarea>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="updateSquadAssignment()">Update Squad Assignment</button>
+                    </div>
+
+                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                        <h4>League Game Tracking</h4>
+                        <p><strong>4ths League Games:</strong> 2 of 4 played</p>
+                        <p><strong>Status:</strong> Can play 2 more league games for 4ths this season</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
+                            <strong>Note:</strong> Players can only play 4 league games per season for any single team.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - REPLACE WITH YOUR WEB APP URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+        
+        let allPlayers = [];
+        let currentCoach = 'Luke Teeling'; // This would come from login
+        
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            if (!sessionStorage.getItem('authenticated')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // In real implementation, would load actual data
+            console.log('Roster loaded with sample data');
+        });
+        
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            window.location.href = 'index.html';
+        }
+        
+        // Player Modal Functions
+        function openPlayerModal(playerName, activeTab = 'info') {
+            document.getElementById('modalPlayerName').textContent = playerName;
+            document.getElementById('playerModal').classList.add('active');
+            showTab(activeTab);
+            
+            // In real implementation, would load player data here
+            console.log(`Opening modal for ${playerName}, tab: ${activeTab}`);
+        }
+        
+        function closePlayerModal() {
+            document.getElementById('playerModal').classList.remove('active');
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Show selected tab
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+        
+        // Quick Status Toggle
+        function togglePlayerStatus(playerName, currentStatus) {
+            const statusOptions = ['Active', 'Injured', 'Unavailable'];
+            const currentIndex = statusOptions.indexOf(currentStatus);
+            const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
+            
+            // In real implementation, would update via API
+            console.log(`Toggling ${playerName} from ${currentStatus} to ${nextStatus}`);
+            
+            // Show visual feedback
+            event.target.textContent = nextStatus;
+            event.target.className = `status-badge ${nextStatus.toLowerCase()}`;
+        }
+        
+        // Notes Functions
+        function addNote() {
+            const category = document.getElementById('noteCategory').value;
+            const content = document.getElementById('noteContent').value;
+            
+            if (!content.trim()) {
+                alert('Please enter a note');
+                return;
+            }
+            
+            // In real implementation, would save via API
+            console.log(`Adding note: ${category} - ${content}`);
+            
+            // Clear form
+            document.getElementById('noteContent').value = '';
+            
+            // Show success message
+            alert('Note added successfully!');
+        }
+        
+        // Availability Functions
+        function updateAvailability() {
+            const status = document.getElementById('playerStatus').value;
+            const until = document.getElementById('unavailableUntil').value;
+            const reason = document.getElementById('unavailableReason').value;
+            const notes = document.getElementById('availabilityNotes').value;
+            
+            // In real implementation, would save via API
+            console.log(`Updating availability: ${status}, until: ${until}, reason: ${reason}`);
+            
+            alert('Availability updated successfully!');
+        }
+        
+        // Squad Management Functions
+        function updateSquadAssignment() {
+            const squad4ths = document.getElementById('squad4ths').checked;
+            const squad5ths = document.getElementById('squad5ths').checked;
+            const positionNotes = document.getElementById('positionNotes').value;
+            
+            let squadTags = [];
+            if (squad4ths) squadTags.push('4ths');
+            if (squad5ths) squadTags.push('5ths');
+            
+            // In real implementation, would save via API
+            console.log(`Updating squad assignment: ${squadTags.join(', ')}`);
+            console.log(`Position notes: ${positionNotes}`);
+            
+            alert('Squad assignment updated successfully!');
+        }
+        
+        // Filter Functions (simplified for demo)
+        function setupFilters() {
+            const searchBox = document.getElementById('searchBox');
+            const squadFilter = document.getElementById('squadFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const positionFilter = document.getElementById('positionFilter');
+            
+            // In real implementation, would filter actual data
+            searchBox.addEventListener('input', () => console.log('Filtering by search:', searchBox.value));
+            squadFilter.addEventListener('change', () => console.log('Filtering by squad:', squadFilter.value));
+            statusFilter.addEventListener('change', () => console.log('Filtering by status:', statusFilter.value));
+            positionFilter.addEventListener('change', () => console.log('Filtering by position:', positionFilter.value));
+        }
+        
+        // Initialize filters
+        setTimeout(setupFilters, 1000);
+        
+        // Close modal when clicking outside
+        document.getElementById('playerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayerModal();
+            }
+        });
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePlayerModal();
+            }
+        });
+    </script>
+</body>
+</html>note-meta">
+                                    <span class="note-category performance">Performance</span>
+                                    <span>Luke Teeling • 12 Jan 2025</span>
+                                </div>
+                            </div>
+                            <div class="note-content">
+                                Excellent lineout throwing in last match. Very reliable under pressure. Could be considered for captain role.
+                            </div>
+                        </div>
+
+                        <div class="note-item">
+                            <div class="note-header">
+                                <div class="
