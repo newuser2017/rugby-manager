@@ -198,51 +198,51 @@
                 console.log('Processing note:', note);
                 
                 return `
-                    <div class="note-item" data-note-index="${note.index || index}">
-                        <div class="note-header">
-                            <span class="note-category ${note.category || 'general'}">${(note.category || 'general').charAt(0).toUpperCase() + (note.category || 'general').slice(1)}</span>
-                            <div class="note-actions">
-                                <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note">
+                    <div class="note-item" data-note-index="${note.index || index}" style="background: #fff; border: 2px solid #1e3c72; margin: 10px 0; padding: 15px; border-radius: 8px; min-height: 100px;">
+                        <div class="note-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="note-category ${note.category || 'general'}" style="background: #1e3c72; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">${(note.category || 'general').charAt(0).toUpperCase() + (note.category || 'general').slice(1)}</span>
+                            <div class="note-actions" style="display: flex; gap: 5px;">
+                                <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note" style="background: #28a745; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer;">
                                     ✏️
                                 </button>
-                                <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note">
+                                <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note" style="background: #dc3545; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer;">
                                     🗑️
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="note-content" id="noteContent_${note.index || index}">
+                        <div class="note-content" id="noteContent_${note.index || index}" style="margin: 10px 0; line-height: 1.5; color: #333; font-size: 14px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
                             ${note.content || 'No content'}
                         </div>
                         
-                        <div class="note-edit-area" id="noteEdit_${note.index || index}">
-                            <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}">${note.content || ''}</textarea>
-                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                                <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes">
-                                    💾
+                        <div class="note-edit-area" id="noteEdit_${note.index || index}" style="display: none; margin: 10px 0;">
+                            <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}" style="width: 100%; min-height: 80px; padding: 10px; border: 2px solid #1e3c72; border-radius: 6px; font-family: inherit; font-size: 14px;">${note.content || ''}</textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                                    💾 Save
                                 </button>
-                                <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel">
-                                    ❌
+                                <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                                    ❌ Cancel
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="delete-confirmation" id="deleteConfirm_${note.index || index}">
-                            <p><strong>Delete this note?</strong></p>
-                            <p>This action cannot be undone.</p>
-                            <div class="delete-confirmation-buttons">
-                                <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})">
+                        <div class="delete-confirmation" id="deleteConfirm_${note.index || index}" style="display: none; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 10px 0;">
+                            <p style="margin: 0 0 10px 0;"><strong>Delete this note?</strong></p>
+                            <p style="margin: 0 0 10px 0;">This action cannot be undone.</p>
+                            <div class="delete-confirmation-buttons" style="display: flex; gap: 10px;">
+                                <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
                                     Delete
                                 </button>
-                                <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})">
+                                <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
                                     Cancel
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="note-meta">
+                        <div class="note-meta" style="font-size: 12px; color: #666; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef;">
                             Added by ${note.addedBy || note.coachName || 'Unknown'} on ${note.timestamp || note.dateAdded ? new Date(note.timestamp || note.dateAdded).toLocaleString() : 'Unknown date'}
-                            ${note.editLog ? `<div class="note-edit-log">${note.editLog}</div>` : ''}
+                            ${note.editLog ? `<div class="note-edit-log" style="font-size: 11px; color: #999; font-style: italic; margin-top: 5px;">${note.editLog}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -252,6 +252,19 @@
             container.innerHTML = notesHTML;
             console.log('HTML inserted into container');
             console.log('Container innerHTML length after insert:', container.innerHTML.length);
+            
+            // Check if notes are actually visible after insertion
+            setTimeout(() => {
+                const noteItems = container.querySelectorAll('.note-item');
+                console.log('Number of note items found after insertion:', noteItems.length);
+                if (noteItems.length > 0) {
+                    const firstNote = noteItems[0];
+                    const computedStyle = window.getComputedStyle(firstNote);
+                    console.log('First note visibility:', computedStyle.display);
+                    console.log('First note height:', computedStyle.height);
+                    console.log('First note position:', firstNote.getBoundingClientRect());
+                }
+            }, 100);
         }
 
         // Start editing a note (inline)
