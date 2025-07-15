@@ -4,7 +4,7 @@ const CONFIG = {
     COACH_PASSWORD: 'clontarf2025',
     
     // Your Google Apps Script Web App URL (update after deployment)
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxdHfeevnqkz1HV1fit7hMUzl4Kj_AlJLeKclRd_N-RAqMUKFLZTJDsTk-mjLBXnxJy/exec',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbx-Ubsc34pLiLGXWxu4TBKUjZrV8pTp5c_bTpwE8pnSko73yCFrCNxuL-7Fo1MzF1T5/exec',
     
     // Team settings
     CLUB_NAME: 'Clontarf Rugby',
