@@ -1,4 +1,1103 @@
-<!DOCTYPE html>
+<div class="notes-section">
+                        <h3>Player Notes</h3>
+                        <div id="notesContainer">
+                            <!-- Notes will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Availability Tab -->
+                <div class="tab-content" id="availabilityTab">
+                    <div class="availability-form">
+                        <h3 style="margin-bottom: 1rem;">Update Player Availability</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Current Status</label>
+                            <select id="playerStatus">
+                                <option value="Active">Active</option>
+                                <option value="Injured">Injured</option>
+                                <option value="Unavailable">Unavailable</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Unavailable Until (if applicable)</label>
+                            <input type="date" id="unavailableUntil">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Reason for Unavailability</label>
+                            <select id="unavailableReason">
+                                <option value="">Select reason...</option>
+                                <option value="Holiday">Holiday</option>
+                                <option value="Injury">Injury</option>
+                                <option value="Retired">Retired</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea id="availabilityNotes" placeholder="Additional details about availability..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="updateAvailability()">Update Availability</button>
+                    </div>
+
+                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="currentStatus">
+                        <!-- Current status will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Squad Management Tab -->
+                <div class="tab-content" id="squadTab">
+                    <div class="squad-management">
+                        <h3 style="margin-bottom: 1rem;">Squad Assignments</h3>
+                        
+                        <div class="squad-options">
+                            <div class="squad-checkbox">
+                                <input type="checkbox" id="squad4ths">
+                                <label for="squad4ths">4ths Squad</label>
+                            </div>
+                            <div class="squad-checkbox">
+                                <input type="checkbox" id="squad5ths">
+                                <label for="squad5ths">5ths Squad</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Position Notes</label>
+                            <textarea id="positionNotes" placeholder="Any notes about position preferences or capabilities..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="updateSquadAssignment()">Update Squad Assignment</button>
+                    </div>
+
+                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="leagueTracking">
+                        <!-- League tracking will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - REPLACE WITH YOUR WEB APP URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdHfeevnqkz1HV1fit7hMUzl4Kj_AlJLeKclRd_N-RAqMUKFLZTJDsTk-mjLBXnxJy/exec';
+        
+        let allPlayers = [];
+        let currentCoach = 'Luke Teeling';
+        let currentPlayerData = null;
+        let currentPlayerName = '';
+        let notesCache = {};
+        
+        // ============================================================================
+        // CORS-FRIENDLY API FUNCTIONS
+        // ============================================================================
+        
+        async function fetchData(action, params = {}) {
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', action);
+            
+            // Add any additional parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // Use GET requests for all operations to avoid CORS issues
+        async function postData(action, data) {
+            console.log('Converting POST to GET for CORS compatibility');
+            
+            const params = {
+                action: action,
+                ...data,
+                coachName: currentCoach,
+                coachEmail: 'luketeeling@gmail.com'
+            };
+
+            try {
+                const result = await fetchData(action, params);
+                console.log('GET request result:', result);
+                return result;
+            } catch (error) {
+                console.error('GET request error:', error);
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // ENHANCED NOTES FUNCTIONS
+        // ============================================================================
+        
+        // Load and display notes for a player
+        async function loadPlayerNotes(playerName) {
+            try {
+                currentPlayerName = playerName;
+                
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getPlayerNotes',
+                        playerName: playerName
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    notesCache[playerName] = result.data;
+                    displayNotes(result.data);
+                } else {
+                    console.error('Error loading notes:', result.error);
+                    showError('Error loading notes');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error loading notes');
+            }
+        }
+
+        // Display notes in the UI
+        function displayNotes(notes) {
+            const container = document.getElementById('notesContainer');
+            
+            if (!notes || notes.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-style: italic;">No notes yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = notes.map((note, index) => `
+                <div class="note-item" data-note-index="${note.index}">
+                    <div class="note-header">
+                        <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
+                        <div class="note-actions">
+                            <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index})" title="Edit note">
+                                ✏️
+                            </button>
+                            <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index})" title="Delete note">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="note-content" id="noteContent_${note.index}">
+                        ${note.content}
+                    </div>
+                    
+                    <div class="note-edit-area" id="noteEdit_${note.index}">
+                        <textarea class="note-edit-textarea" id="noteTextarea_${note.index}">${note.content}</textarea>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index})" title="Save changes">
+                                💾
+                            </button>
+                            <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index})" title="Cancel">
+                                ❌
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="delete-confirmation" id="deleteConfirm_${note.index}">
+                        <p><strong>Delete this note?</strong></p>
+                        <p>This action cannot be undone.</p>
+                        <div class="delete-confirmation-buttons">
+                            <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index})">
+                                Delete
+                            </button>
+                            <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index})">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="note-meta">
+                        Added by ${note.addedBy} on ${new Date(note.timestamp).toLocaleString()}
+                        ${note.editLog ? `<div class="note-edit-log">${note.editLog}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Start editing a note (inline)
+        function startEditNote(noteIndex) {
+            const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
+            const editDiv = document.getElementById(`noteEdit_${noteIndex}`);
+            
+            // Hide content, show edit area
+            contentDiv.style.display = 'none';
+            editDiv.classList.add('active');
+            
+            // Focus on textarea
+            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+
+        // Cancel editing
+        function cancelEditNote(noteIndex) {
+            const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
+            const editDiv = document.getElementById(`noteEdit_${noteIndex}`);
+            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
+            
+            // Reset textarea to original content
+            const originalNote = notesCache[currentPlayerName].find(note => note.index === noteIndex);
+            if (originalNote) {
+                textarea.value = originalNote.content;
+            }
+            
+            // Show content, hide edit area
+            contentDiv.style.display = 'block';
+            editDiv.classList.remove('active');
+        }
+
+        // Save edited note
+        async function saveEditNote(noteIndex) {
+            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
+            const newContent = textarea.value.trim();
+            
+            if (!newContent) {
+                showError('Note content cannot be empty');
+                return;
+            }
+            
+            const noteItem = document.querySelector(`[data-note-index="${noteIndex}"]`);
+            noteItem.classList.add('note-loading');
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'editPlayerNote',
+                        playerName: currentPlayerName,
+                        noteIndex: noteIndex,
+                        newContent: newContent,
+                        coachName: currentCoach,
+                        coachEmail: 'luketeeling@gmail.com'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update content display
+                    const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
+                    contentDiv.textContent = newContent;
+                    
+                    // Update cache
+                    const noteInCache = notesCache[currentPlayerName].find(note => note.index === noteIndex);
+                    if (noteInCache) {
+                        noteInCache.content = newContent;
+                    }
+                    
+                    // Hide edit area, show content
+                    cancelEditNote(noteIndex);
+                    
+                    showSuccess('Note updated successfully');
+                    
+                    // Reload notes to get updated edit log
+                    setTimeout(() => loadPlayerNotes(currentPlayerName), 500);
+                    
+                } else {
+                    console.error('Error updating note:', result.error);
+                    showError('Error updating note');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error updating note');
+            } finally {
+                noteItem.classList.remove('note-loading');
+            }
+        }
+
+        // Start delete confirmation
+        function startDeleteNote(noteIndex) {
+            const deleteConfirm = document.getElementById(`deleteConfirm_${noteIndex}`);
+            deleteConfirm.classList.add('active');
+        }
+
+        // Cancel delete
+        function cancelDeleteNote(noteIndex) {
+            const deleteConfirm = document.getElementById(`deleteConfirm_${noteIndex}`);
+            deleteConfirm.classList.remove('active');
+        }
+
+        // Confirm and execute delete
+        async function confirmDeleteNote(noteIndex) {
+            const noteItem = document.querySelector(`[data-note-index="${noteIndex}"]`);
+            noteItem.classList.add('note-loading');
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'deletePlayerNote',
+                        playerName: currentPlayerName,
+                        noteIndex: noteIndex,
+                        coachName: currentCoach,
+                        coachEmail: 'luketeeling@gmail.com'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Remove from cache
+                    notesCache[currentPlayerName] = notesCache[currentPlayerName].filter(note => note.index !== noteIndex);
+                    
+                    // Remove from DOM with animation
+                    noteItem.style.opacity = '0';
+                    noteItem.style.transform = 'translateX(-20px)';
+                    
+                    setTimeout(() => {
+                        noteItem.remove();
+                        showSuccess('Note deleted successfully');
+                        
+                        // Reload notes to refresh indices
+                        loadPlayerNotes(currentPlayerName);
+                    }, 300);
+                    
+                } else {
+                    console.error('Error deleting note:', result.error);
+                    showError('Error deleting note');
+                    noteItem.classList.remove('note-loading');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error deleting note');
+                noteItem.classList.remove('note-loading');
+            }
+        }
+
+        // Function to open player modal with notes tab pre-selected (called from Recent Activity)
+        function openPlayerNotes(playerName) {
+            // First open the player modal
+            openPlayerModal(playerName, 'notes');
+        }
+
+        // ============================================================================
+        // AUTHENTICATION & INITIALIZATION
+        // ============================================================================
+        
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            if (!sessionStorage.getItem('authenticated')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            loadData();
+            loadActivityLog();
+        });
+        
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            window.location.href = 'index.html';
+        }
+        
+        // ============================================================================
+        // ACTIVITY LOG FUNCTIONS
+        // ============================================================================
+        
+        async function loadActivityLog() {
+            try {
+                const data = await fetchData('getActivityLog');
+                
+                if (data.success) {
+                    displayActivityLog(data.data);
+                } else {
+                    console.error('Failed to load activity log:', data.error);
+                    displayActivityLog([]); // Show empty state
+                }
+            } catch (error) {
+                console.error('Error loading activity log:', error);
+                displayActivityLog([]); // Show empty state
+            }
+        }
+        
+        function displayActivityLog(activities) {
+            const activityFeed = document.getElementById('activityFeed');
+            
+            if (activities.length === 0) {
+                activityFeed.innerHTML = '<div class="activity-loading">No recent activity found.</div>';
+                return;
+            }
+            
+            const activityHtml = activities.map(activity => {
+                const timeAgo = getTimeAgo(new Date(activity.timestamp));
+                let message = activity.message;
+                
+                // If it's a note-related activity, make the player name clickable
+                if (activity.type === 'note' && activity.playerName) {
+                    message = message.replace(
+                        activity.playerName, 
+                        `<a href="#" class="activity-player-name" onclick="openPlayerNotes('${activity.playerName}'); return false;">${activity.playerName}</a>`
+                    );
+                }
+                
+                return `
+                    <div class="activity-item" data-type="${activity.type}">
+                        <div class="activity-icon ${activity.type}">
+                            ${getActivityIcon(activity.type)}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-message">${message}</div>
+                            <div class="activity-meta">
+                                <span class="activity-time">${timeAgo}</span>
+                                <span>by ${activity.coachName}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            activityFeed.innerHTML = activityHtml;
+        }
+        
+        function getActivityIcon(type) {
+            const icons = {
+                'note': '📝',
+                'status': '🔄',
+                'squad': '👥',
+                'registration': '✅'
+            };
+            return icons[type] || '📋';
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        function filterActivity() {
+            const filterValue = document.getElementById('activityFilter').value;
+            const activityItems = document.querySelectorAll('.activity-item');
+            
+            activityItems.forEach(item => {
+                if (!filterValue || item.dataset.type === filterValue) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        function logActivity(type, message, playerName = null) {
+            // This will be called when actions are performed
+            // For now, we'll just refresh the activity log
+            setTimeout(() => {
+                loadActivityLog();
+            }, 1000);
+        }
+        
+        // ============================================================================
+        // DATA LOADING FUNCTIONS
+        // ============================================================================
+        
+        async function loadData() {
+            try {
+                showLoading(true);
+                
+                // Load stats
+                const statsData = await fetchData('getTeamStats');
+                
+                if (statsData.success) {
+                    displayStats(statsData.data);
+                }
+                
+                // Load players
+                const playersData = await fetchData('getAllPlayers');
+                
+                if (playersData.success) {
+                    allPlayers = playersData.data;
+                    displayPlayers(allPlayers);
+                    showLoading(false);
+                } else {
+                    showError('Failed to load players: ' + playersData.error);
+                }
+                
+            } catch (error) {
+                showError('Connection error: ' + error.message);
+            }
+        }
+        
+        async function loadPlayerDetails(playerName) {
+            try {
+                const data = await fetchData('getPlayerDetails', { playerName: playerName });
+                
+                if (data.success) {
+                    currentPlayerData = data.data;
+                    populatePlayerModal(data.data);
+                    await loadPlayerNotes(playerName);
+                } else {
+                    console.error('Failed to load player details:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading player details:', error);
+            }
+        }
+        
+        // ============================================================================
+        // DISPLAY FUNCTIONS
+        // ============================================================================
+        
+        function displayStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Players</h3>
+                    <div class="value">${stats.totalPlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Players</h3>
+                    <div class="value">${stats.activePlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>4ths Squad</h3>
+                    <div class="value">${stats.fourthsPlayers}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>5ths Squad</h3>
+                    <div class="value">${stats.fifthsPlayers}</div>
+                </div>
+            `;
+        }
+        
+        function displayPlayers(players) {
+            const tbody = document.querySelector('#playerTable tbody');
+            
+            tbody.innerHTML = players.map(player => {
+                const squadTags = player['Squad Tags'] || '';
+                let squadBadges = '';
+                
+                if (squadTags.includes('4ths')) {
+                    squadBadges += '<span class="team-badge fourths">4ths</span>';
+                }
+                if (squadTags.includes('5ths')) {
+                    squadBadges += '<span class="team-badge fifths">5ths</span>';
+                }
+                if (!squadBadges) {
+                    squadBadges = '<span style="color: #999; font-size: 0.75rem;">Unassigned</span>';
+                }
+                
+                const status = player['Status'] || 'Active';
+                const statusClass = status.toLowerCase().replace(' ', '');
+                const playerName = `${player['First Name']} ${player['Last Name']}`;
+                
+                // Format availability info
+                let availabilityInfo = '';
+                if (status !== 'Active' && player['Unavailable Until']) {
+                    const returnDate = new Date(player['Unavailable Until']).toLocaleDateString();
+                    const reason = player['Unavailable Reason'] || '';
+                    availabilityInfo = `<div class="availability-info">${reason} until: ${returnDate}</div>`;
+                }
+                
+                // Format notes indicator
+                const notesCount = player['Notes Count'] || 0;
+                let notesIndicator = '';
+                if (notesCount > 0) {
+                    notesIndicator = `<span class="notes-indicator" onclick="openPlayerModal('${playerName}', 'notes')">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
+                } else {
+                    notesIndicator = '<span style="color: #999; font-size: 0.75rem;">No notes</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>
+                            <a href="#" class="player-name" onclick="openPlayerModal('${playerName}'); return false;">${playerName}</a>
+                        </td>
+                        <td>${squadBadges}</td>
+                        <td>${player['Positions'] || ''}</td>
+                        <td>
+                            <div>${player['Phone'] || ''}</div>
+                            <div style="color: #666; font-size: 0.75rem;">${player['Email'] || ''}</div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${status}</span>
+                            ${availabilityInfo}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                4ths: ${player['4ths All Games'] || 0} games (${player['4ths League Games'] || 0} league)
+                                <br>5ths: ${player['5ths All Games'] || 0} games
+                            </div>
+                        </td>
+                        <td>${notesIndicator}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('playerTable').style.display = 'table';
+        }
+        
+        function populatePlayerModal(playerData) {
+            const playerName = `${playerData['First Name']} ${playerData['Last Name']}`;
+            document.getElementById('modalPlayerName').textContent = playerName;
+            
+            // Update player summary
+            const squadTags = playerData['Squad Tags'] || '';
+            let squadBadges = '';
+            if (squadTags.includes('4ths')) {
+                squadBadges += '<span class="team-badge fourths">4ths</span>';
+            }
+            if (squadTags.includes('5ths')) {
+                squadBadges += '<span class="team-badge fifths">5ths</span>';
+            }
+            
+            const status = playerData['Status'] || 'Active';
+            const statusClass = status.toLowerCase().replace(' ', '');
+            
+            document.getElementById('playerSummary').innerHTML = `
+                ${squadBadges}
+                <span class="status-badge ${statusClass}">${status}</span>
+                <span style="opacity: 0.8;">Positions: ${playerData['Positions'] || 'None specified'}</span>
+            `;
+            
+            // Update form fields with real data
+            document.getElementById('playerStatus').value = status;
+            
+            if (playerData['Unavailable Until']) {
+                const date = new Date(playerData['Unavailable Until']);
+                document.getElementById('unavailableUntil').value = date.toISOString().split('T')[0];
+            } else {
+                document.getElementById('unavailableUntil').value = '';
+            }
+            
+            document.getElementById('unavailableReason').value = playerData['Unavailable Reason'] || '';
+            
+            // Squad checkboxes
+            document.getElementById('squad4ths').checked = squadTags.includes('4ths');
+            document.getElementById('squad5ths').checked = squadTags.includes('5ths');
+            
+            // Populate info tab with real data
+            const infoTab = document.getElementById('infoTab');
+            infoTab.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">${playerData['Email'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">${playerData['Phone'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">WhatsApp</div>
+                        <div class="info-value">${playerData['WhatsApp'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">IRFU Number</div>
+                        <div class="info-value">${playerData['IRFU Number'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Age</div>
+                        <div class="info-value">${playerData['Age'] || 'Unknown'} years</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Registration Date</div>
+                        <div class="info-value">${playerData['Registration Date'] ? new Date(playerData['Registration Date']).toLocaleDateString() : 'Unknown'}</div>
+                    </div>
+                </div>
+
+                <h3>Emergency Contact</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Name</div>
+                        <div class="info-value">${playerData['Emergency Contact'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Relationship</div>
+                        <div class="info-value">${playerData['Emergency Relationship'] || 'Not provided'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">${playerData['Emergency Phone'] || 'Not provided'}</div>
+                    </div>
+                </div>
+
+                <h3>Season Statistics</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">4ths Games</div>
+                        <div class="info-value">${playerData['4ths All Games'] || 0} total (${playerData['4ths League Games'] || 0} league)</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">5ths Games</div>
+                        <div class="info-value">${playerData['5ths All Games'] || 0} total</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">League Eligibility</div>
+                        <div class="info-value">Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths</div>
+                    </div>
+                </div>
+            `;
+            
+            // Update current status section
+            document.getElementById('currentStatus').innerHTML = `
+                <h4>Current Availability Status</h4>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Last Updated:</strong> ${playerData['Last Updated'] ? new Date(playerData['Last Updated']).toLocaleDateString() : 'Unknown'}</p>
+                ${playerData['Unavailable Until'] ? `<p><strong>Available Again:</strong> ${new Date(playerData['Unavailable Until']).toLocaleDateString()}</p>` : ''}
+            `;
+            
+            // Update league tracking
+            document.getElementById('leagueTracking').innerHTML = `
+                <h4>League Game Tracking</h4>
+                <p><strong>4ths League Games:</strong> ${playerData['4ths League Games'] || 0} of 4 played</p>
+                <p><strong>Status:</strong> Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths this season</p>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
+                    <strong>Note:</strong> Players can only play 4 league games per season for any single team.
+                </p>
+            `;
+        }
+        
+        function displayPlayerNotes(notes) {
+            const notesSection = document.querySelector('#notesTab .notes-section');
+            
+            if (notes.length === 0) {
+                notesSection.innerHTML = '<h3>Player Notes</h3><p style="color: #666; font-style: italic;">No notes on file for this player.</p>';
+                return;
+            }
+            
+            const notesHtml = notes.map(note => {
+                const date = new Date(note.dateAdded).toLocaleDateString();
+                return `
+                    <div class="note-item">
+                        <div class="note-header">
+                            <div class="note-meta">
+                                <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
+                                <span>${note.coachName} • ${date}</span>
+                            </div>
+                        </div>
+                        <div class="note-content">${note.content}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            notesSection.innerHTML = `<h3>Player Notes</h3>${notesHtml}`;
+        }
+        
+        // ============================================================================
+        // PLAYER MODAL FUNCTIONS
+        // ============================================================================
+        
+        async function openPlayerModal(playerName, activeTab = 'info') {
+            document.getElementById('playerModal').classList.add('active');
+            showTab(activeTab);
+            
+            await loadPlayerDetails(playerName);
+        }
+        
+        function closePlayerModal() {
+            document.getElementById('playerModal').classList.remove('active');
+            currentPlayerData = null;
+            currentPlayerName = '';
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+        
+        // ============================================================================
+        // UPDATE FUNCTIONS - NOW USING POST REQUESTS WITH CORS
+        // ============================================================================
+        
+        async function addNote() {
+            const category = document.getElementById('noteCategory').value;
+            const content = document.getElementById('noteContent').value.trim();
+            
+            if (!content) {
+                showError('Please enter a note');
+                return;
+            }
+            
+            if (!currentPlayerData) {
+                showError('No player selected');
+                return;
+            }
+            
+            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addPlayerNote',
+                        playerName: playerName,
+                        category: category,
+                        content: content,
+                        coachName: currentCoach,
+                        coachEmail: 'luketeeling@gmail.com'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('noteContent').value = '';
+                    await loadPlayerNotes(playerName);
+                    await loadData(); // Refresh to update notes count
+                    logActivity('note', `Added note to <strong>${playerName}</strong>`, playerName);
+                    showSuccess('Note added successfully!');
+                } else {
+                    showError('Error adding note: ' + result.error);
+                }
+            } catch (error) {
+                showError('Error adding note: ' + error.message);
+            }
+        }
+        
+        async function updateAvailability() {
+            const status = document.getElementById('playerStatus').value;
+            const until = document.getElementById('unavailableUntil').value;
+            const reason = document.getElementById('unavailableReason').value;
+            const notes = document.getElementById('availabilityNotes').value;
+            
+            if (!currentPlayerData) {
+                showError('No player selected');
+                return;
+            }
+            
+            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updatePlayerStatus',
+                        playerName: playerName,
+                        status: status,
+                        unavailableUntil: until,
+                        unavailableReason: reason,
+                        notes: notes,
+                        coachName: currentCoach,
+                        coachEmail: 'luketeeling@gmail.com'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadData(); // Refresh main table
+                    await loadPlayerDetails(playerName); // Refresh modal
+                    logActivity('status', `Updated <strong>${playerName}</strong> status to ${status}`, playerName);
+                    showSuccess('Availability updated successfully!');
+                } else {
+                    showError('Error updating availability: ' + result.error);
+                }
+            } catch (error) {
+                showError('Error updating availability: ' + error.message);
+            }
+        }
+        
+        async function updateSquadAssignment() {
+            const squad4ths = document.getElementById('squad4ths').checked;
+            const squad5ths = document.getElementById('squad5ths').checked;
+            
+            let squadTags = [];
+            if (squad4ths) squadTags.push('4ths');
+            if (squad5ths) squadTags.push('5ths');
+            
+            if (!currentPlayerData) {
+                showError('No player selected');
+                return;
+            }
+            
+            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateSquadTags',
+                        playerName: playerName,
+                        squadTags: squadTags.join(', '),
+                        coachName: currentCoach,
+                        coachEmail: 'luketeeling@gmail.com'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadData(); // Refresh main table
+                    logActivity('squad', `Updated <strong>${playerName}</strong> squad assignment to ${squadTags.join(', ') || 'Unassigned'}`, playerName);
+                    showSuccess('Squad assignment updated successfully!');
+                } else {
+                    showError('Error updating squad assignment: ' + result.error);
+                }
+            } catch (error) {
+                showError('Error updating squad assignment: ' + error.message);
+            }
+        }
+        
+        // ============================================================================
+        // FILTER FUNCTIONS
+        // ============================================================================
+        
+        function setupFilters() {
+            const searchBox = document.getElementById('searchBox');
+            const squadFilter = document.getElementById('squadFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const positionFilter = document.getElementById('positionFilter');
+            
+            function applyFilters() {
+                let filteredPlayers = allPlayers;
+                
+                // Search filter
+                const searchTerm = searchBox.value.toLowerCase();
+                if (searchTerm) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        `${player['First Name']} ${player['Last Name']}`.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                // Squad filter
+                const squadValue = squadFilter.value;
+                if (squadValue) {
+                    if (squadValue === 'unassigned') {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            !(player['Squad Tags'] || '').includes('4ths') && 
+                            !(player['Squad Tags'] || '').includes('5ths')
+                        );
+                    } else {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            (player['Squad Tags'] || '').includes(squadValue)
+                        );
+                    }
+                }
+                
+                // Status filter
+                const statusValue = statusFilter.value;
+                if (statusValue) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        (player['Status'] || 'Active') === statusValue
+                    );
+                }
+                
+                // Position filter
+                const positionValue = positionFilter.value;
+                if (positionValue) {
+                    filteredPlayers = filteredPlayers.filter(player => 
+                        (player['Positions'] || '').includes(positionValue)
+                    );
+                }
+                
+                displayPlayers(filteredPlayers);
+            }
+            
+            searchBox.addEventListener('input', applyFilters);
+            squadFilter.addEventListener('change', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+            positionFilter.addEventListener('change', applyFilters);
+        }
+        
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loadingMessage');
+            const playerTable = document.getElementById('playerTable');
+            
+            if (show) {
+                loadingDiv.style.display = 'block';
+                playerTable.style.display = 'none';
+            } else {
+                loadingDiv.style.display = 'none';
+                playerTable.style.display = 'table';
+            }
+        }
+        
+        function showError(message) {
+            hideMessages();
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(hideMessages, 5000);
+        }
+        
+        function showSuccess(message) {
+            hideMessages();
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(hideMessages, 3000);
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // ============================================================================
+        // EVENT LISTENERS
+        // ============================================================================
+        
+        // Initialize filters when data is loaded
+        setTimeout(setupFilters, 1000);
+        
+        // Close modal when clicking outside
+        document.getElementById('playerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayerModal();
+            }
+        });
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePlayerModal();
+            }
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -480,24 +1579,169 @@
             background: #d4d4d4;
         }
 
+        /* Enhanced Notes Styles */
         .note-item {
-            background: white;
-            border: 1px solid #e5e5e5;
+            background: #f8f9fa;
             border-radius: 8px;
             padding: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #1e3c72;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .note-item:hover {
+            background: #f0f1f3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .note-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 0.5rem;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .note-item:hover .note-actions {
+            opacity: 1;
+        }
+
+        .note-action-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #218838;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .save-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .note-content {
+            margin: 0.5rem 0;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .note-content.editing {
+            display: none;
+        }
+
+        .note-edit-area {
+            display: none;
+            margin: 0.5rem 0;
+        }
+
+        .note-edit-area.active {
+            display: block;
+        }
+
+        .note-edit-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.5rem;
+            border: 2px solid #1e3c72;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            resize: vertical;
         }
 
         .note-meta {
             font-size: 0.75rem;
             color: #666;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .note-edit-log {
+            font-size: 0.7rem;
+            color: #999;
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
+
+        .note-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .delete-confirmation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            display: none;
+        }
+
+        .delete-confirmation.active {
+            display: block;
+        }
+
+        .delete-confirmation-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .confirm-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .cancel-delete-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
         }
 
         .note-category {
@@ -522,9 +1766,18 @@
             color: #7b1fa2;
         }
 
-        .note-content {
-            color: #333;
-            line-height: 1.5;
+        /* Activity player name clickable styling */
+        .activity-player-name {
+            color: #1e3c72;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .activity-player-name:hover {
+            color: #2a5298;
+            text-decoration: underline;
         }
 
         /* Availability Section */
@@ -884,10 +2137,10 @@
             <div class="modal-body">
                 <!-- Tabs -->
                 <div class="modal-tabs">
-                    <button class="modal-tab active" onclick="showTab('info')">Basic Info</button>
-                    <button class="modal-tab" onclick="showTab('notes')">Notes</button>
-                    <button class="modal-tab" onclick="showTab('availability')">Availability</button>
-                    <button class="modal-tab" onclick="showTab('squad')">Squad Management</button>
+                    <button class="modal-tab active" onclick="showTab('info')" data-tab="info">Basic Info</button>
+                    <button class="modal-tab" onclick="showTab('notes')" data-tab="notes">Notes</button>
+                    <button class="modal-tab" onclick="showTab('availability')" data-tab="availability">Availability</button>
+                    <button class="modal-tab" onclick="showTab('squad')" data-tab="squad">Squad Management</button>
                 </div>
 
                 <!-- Basic Info Tab -->
@@ -918,818 +2171,7 @@
 
                     <div class="notes-section">
                         <h3>Player Notes</h3>
-                        <!-- Notes will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Availability Tab -->
-                <div class="tab-content" id="availabilityTab">
-                    <div class="availability-form">
-                        <h3 style="margin-bottom: 1rem;">Update Player Availability</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Current Status</label>
-                            <select id="playerStatus">
-                                <option value="Active">Active</option>
-                                <option value="Injured">Injured</option>
-                                <option value="Unavailable">Unavailable</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Unavailable Until (if applicable)</label>
-                            <input type="date" id="unavailableUntil">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Reason for Unavailability</label>
-                            <select id="unavailableReason">
-                                <option value="">Select reason...</option>
-                                <option value="Holiday">Holiday</option>
-                                <option value="Injury">Injury</option>
-                                <option value="Retired">Retired</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Additional Notes</label>
-                            <textarea id="availabilityNotes" placeholder="Additional details about availability..."></textarea>
-                        </div>
-
-                        <button class="btn btn-primary" onclick="updateAvailability()">Update Availability</button>
-                    </div>
-
-                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="currentStatus">
-                        <!-- Current status will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Squad Management Tab -->
-                <div class="tab-content" id="squadTab">
-                    <div class="squad-management">
-                        <h3 style="margin-bottom: 1rem;">Squad Assignments</h3>
-                        
-                        <div class="squad-options">
-                            <div class="squad-checkbox">
-                                <input type="checkbox" id="squad4ths">
-                                <label for="squad4ths">4ths Squad</label>
-                            </div>
-                            <div class="squad-checkbox">
-                                <input type="checkbox" id="squad5ths">
-                                <label for="squad5ths">5ths Squad</label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Position Notes</label>
-                            <textarea id="positionNotes" placeholder="Any notes about position preferences or capabilities..."></textarea>
-                        </div>
-
-                        <button class="btn btn-primary" onclick="updateSquadAssignment()">Update Squad Assignment</button>
-                    </div>
-
-                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="leagueTracking">
-                        <!-- League tracking will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Configuration - REPLACE WITH YOUR WEB APP URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdHfeevnqkz1HV1fit7hMUzl4Kj_AlJLeKclRd_N-RAqMUKFLZTJDsTk-mjLBXnxJy/exec';
-        
-        let allPlayers = [];
-        let currentCoach = 'Luke Teeling';
-        let currentPlayerData = null;
-        
-        // ============================================================================
-        // CORS-FRIENDLY API FUNCTIONS
-        // ============================================================================
-        
-        async function fetchData(action, params = {}) {
-            const url = new URL(WEB_APP_URL);
-            url.searchParams.append('action', action);
-            
-            // Add any additional parameters
-            Object.keys(params).forEach(key => {
-                if (params[key] !== null && params[key] !== undefined) {
-                    url.searchParams.append(key, params[key]);
-                }
-            });
-
-            try {
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                throw error;
-            }
-        }
-
-        // Use GET requests for all operations to avoid CORS issues
-        async function postData(action, data) {
-            console.log('Converting POST to GET for CORS compatibility');
-            
-            const params = {
-                action: action,
-                ...data,
-                coachName: currentCoach,
-                coachEmail: 'luketeeling@gmail.com'
-            };
-
-            try {
-                const result = await fetchData(action, params);
-                console.log('GET request result:', result);
-                return result;
-            } catch (error) {
-                console.error('GET request error:', error);
-                throw error;
-            }
-        }
-
-        // ============================================================================
-        // AUTHENTICATION & INITIALIZATION
-        // ============================================================================
-        
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            if (!sessionStorage.getItem('authenticated')) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            loadData();
-            loadActivityLog();
-        });
-        
-        function logout() {
-            sessionStorage.removeItem('authenticated');
-            window.location.href = 'index.html';
-        }
-        
-        // ============================================================================
-        // ACTIVITY LOG FUNCTIONS
-        // ============================================================================
-        
-        async function loadActivityLog() {
-            try {
-                const data = await fetchData('getActivityLog');
-                
-                if (data.success) {
-                    displayActivityLog(data.data);
-                } else {
-                    console.error('Failed to load activity log:', data.error);
-                    displayActivityLog([]); // Show empty state
-                }
-            } catch (error) {
-                console.error('Error loading activity log:', error);
-                displayActivityLog([]); // Show empty state
-            }
-        }
-        
-        function displayActivityLog(activities) {
-            const activityFeed = document.getElementById('activityFeed');
-            
-            if (activities.length === 0) {
-                activityFeed.innerHTML = '<div class="activity-loading">No recent activity found.</div>';
-                return;
-            }
-            
-            const activityHtml = activities.map(activity => {
-                const timeAgo = getTimeAgo(new Date(activity.timestamp));
-                
-                return `
-                    <div class="activity-item" data-type="${activity.type}">
-                        <div class="activity-icon ${activity.type}">
-                            ${getActivityIcon(activity.type)}
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-message">${activity.message}</div>
-                            <div class="activity-meta">
-                                <span class="activity-time">${timeAgo}</span>
-                                <span>by ${activity.coachName}</span>
-                                ${activity.playerName ? `<span>• ${activity.playerName}</span>` : ''}
-                            </div>
+                        <div id="notesContainer">
+                            <!-- Notes will be loaded here -->
                         </div>
                     </div>
-                `;
-            }).join('');
-            
-            activityFeed.innerHTML = activityHtml;
-        }
-        
-        function getActivityIcon(type) {
-            const icons = {
-                'note': '📝',
-                'status': '🔄',
-                'squad': '👥',
-                'registration': '✅'
-            };
-            return icons[type] || '📋';
-        }
-        
-        function getTimeAgo(date) {
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
-            return date.toLocaleDateString();
-        }
-        
-        function filterActivity() {
-            const filterValue = document.getElementById('activityFilter').value;
-            const activityItems = document.querySelectorAll('.activity-item');
-            
-            activityItems.forEach(item => {
-                if (!filterValue || item.dataset.type === filterValue) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-        
-        function logActivity(type, message, playerName = null) {
-            // This will be called when actions are performed
-            // For now, we'll just refresh the activity log
-            setTimeout(() => {
-                loadActivityLog();
-            }, 1000);
-        }
-        
-        // ============================================================================
-        // DATA LOADING FUNCTIONS
-        // ============================================================================
-        
-        async function loadData() {
-            try {
-                showLoading(true);
-                
-                // Load stats
-                const statsData = await fetchData('getTeamStats');
-                
-                if (statsData.success) {
-                    displayStats(statsData.data);
-                }
-                
-                // Load players
-                const playersData = await fetchData('getAllPlayers');
-                
-                if (playersData.success) {
-                    allPlayers = playersData.data;
-                    displayPlayers(allPlayers);
-                    showLoading(false);
-                } else {
-                    showError('Failed to load players: ' + playersData.error);
-                }
-                
-            } catch (error) {
-                showError('Connection error: ' + error.message);
-            }
-        }
-        
-        async function loadPlayerDetails(playerName) {
-            try {
-                const data = await fetchData('getPlayerDetails', { playerName: playerName });
-                
-                if (data.success) {
-                    currentPlayerData = data.data;
-                    populatePlayerModal(data.data);
-                    await loadPlayerNotes(playerName);
-                } else {
-                    console.error('Failed to load player details:', data.error);
-                }
-            } catch (error) {
-                console.error('Error loading player details:', error);
-            }
-        }
-        
-        async function loadPlayerNotes(playerName) {
-            try {
-                const data = await fetchData('getPlayerNotes', { playerName: playerName });
-                
-                if (data.success) {
-                    displayPlayerNotes(data.data);
-                } else {
-                    console.error('Failed to load player notes:', data.error);
-                }
-            } catch (error) {
-                console.error('Error loading player notes:', error);
-            }
-        }
-        
-        // ============================================================================
-        // DISPLAY FUNCTIONS
-        // ============================================================================
-        
-        function displayStats(stats) {
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <h3>Total Players</h3>
-                    <div class="value">${stats.totalPlayers}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Players</h3>
-                    <div class="value">${stats.activePlayers}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>4ths Squad</h3>
-                    <div class="value">${stats.fourthsPlayers}</div>
-                </div>
-                <div class="stat-card">
-                    <h3>5ths Squad</h3>
-                    <div class="value">${stats.fifthsPlayers}</div>
-                </div>
-            `;
-        }
-        
-        function displayPlayers(players) {
-            const tbody = document.querySelector('#playerTable tbody');
-            
-            tbody.innerHTML = players.map(player => {
-                const squadTags = player['Squad Tags'] || '';
-                let squadBadges = '';
-                
-                if (squadTags.includes('4ths')) {
-                    squadBadges += '<span class="team-badge fourths">4ths</span>';
-                }
-                if (squadTags.includes('5ths')) {
-                    squadBadges += '<span class="team-badge fifths">5ths</span>';
-                }
-                if (!squadBadges) {
-                    squadBadges = '<span style="color: #999; font-size: 0.75rem;">Unassigned</span>';
-                }
-                
-                const status = player['Status'] || 'Active';
-                const statusClass = status.toLowerCase().replace(' ', '');
-                const playerName = `${player['First Name']} ${player['Last Name']}`;
-                
-                // Format availability info
-                let availabilityInfo = '';
-                if (status !== 'Active' && player['Unavailable Until']) {
-                    const returnDate = new Date(player['Unavailable Until']).toLocaleDateString();
-                    const reason = player['Unavailable Reason'] || '';
-                    availabilityInfo = `<div class="availability-info">${reason} until: ${returnDate}</div>`;
-                }
-                
-                // Format notes indicator
-                const notesCount = player['Notes Count'] || 0;
-                let notesIndicator = '';
-                if (notesCount > 0) {
-                    notesIndicator = `<span class="notes-indicator" onclick="openPlayerModal('${playerName}', 'notes')">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
-                } else {
-                    notesIndicator = '<span style="color: #999; font-size: 0.75rem;">No notes</span>';
-                }
-                
-                return `
-                    <tr>
-                        <td>
-                            <a href="#" class="player-name" onclick="openPlayerModal('${playerName}'); return false;">${playerName}</a>
-                        </td>
-                        <td>${squadBadges}</td>
-                        <td>${player['Positions'] || ''}</td>
-                        <td>
-                            <div>${player['Phone'] || ''}</div>
-                            <div style="color: #666; font-size: 0.75rem;">${player['Email'] || ''}</div>
-                        </td>
-                        <td>
-                            <span class="status-badge ${statusClass}">${status}</span>
-                            ${availabilityInfo}
-                        </td>
-                        <td>
-                            <div style="font-size: 0.75rem;">
-                                4ths: ${player['4ths All Games'] || 0} games (${player['4ths League Games'] || 0} league)
-                                <br>5ths: ${player['5ths All Games'] || 0} games
-                            </div>
-                        </td>
-                        <td>${notesIndicator}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-            document.getElementById('playerTable').style.display = 'table';
-        }
-        
-        function populatePlayerModal(playerData) {
-            const playerName = `${playerData['First Name']} ${playerData['Last Name']}`;
-            document.getElementById('modalPlayerName').textContent = playerName;
-            
-            // Update player summary
-            const squadTags = playerData['Squad Tags'] || '';
-            let squadBadges = '';
-            if (squadTags.includes('4ths')) {
-                squadBadges += '<span class="team-badge fourths">4ths</span>';
-            }
-            if (squadTags.includes('5ths')) {
-                squadBadges += '<span class="team-badge fifths">5ths</span>';
-            }
-            
-            const status = playerData['Status'] || 'Active';
-            const statusClass = status.toLowerCase().replace(' ', '');
-            
-            document.getElementById('playerSummary').innerHTML = `
-                ${squadBadges}
-                <span class="status-badge ${statusClass}">${status}</span>
-                <span style="opacity: 0.8;">Positions: ${playerData['Positions'] || 'None specified'}</span>
-            `;
-            
-            // Update form fields with real data
-            document.getElementById('playerStatus').value = status;
-            
-            if (playerData['Unavailable Until']) {
-                const date = new Date(playerData['Unavailable Until']);
-                document.getElementById('unavailableUntil').value = date.toISOString().split('T')[0];
-            } else {
-                document.getElementById('unavailableUntil').value = '';
-            }
-            
-            document.getElementById('unavailableReason').value = playerData['Unavailable Reason'] || '';
-            
-            // Squad checkboxes
-            document.getElementById('squad4ths').checked = squadTags.includes('4ths');
-            document.getElementById('squad5ths').checked = squadTags.includes('5ths');
-            
-            // Populate info tab with real data
-            const infoTab = document.getElementById('infoTab');
-            infoTab.innerHTML = `
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Email</div>
-                        <div class="info-value">${playerData['Email'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">${playerData['Phone'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">WhatsApp</div>
-                        <div class="info-value">${playerData['WhatsApp'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">IRFU Number</div>
-                        <div class="info-value">${playerData['IRFU Number'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Age</div>
-                        <div class="info-value">${playerData['Age'] || 'Unknown'} years</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Registration Date</div>
-                        <div class="info-value">${playerData['Registration Date'] ? new Date(playerData['Registration Date']).toLocaleDateString() : 'Unknown'}</div>
-                    </div>
-                </div>
-
-                <h3>Emergency Contact</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Name</div>
-                        <div class="info-value">${playerData['Emergency Contact'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Relationship</div>
-                        <div class="info-value">${playerData['Emergency Relationship'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">${playerData['Emergency Phone'] || 'Not provided'}</div>
-                    </div>
-                </div>
-
-                <h3>Season Statistics</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">4ths Games</div>
-                        <div class="info-value">${playerData['4ths All Games'] || 0} total (${playerData['4ths League Games'] || 0} league)</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">5ths Games</div>
-                        <div class="info-value">${playerData['5ths All Games'] || 0} total</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">League Eligibility</div>
-                        <div class="info-value">Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths</div>
-                    </div>
-                </div>
-            `;
-            
-            // Update current status section
-            document.getElementById('currentStatus').innerHTML = `
-                <h4>Current Availability Status</h4>
-                <p><strong>Status:</strong> ${status}</p>
-                <p><strong>Last Updated:</strong> ${playerData['Last Updated'] ? new Date(playerData['Last Updated']).toLocaleDateString() : 'Unknown'}</p>
-                ${playerData['Unavailable Until'] ? `<p><strong>Available Again:</strong> ${new Date(playerData['Unavailable Until']).toLocaleDateString()}</p>` : ''}
-            `;
-            
-            // Update league tracking
-            document.getElementById('leagueTracking').innerHTML = `
-                <h4>League Game Tracking</h4>
-                <p><strong>4ths League Games:</strong> ${playerData['4ths League Games'] || 0} of 4 played</p>
-                <p><strong>Status:</strong> Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths this season</p>
-                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
-                    <strong>Note:</strong> Players can only play 4 league games per season for any single team.
-                </p>
-            `;
-        }
-        
-        function displayPlayerNotes(notes) {
-            const notesSection = document.querySelector('#notesTab .notes-section');
-            
-            if (notes.length === 0) {
-                notesSection.innerHTML = '<h3>Player Notes</h3><p style="color: #666; font-style: italic;">No notes on file for this player.</p>';
-                return;
-            }
-            
-            const notesHtml = notes.map(note => {
-                const date = new Date(note.dateAdded).toLocaleDateString();
-                return `
-                    <div class="note-item">
-                        <div class="note-header">
-                            <div class="note-meta">
-                                <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
-                                <span>${note.coachName} • ${date}</span>
-                            </div>
-                        </div>
-                        <div class="note-content">${note.content}</div>
-                    </div>
-                `;
-            }).join('');
-            
-            notesSection.innerHTML = `<h3>Player Notes</h3>${notesHtml}`;
-        }
-        
-        // ============================================================================
-        // PLAYER MODAL FUNCTIONS
-        // ============================================================================
-        
-        async function openPlayerModal(playerName, activeTab = 'info') {
-            document.getElementById('playerModal').classList.add('active');
-            showTab(activeTab);
-            
-            await loadPlayerDetails(playerName);
-        }
-        
-        function closePlayerModal() {
-            document.getElementById('playerModal').classList.remove('active');
-            currentPlayerData = null;
-        }
-        
-        function showTab(tabName) {
-            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        }
-        
-        // ============================================================================
-        // UPDATE FUNCTIONS - NOW USING GET REQUESTS
-        // ============================================================================
-        
-        async function addNote() {
-            const category = document.getElementById('noteCategory').value;
-            const content = document.getElementById('noteContent').value.trim();
-            
-            if (!content) {
-                showError('Please enter a note');
-                return;
-            }
-            
-            if (!currentPlayerData) {
-                showError('No player selected');
-                return;
-            }
-            
-            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-            
-            try {
-                const result = await fetchData('addPlayerNote', {
-                    playerName: playerName,
-                    category: category,
-                    content: content,
-                    coachName: currentCoach,
-                    coachEmail: 'luketeeling@gmail.com'
-                });
-                
-                if (result.success) {
-                    document.getElementById('noteContent').value = '';
-                    await loadPlayerNotes(playerName);
-                    await loadData(); // Refresh to update notes count
-                    logActivity('note', `Added note to <strong>${playerName}</strong>`, playerName);
-                    showSuccess('Note added successfully!');
-                } else {
-                    showError('Error adding note: ' + result.error);
-                }
-            } catch (error) {
-                showError('Error adding note: ' + error.message);
-            }
-        }
-        
-        async function updateAvailability() {
-            const status = document.getElementById('playerStatus').value;
-            const until = document.getElementById('unavailableUntil').value;
-            const reason = document.getElementById('unavailableReason').value;
-            const notes = document.getElementById('availabilityNotes').value;
-            
-            if (!currentPlayerData) {
-                showError('No player selected');
-                return;
-            }
-            
-            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-            
-            try {
-                const result = await fetchData('updatePlayerStatus', {
-                    playerName: playerName,
-                    status: status,
-                    unavailableUntil: until,
-                    unavailableReason: reason,
-                    notes: notes,
-                    coachName: currentCoach,
-                    coachEmail: 'luketeeling@gmail.com'
-                });
-                
-                if (result.success) {
-                    await loadData(); // Refresh main table
-                    await loadPlayerDetails(playerName); // Refresh modal
-                    logActivity('status', `Updated <strong>${playerName}</strong> status to ${status}`, playerName);
-                    showSuccess('Availability updated successfully!');
-                } else {
-                    showError('Error updating availability: ' + result.error);
-                }
-            } catch (error) {
-                showError('Error updating availability: ' + error.message);
-            }
-        }
-        
-        async function updateSquadAssignment() {
-            const squad4ths = document.getElementById('squad4ths').checked;
-            const squad5ths = document.getElementById('squad5ths').checked;
-            
-            let squadTags = [];
-            if (squad4ths) squadTags.push('4ths');
-            if (squad5ths) squadTags.push('5ths');
-            
-            if (!currentPlayerData) {
-                showError('No player selected');
-                return;
-            }
-            
-            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-            
-            try {
-                const result = await fetchData('updateSquadTags', {
-                    playerName: playerName,
-                    squadTags: squadTags.join(', '),
-                    coachName: currentCoach,
-                    coachEmail: 'luketeeling@gmail.com'
-                });
-                
-                if (result.success) {
-                    await loadData(); // Refresh main table
-                    logActivity('squad', `Updated <strong>${playerName}</strong> squad assignment to ${squadTags.join(', ') || 'Unassigned'}`, playerName);
-                    showSuccess('Squad assignment updated successfully!');
-                } else {
-                    showError('Error updating squad assignment: ' + result.error);
-                }
-            } catch (error) {
-                showError('Error updating squad assignment: ' + error.message);
-            }
-        }
-        
-        // ============================================================================
-        // FILTER FUNCTIONS
-        // ============================================================================
-        
-        function setupFilters() {
-            const searchBox = document.getElementById('searchBox');
-            const squadFilter = document.getElementById('squadFilter');
-            const statusFilter = document.getElementById('statusFilter');
-            const positionFilter = document.getElementById('positionFilter');
-            
-            function applyFilters() {
-                let filteredPlayers = allPlayers;
-                
-                // Search filter
-                const searchTerm = searchBox.value.toLowerCase();
-                if (searchTerm) {
-                    filteredPlayers = filteredPlayers.filter(player => 
-                        `${player['First Name']} ${player['Last Name']}`.toLowerCase().includes(searchTerm)
-                    );
-                }
-                
-                // Squad filter
-                const squadValue = squadFilter.value;
-                if (squadValue) {
-                    if (squadValue === 'unassigned') {
-                        filteredPlayers = filteredPlayers.filter(player => 
-                            !(player['Squad Tags'] || '').includes('4ths') && 
-                            !(player['Squad Tags'] || '').includes('5ths')
-                        );
-                    } else {
-                        filteredPlayers = filteredPlayers.filter(player => 
-                            (player['Squad Tags'] || '').includes(squadValue)
-                        );
-                    }
-                }
-                
-                // Status filter
-                const statusValue = statusFilter.value;
-                if (statusValue) {
-                    filteredPlayers = filteredPlayers.filter(player => 
-                        (player['Status'] || 'Active') === statusValue
-                    );
-                }
-                
-                // Position filter
-                const positionValue = positionFilter.value;
-                if (positionValue) {
-                    filteredPlayers = filteredPlayers.filter(player => 
-                        (player['Positions'] || '').includes(positionValue)
-                    );
-                }
-                
-                displayPlayers(filteredPlayers);
-            }
-            
-            searchBox.addEventListener('input', applyFilters);
-            squadFilter.addEventListener('change', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-            positionFilter.addEventListener('change', applyFilters);
-        }
-        
-        // ============================================================================
-        // UTILITY FUNCTIONS
-        // ============================================================================
-        
-        function showLoading(show) {
-            const loadingDiv = document.getElementById('loadingMessage');
-            const playerTable = document.getElementById('playerTable');
-            
-            if (show) {
-                loadingDiv.style.display = 'block';
-                playerTable.style.display = 'none';
-            } else {
-                loadingDiv.style.display = 'none';
-                playerTable.style.display = 'table';
-            }
-        }
-        
-        function showError(message) {
-            hideMessages();
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(hideMessages, 5000);
-        }
-        
-        function showSuccess(message) {
-            hideMessages();
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            setTimeout(hideMessages, 3000);
-        }
-        
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-        
-        // ============================================================================
-        // EVENT LISTENERS
-        // ============================================================================
-        
-        // Initialize filters when data is loaded
-        setTimeout(setupFilters, 1000);
-        
-        // Close modal when clicking outside
-        document.getElementById('playerModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closePlayerModal();
-            }
-        });
-        
-        // ESC key to close modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePlayerModal();
-            }
-        });
-    </script>
-</body>
-</html>
