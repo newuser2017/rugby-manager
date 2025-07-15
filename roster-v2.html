@@ -561,8 +561,8 @@
                 if (data.success) {
                     currentPlayerData = data.data;
                     populatePlayerModal(data.data);
-                    // Load notes after modal is populated
-                    await loadPlayerNotes(playerName);
+                    // Don't load notes here - they'll be loaded when Notes tab is clicked
+                    console.log('Player details loaded successfully');
                 } else {
                     console.error('Failed to load player details:', data.error);
                     showError('Failed to load player details');
@@ -836,6 +836,13 @@
             
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Load notes when Notes tab is clicked
+            if (tabName === 'notes' && currentPlayerData) {
+                const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+                console.log('Notes tab activated - loading notes for:', playerName);
+                loadPlayerNotes(playerName);
+            }
         }
         
         // ============================================================================
