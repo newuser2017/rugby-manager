@@ -81,6 +81,49 @@
         </div>
     </div>
 
+    <!-- Responsive Notes Popup -->
+    <div class="notes-popup" id="notesPopup">
+        <div class="notes-popup-content">
+            <div class="notes-popup-header">
+                <h3 id="notesPopupTitle">Player Notes</h3>
+                <button class="notes-popup-close" onclick="closeNotesPopup()" aria-label="Close">&times;</button>
+            </div>
+            <div class="notes-popup-body">
+                <!-- Add Note Form -->
+                <div class="add-note-form">
+                    <h4>Add New Note</h4>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="popupNoteCategory">
+                            <option value="general">General</option>
+                            <option value="performance">Performance</option>
+                            <option value="medical">Medical/Injury</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Note Content</label>
+                        <textarea id="popupNoteContent" placeholder="Enter your note here..." rows="3"></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="addNoteBtn" onclick="addNoteFromPopup()">
+                        <span id="addNoteText">Add Note</span>
+                        <span id="addNoteSpinner" style="display: none;">Adding...</span>
+                    </button>
+                </div>
+                
+                <!-- Notes List -->
+                <div class="notes-list">
+                    <h4>Notes History</h4>
+                    <div id="popupNotesContainer">
+                        <div class="loading-notes">
+                            <div class="loading-spinner"></div>
+                            <div>Loading notes...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration - REPLACE WITH YOUR WEB APP URL
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdHfeevnqkz1HV1fit7hMUzl4Kj_AlJLeKclRd_N-RAqMUKFLZTJDsTk-mjLBXnxJy/exec';
@@ -142,185 +185,256 @@
         }
 
         // ============================================================================
-        // ENHANCED NOTES FUNCTIONS
+        // RESPONSIVE NOTES POPUP SYSTEM
         // ============================================================================
         
-        // Load and display notes for a player
-        async function loadPlayerNotes(playerName) {
+        let popupCurrentPlayer = null;
+        let isPopupLoading = false;
+        
+        // Open notes popup for a specific player
+        async function openNotesPopup(playerName) {
+            if (isPopupLoading) return; // Prevent multiple opens
+            
+            popupCurrentPlayer = playerName;
+            
+            // Open popup immediately with loading state
+            document.getElementById('notesPopup').classList.add('active');
+            document.getElementById('notesPopupTitle').textContent = `Notes for ${playerName}`;
+            
+            // Reset form to defaults
+            document.getElementById('popupNoteCategory').value = 'general';
+            document.getElementById('popupNoteContent').value = '';
+            
+            // Show loading state
+            showNotesLoading();
+            
+            // Load notes
+            await loadNotesForPopup(playerName);
+        }
+        
+        // Open notes popup from player modal
+        function openNotesFromModal() {
+            if (!currentPlayerData) {
+                alert('No player selected');
+                return;
+            }
+            
+            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+            openNotesPopup(playerName);
+            // Note: Modal stays open behind popup as requested
+        }
+        
+        // Close notes popup
+        function closeNotesPopup() {
+            document.getElementById('notesPopup').classList.remove('active');
+            popupCurrentPlayer = null;
+            isPopupLoading = false;
+        }
+        
+        // Show loading state in popup
+        function showNotesLoading() {
+            document.getElementById('popupNotesContainer').innerHTML = `
+                <div class="loading-notes">
+                    <div class="loading-spinner"></div>
+                    <div>Loading notes...</div>
+                </div>
+            `;
+        }
+        
+        // Load notes for the popup
+        async function loadNotesForPopup(playerName) {
             try {
-                console.log('Loading notes for:', playerName);
-                currentPlayerName = playerName;
+                isPopupLoading = true;
+                console.log('Loading notes for popup:', playerName);
                 
                 const result = await fetchData('getPlayerNotes', { playerName: playerName });
-                console.log('Notes result:', result);
                 
                 if (result.success) {
-                    notesCache[playerName] = result.data;
-                    displayNotes(result.data);
-                    console.log('Loaded', result.data.length, 'notes for', playerName);
+                    displayNotesInPopup(result.data);
+                    console.log(`Loaded ${result.data.length} notes for ${playerName}`);
                 } else {
                     console.error('Error loading notes:', result.error);
-                    displayNotes([]); // Show empty state
+                    showNotesError('Error loading notes');
                 }
             } catch (error) {
                 console.error('Error loading notes:', error);
-                displayNotes([]); // Show empty state
+                showNotesError('Network error loading notes');
+            } finally {
+                isPopupLoading = false;
             }
         }
-
-        // Display notes in the UI
-        function displayNotes(notes) {
-            const container = document.getElementById('notesContainer');
-            
-            console.log('displayNotes called with:', notes);
-            console.log('Notes container found:', !!container);
-            
-            if (!container) {
-                console.error('Notes container not found');
-                return;
-            }
-            
-            // Check if notes tab is visible
-            const notesTab = document.getElementById('notesTab');
-            console.log('Notes tab found:', !!notesTab);
-            console.log('Notes tab visibility:', notesTab ? window.getComputedStyle(notesTab).display : 'N/A');
+        
+        // Show error state in popup
+        function showNotesError(message) {
+            document.getElementById('popupNotesContainer').innerHTML = `
+                <div class="empty-notes">
+                    <div style="color: #dc3545; margin-bottom: 1rem;">⚠️</div>
+                    <div>${message}</div>
+                    <button class="btn btn-primary" onclick="loadNotesForPopup(popupCurrentPlayer)" style="margin-top: 1rem;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Display notes in the popup
+        function displayNotesInPopup(notes) {
+            const container = document.getElementById('popupNotesContainer');
             
             if (!notes || notes.length === 0) {
-                console.log('No notes to display');
-                container.innerHTML = '<p style="color: #666; font-style: italic;">No notes yet.</p>';
-                return;
-            }
-            
-            console.log('Displaying', notes.length, 'notes');
-            console.log('First note structure:', notes[0]);
-            
-            const notesHTML = notes.map((note, index) => {
-                console.log('Processing note:', note);
-                
-                return `
-                    <div class="note-item" data-note-index="${note.index || index}" style="background: #fff; border: 2px solid #1e3c72; margin: 10px 0; padding: 15px; border-radius: 8px; min-height: 100px;">
-                        <div class="note-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span class="note-category ${note.category || 'general'}" style="background: #1e3c72; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">${(note.category || 'general').charAt(0).toUpperCase() + (note.category || 'general').slice(1)}</span>
-                            <div class="note-actions" style="display: flex; gap: 5px;">
-                                <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note" style="background: #28a745; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer;">
-                                    ✏️
-                                </button>
-                                <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note" style="background: #dc3545; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer;">
-                                    🗑️
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="note-content" id="noteContent_${note.index || index}" style="margin: 10px 0; line-height: 1.5; color: #333; font-size: 14px; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-                            ${note.content || 'No content'}
-                        </div>
-                        
-                        <div class="note-edit-area" id="noteEdit_${note.index || index}" style="display: none; margin: 10px 0;">
-                            <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}" style="width: 100%; min-height: 80px; padding: 10px; border: 2px solid #1e3c72; border-radius: 6px; font-family: inherit; font-size: 14px;">${note.content || ''}</textarea>
-                            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                                    💾 Save
-                                </button>
-                                <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                                    ❌ Cancel
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="delete-confirmation" id="deleteConfirm_${note.index || index}" style="display: none; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 10px 0;">
-                            <p style="margin: 0 0 10px 0;"><strong>Delete this note?</strong></p>
-                            <p style="margin: 0 0 10px 0;">This action cannot be undone.</p>
-                            <div class="delete-confirmation-buttons" style="display: flex; gap: 10px;">
-                                <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                                    Delete
-                                </button>
-                                <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})" style="background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="note-meta" style="font-size: 12px; color: #666; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef;">
-                            Added by ${note.addedBy || note.coachName || 'Unknown'} on ${note.timestamp || note.dateAdded ? new Date(note.timestamp || note.dateAdded).toLocaleString() : 'Unknown date'}
-                            ${note.editLog ? `<div class="note-edit-log" style="font-size: 11px; color: #999; font-style: italic; margin-top: 5px;">${note.editLog}</div>` : ''}
+                container.innerHTML = `
+                    <div class="empty-notes">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">📝</div>
+                        <div>No notes yet for this player</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #999;">
+                            Use the form above to add the first note
                         </div>
                     </div>
                 `;
-            }).join('');
-            
-            console.log('Generated HTML length:', notesHTML.length);
-            container.innerHTML = notesHTML;
-            console.log('HTML inserted into container');
-            console.log('Container innerHTML length after insert:', container.innerHTML.length);
-            
-            // Force correct positioning of the container
-            container.style.position = 'relative';
-            container.style.top = '0';
-            container.style.left = '0';
-            container.style.zIndex = '1';
-            
-            // Check if notes are actually visible after insertion
-            setTimeout(() => {
-                const noteItems = container.querySelectorAll('.note-item');
-                console.log('Number of note items found after insertion:', noteItems.length);
-                if (noteItems.length > 0) {
-                    const firstNote = noteItems[0];
-                    const computedStyle = window.getComputedStyle(firstNote);
-                    console.log('First note visibility:', computedStyle.display);
-                    console.log('First note height:', computedStyle.height);
-                    console.log('First note position AFTER fix:', firstNote.getBoundingClientRect());
-                }
-            }, 100);
-        }
-
-        // Start editing a note (inline)
-        function startEditNote(noteIndex) {
-            const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
-            const editDiv = document.getElementById(`noteEdit_${noteIndex}`);
-            
-            // Hide content, show edit area
-            contentDiv.style.display = 'none';
-            editDiv.classList.add('active');
-            
-            // Focus on textarea
-            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
-            textarea.focus();
-            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-        }
-
-        // Cancel editing
-        function cancelEditNote(noteIndex) {
-            const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
-            const editDiv = document.getElementById(`noteEdit_${noteIndex}`);
-            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
-            
-            // Reset textarea to original content
-            const originalNote = notesCache[currentPlayerName].find(note => note.index === noteIndex);
-            if (originalNote) {
-                textarea.value = originalNote.content;
-            }
-            
-            // Show content, hide edit area
-            contentDiv.style.display = 'block';
-            editDiv.classList.remove('active');
-        }
-
-        // Save edited note
-        async function saveEditNote(noteIndex) {
-            const textarea = document.getElementById(`noteTextarea_${noteIndex}`);
-            const newContent = textarea.value.trim();
-            
-            if (!newContent) {
-                showError('Note content cannot be empty');
                 return;
             }
             
-            const noteItem = document.querySelector(`[data-note-index="${noteIndex}"]`);
-            noteItem.classList.add('note-loading');
+            const notesHTML = notes.map((note, index) => `
+                <div class="note-item" data-note-index="${note.index || index}">
+                    <div class="note-header">
+                        <span class="note-category">${note.category || 'general'}</span>
+                        <div class="note-actions">
+                            <button class="note-action-btn edit" onclick="editNoteInPopup(${note.index || index})" title="Edit note">
+                                ✏️ Edit
+                            </button>
+                            <button class="note-action-btn delete" onclick="deleteNoteInPopup(${note.index || index})" title="Delete note">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="note-content" id="popupNoteContent_${note.index || index}">
+                        ${note.content || 'No content'}
+                    </div>
+                    
+                    <div class="note-edit-area" id="popupNoteEdit_${note.index || index}">
+                        <textarea class="note-edit-textarea" id="popupNoteTextarea_${note.index || index}">${note.content || ''}</textarea>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                            <button class="btn btn-primary" onclick="saveNoteInPopup(${note.index || index})">
+                                💾 Save Changes
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelEditInPopup(${note.index || index})" style="background: #6c757d; color: white;">
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="note-meta">
+                        Added by ${note.addedBy || note.coachName || 'Unknown'} on ${note.timestamp || note.dateAdded ? new Date(note.timestamp || note.dateAdded).toLocaleString() : 'Unknown date'}
+                        ${note.editLog ? `<br><strong>Last edited:</strong> ${note.editLog}` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = notesHTML;
+        }
+        
+        // Add note from popup
+        async function addNoteFromPopup() {
+            const category = document.getElementById('popupNoteCategory').value;
+            const content = document.getElementById('popupNoteContent').value.trim();
+            const addBtn = document.getElementById('addNoteBtn');
+            const addText = document.getElementById('addNoteText');
+            const addSpinner = document.getElementById('addNoteSpinner');
+            
+            if (!content) {
+                alert('Please enter a note');
+                document.getElementById('popupNoteContent').focus();
+                return;
+            }
+            
+            if (!popupCurrentPlayer) {
+                alert('No player selected');
+                return;
+            }
+            
+            // Show loading state
+            addBtn.disabled = true;
+            addText.style.display = 'none';
+            addSpinner.style.display = 'inline';
+            
+            try {
+                const result = await fetchData('addPlayerNote', {
+                    playerName: popupCurrentPlayer,
+                    category: category,
+                    content: content,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
+                });
+                
+                if (result.success) {
+                    // Clear form and reset to default
+                    document.getElementById('popupNoteCategory').value = 'general';
+                    document.getElementById('popupNoteContent').value = '';
+                    
+                    // Reload notes
+                    await loadNotesForPopup(popupCurrentPlayer);
+                    
+                    // Show success message briefly
+                    showSuccess('Note added successfully!');
+                    
+                    // Optionally refresh main table (but not required as per user request)
+                } else {
+                    alert('Error adding note: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error adding note: ' + error.message);
+            } finally {
+                // Reset button state
+                addBtn.disabled = false;
+                addText.style.display = 'inline';
+                addSpinner.style.display = 'none';
+            }
+        }
+        
+        // Edit note in popup
+        function editNoteInPopup(noteIndex) {
+            const contentDiv = document.getElementById(`popupNoteContent_${noteIndex}`);
+            const editDiv = document.getElementById(`popupNoteEdit_${noteIndex}`);
+            
+            if (!contentDiv || !editDiv) return;
+            
+            contentDiv.style.display = 'none';
+            editDiv.classList.add('active');
+            
+            const textarea = document.getElementById(`popupNoteTextarea_${noteIndex}`);
+            if (textarea) {
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            }
+        }
+        
+        // Cancel edit in popup
+        function cancelEditInPopup(noteIndex) {
+            const contentDiv = document.getElementById(`popupNoteContent_${noteIndex}`);
+            const editDiv = document.getElementById(`popupNoteEdit_${noteIndex}`);
+            
+            if (!contentDiv || !editDiv) return;
+            
+            contentDiv.style.display = 'block';
+            editDiv.classList.remove('active');
+        }
+        
+        // Save edited note in popup
+        async function saveNoteInPopup(noteIndex) {
+            const textarea = document.getElementById(`popupNoteTextarea_${noteIndex}`);
+            if (!textarea) return;
+            
+            const newContent = textarea.value.trim();
+            
+            if (!newContent) {
+                alert('Note content cannot be empty');
+                return;
+            }
             
             try {
                 const result = await fetchData('editPlayerNote', {
-                    playerName: currentPlayerName,
+                    playerName: popupCurrentPlayer,
                     noteIndex: noteIndex,
                     newContent: newContent,
                     coachName: currentCoach,
@@ -328,88 +442,71 @@
                 });
                 
                 if (result.success) {
-                    // Update content display
-                    const contentDiv = document.getElementById(`noteContent_${noteIndex}`);
-                    contentDiv.textContent = newContent;
-                    
-                    // Update cache
-                    const noteInCache = notesCache[currentPlayerName].find(note => note.index === noteIndex);
-                    if (noteInCache) {
-                        noteInCache.content = newContent;
-                    }
-                    
-                    // Hide edit area, show content
-                    cancelEditNote(noteIndex);
-                    
-                    showSuccess('Note updated successfully');
-                    
-                    // Reload notes to get updated edit log
-                    setTimeout(() => loadPlayerNotes(currentPlayerName), 500);
-                    
+                    // Reload notes to show changes
+                    await loadNotesForPopup(popupCurrentPlayer);
+                    showSuccess('Note updated successfully!');
                 } else {
-                    console.error('Error updating note:', result.error);
-                    showError('Error updating note');
+                    alert('Error updating note: ' + result.error);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('Error updating note');
-            } finally {
-                noteItem.classList.remove('note-loading');
+                alert('Error updating note: ' + error.message);
             }
         }
-
-        // Start delete confirmation
-        function startDeleteNote(noteIndex) {
-            const deleteConfirm = document.getElementById(`deleteConfirm_${noteIndex}`);
-            deleteConfirm.classList.add('active');
-        }
-
-        // Cancel delete
-        function cancelDeleteNote(noteIndex) {
-            const deleteConfirm = document.getElementById(`deleteConfirm_${noteIndex}`);
-            deleteConfirm.classList.remove('active');
-        }
-
-        // Confirm and execute delete
-        async function confirmDeleteNote(noteIndex) {
-            const noteItem = document.querySelector(`[data-note-index="${noteIndex}"]`);
-            noteItem.classList.add('note-loading');
+        
+        // Delete note in popup
+        async function deleteNoteInPopup(noteIndex) {
+            if (!confirm('Are you sure you want to delete this note?\n\nThis action cannot be undone.')) {
+                return;
+            }
             
             try {
                 const result = await fetchData('deletePlayerNote', {
-                    playerName: currentPlayerName,
+                    playerName: popupCurrentPlayer,
                     noteIndex: noteIndex,
                     coachName: currentCoach,
                     coachEmail: 'luketeeling@gmail.com'
                 });
                 
                 if (result.success) {
-                    // Remove from cache
-                    notesCache[currentPlayerName] = notesCache[currentPlayerName].filter(note => note.index !== noteIndex);
-                    
-                    // Remove from DOM with animation
-                    noteItem.style.opacity = '0';
-                    noteItem.style.transform = 'translateX(-20px)';
-                    
-                    setTimeout(() => {
-                        noteItem.remove();
-                        showSuccess('Note deleted successfully');
-                        
-                        // Reload notes to refresh indices
-                        loadPlayerNotes(currentPlayerName);
-                    }, 300);
-                    
+                    // Reload notes to show changes
+                    await loadNotesForPopup(popupCurrentPlayer);
+                    showSuccess('Note deleted successfully!');
                 } else {
-                    console.error('Error deleting note:', result.error);
-                    showError('Error deleting note');
-                    noteItem.classList.remove('note-loading');
+                    alert('Error deleting note: ' + result.error);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('Error deleting note');
-                noteItem.classList.remove('note-loading');
+                alert('Error deleting note: ' + error.message);
             }
         }
+        
+        // OLD COMPLEX NOTES FUNCTIONS (DISABLED - USING POPUP INSTEAD)
+        // ============================================================================
+        
+        // Load and display notes for a player (OLD - DISABLED)
+        async function loadPlayerNotes(playerName) {
+            // This function is now disabled - using popup instead
+            console.log('loadPlayerNotes called but disabled - using popup instead');
+            return;
+        }
+
+        // Display notes in the UI (OLD - DISABLED)
+        function displayNotes(notes) {
+            // This function is now disabled - using popup instead
+            console.log('displayNotes called but disabled - using popup instead');
+            return;
+        }
+
+        // OLD COMPLEX NOTES FUNCTIONS (DISABLED - USING POPUP INSTEAD)
+        // ============================================================================
+        
+        // These functions are disabled - using the simple popup approach instead
+        function startEditNote(noteIndex) { console.log('startEditNote disabled - using popup'); }
+        function cancelEditNote(noteIndex) { console.log('cancelEditNote disabled - using popup'); }
+        function saveEditNote(noteIndex) { console.log('saveEditNote disabled - using popup'); }
+        function startDeleteNote(noteIndex) { console.log('startDeleteNote disabled - using popup'); }
+        function cancelDeleteNote(noteIndex) { console.log('cancelDeleteNote disabled - using popup'); }
+        function confirmDeleteNote(noteIndex) { console.log('confirmDeleteNote disabled - using popup'); }
+        function addNote() { console.log('addNote disabled - using popup'); }
 
         // Function to open player modal with notes tab pre-selected (called from Recent Activity)
         function openPlayerNotes(playerName) {
@@ -469,11 +566,17 @@
                 const timeAgo = getTimeAgo(new Date(activity.timestamp));
                 let message = activity.message;
                 
-                // If it's a note-related activity, make the player name clickable
+                // ONLY make player names clickable for note-related activities
                 if (activity.type === 'note' && activity.playerName) {
                     message = message.replace(
                         activity.playerName, 
-                        `<a href="#" class="activity-player-name" onclick="openPlayerNotes('${activity.playerName}'); return false;">${activity.playerName}</a>`
+                        `<a href="#" class="activity-player-name" onclick="openNotesPopup('${activity.playerName}'); return false;">${activity.playerName}</a>`
+                    );
+                } else if (activity.playerName) {
+                    // For non-note activities, make player name bold but not clickable
+                    message = message.replace(
+                        activity.playerName,
+                        `<strong>${activity.playerName}</strong>`
                     );
                 }
                 
@@ -647,13 +750,13 @@
                     availabilityInfo = `<div class="availability-info">${reason} until: ${returnDate}</div>`;
                 }
                 
-                // Format notes indicator
+                // Format notes indicator with better styling and clear call-to-action
                 const notesCount = player['Notes Count'] || 0;
                 let notesIndicator = '';
                 if (notesCount > 0) {
-                    notesIndicator = `<span class="notes-indicator" onclick="openPlayerModal('${playerName}', 'notes')">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
+                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${playerName}')" title="View ${notesCount} note${notesCount > 1 ? 's' : ''}">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
                 } else {
-                    notesIndicator = '<span style="color: #999; font-size: 0.75rem;">No notes</span>';
+                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${playerName}')" title="Add first note" style="background: #f0f8ff; color: #1e3c72; border: 1px dashed #1e3c72;">+ Add note</span>`;
                 }
                 
                 return `
@@ -856,55 +959,16 @@
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
             
-            // Load notes when Notes tab is clicked
-            if (tabName === 'notes' && currentPlayerData) {
-                const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-                console.log('Notes tab activated - loading notes for:', playerName);
-                loadPlayerNotes(playerName);
-            }
+            // Notes are now handled by the popup - no need to load them here
         }
         
-        // ============================================================================
-        // UPDATE FUNCTIONS - NOW USING POST REQUESTS WITH CORS
+        // UPDATE FUNCTIONS - USING SIMPLE POPUP APPROACH
         // ============================================================================
         
+        // OLD addNote function is disabled - using popup instead
         async function addNote() {
-            const category = document.getElementById('noteCategory').value;
-            const content = document.getElementById('noteContent').value.trim();
-            
-            if (!content) {
-                showError('Please enter a note');
-                return;
-            }
-            
-            if (!currentPlayerData) {
-                showError('No player selected');
-                return;
-            }
-            
-            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-            
-            try {
-                const result = await fetchData('addPlayerNote', {
-                    playerName: playerName,
-                    category: category,
-                    content: content,
-                    coachName: currentCoach,
-                    coachEmail: 'luketeeling@gmail.com'
-                });
-                
-                if (result.success) {
-                    document.getElementById('noteContent').value = '';
-                    await loadPlayerNotes(playerName);
-                    await loadData(); // Refresh to update notes count
-                    logActivity('note', `Added note to <strong>${playerName}</strong>`, playerName);
-                    showSuccess('Note added successfully!');
-                } else {
-                    showError('Error adding note: ' + result.error);
-                }
-            } catch (error) {
-                showError('Error adding note: ' + error.message);
-            }
+            console.log('addNote disabled - using popup approach instead');
+            alert('Please use the notes popup by clicking the notes indicator in the main table');
         }
         
         async function updateAvailability() {
@@ -1100,20 +1164,53 @@
         // Initialize filters when data is loaded
         setTimeout(initializeFiltersWhenReady, 1000);
         
-        // Close modal when clicking outside
+        // Close modal and popup when clicking outside
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('playerModal');
             if (modal && e.target === modal) {
                 closePlayerModal();
             }
-        });
-        
-        // ESC key to close modal
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePlayerModal();
+            
+            // Close notes popup when clicking outside
+            const notesPopup = document.getElementById('notesPopup');
+            if (notesPopup && e.target === notesPopup) {
+                closeNotesPopup();
             }
         });
+        
+        // ESC key to close modal and popup
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close popup first if open, otherwise close modal
+                if (document.getElementById('notesPopup').classList.contains('active')) {
+                    closeNotesPopup();
+                } else {
+                    closePlayerModal();
+                }
+            }
+        });
+        
+        // Prevent body scrolling when popup is open (mobile improvement)
+        function toggleBodyScroll(disable) {
+            if (disable) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Enhanced popup open/close with scroll management
+        const originalOpenNotesPopup = openNotesPopup;
+        openNotesPopup = async function(playerName) {
+            toggleBodyScroll(true);
+            await originalOpenNotesPopup(playerName);
+        };
+        
+        const originalCloseNotesPopup = closeNotesPopup;
+        closeNotesPopup = function() {
+            toggleBodyScroll(false);
+            originalCloseNotesPopup();
+        };
     </script>
 </body>
 </html><!DOCTYPE html>
@@ -1531,18 +1628,361 @@
             color: #333;
         }
 
-        /* Notes Section */
-        .notes-section {
-            margin-bottom: 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        #notesContainer {
-            position: relative;
-            z-index: 1;
+        /* Responsive Notes Popup System */
+        .notes-popup {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .notes-popup.active {
+            display: flex;
+        }
+
+        .notes-popup-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            animation: popupSlideIn 0.3s ease-out;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Mobile responsive - full screen on small devices */
+        @media (max-width: 768px) {
+            .notes-popup {
+                padding: 0.5rem;
+            }
+            
+            .notes-popup-content {
+                max-width: 95vw;
+                max-height: 95vh;
+                width: 95vw;
+                height: 95vh;
+                border-radius: 8px;
+            }
+        }
+
+        /* Tablet responsive */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .notes-popup-content {
+                max-width: 80vw;
+                width: 80vw;
+            }
+        }
+
+        .notes-popup-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .notes-popup-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            padding-right: 3rem;
+        }
+
+        .notes-popup-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .notes-popup-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notes-popup-body {
+            padding: 1.5rem;
+            max-height: calc(85vh - 100px);
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .notes-popup-body {
+                max-height: calc(95vh - 100px);
+                padding: 1rem;
+            }
+        }
+
+        .notes-popup .add-note-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .notes-popup .add-note-form h4 {
+            margin: 0 0 1rem 0;
+            color: #1e3c72;
+            font-size: 1.1rem;
+        }
+
+        .notes-popup .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .notes-popup .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .notes-popup .form-group select,
+        .notes-popup .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .notes-popup .form-group select:focus,
+        .notes-popup .form-group textarea:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
+        }
+
+        .notes-popup .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .notes-popup .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .notes-popup .btn-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .notes-popup .btn-primary:hover {
+            background: #2a5298;
+            transform: translateY(-1px);
+        }
+
+        .notes-popup .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .notes-popup .notes-list {
+            background: white;
+        }
+
+        .notes-popup .notes-list h4 {
+            margin: 0 0 1rem 0;
+            color: #1e3c72;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e5e5;
+            font-size: 1.1rem;
+        }
+
+        .notes-popup .empty-notes {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 3rem 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+
+        .notes-popup .loading-notes {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+        }
+
+        .notes-popup .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced note item styling for popup */
+        .notes-popup .note-item {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            margin: 0 0 1rem 0;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+            transition: all 0.2s ease;
+        }
+
+        .notes-popup .note-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .notes-popup .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .notes-popup .note-category {
+            background: #1e3c72;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .notes-popup .note-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .notes-popup .note-action-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .notes-popup .note-action-btn.edit {
+            background: #28a745;
+        }
+
+        .notes-popup .note-action-btn.delete {
+            background: #dc3545;
+        }
+
+        .notes-popup .note-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .notes-popup .note-content {
+            line-height: 1.6;
+            color: #333;
+            margin: 0.75rem 0;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .notes-popup .note-edit-area {
+            display: none;
+            margin: 0.75rem 0;
+        }
+
+        .notes-popup .note-edit-area.active {
+            display: block;
+        }
+
+        .notes-popup .note-edit-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.75rem;
+            border: 2px solid #1e3c72;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            resize: vertical;
+        }
+
+        .notes-popup .note-meta {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e9ecef;
+            font-style: italic;
+        }
+
+        /* View Notes button for player modal */
+        .view-notes-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .view-notes-btn:hover {
+            background: #138496;
+            transform: translateY(-1px);
         }
 
         .add-note-form {
