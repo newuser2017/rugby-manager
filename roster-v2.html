@@ -150,18 +150,7 @@
             try {
                 currentPlayerName = playerName;
                 
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getPlayerNotes',
-                        playerName: playerName
-                    })
-                });
-
-                const result = await response.json();
+                const result = await fetchData('getPlayerNotes', { playerName: playerName });
                 
                 if (result.success) {
                     notesCache[playerName] = result.data;
@@ -282,22 +271,13 @@
             noteItem.classList.add('note-loading');
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'editPlayerNote',
-                        playerName: currentPlayerName,
-                        noteIndex: noteIndex,
-                        newContent: newContent,
-                        coachName: currentCoach,
-                        coachEmail: 'luketeeling@gmail.com'
-                    })
+                const result = await fetchData('editPlayerNote', {
+                    playerName: currentPlayerName,
+                    noteIndex: noteIndex,
+                    newContent: newContent,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-
-                const result = await response.json();
                 
                 if (result.success) {
                     // Update content display
@@ -348,21 +328,12 @@
             noteItem.classList.add('note-loading');
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'deletePlayerNote',
-                        playerName: currentPlayerName,
-                        noteIndex: noteIndex,
-                        coachName: currentCoach,
-                        coachEmail: 'luketeeling@gmail.com'
-                    })
+                const result = await fetchData('deletePlayerNote', {
+                    playerName: currentPlayerName,
+                    noteIndex: noteIndex,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-
-                const result = await response.json();
                 
                 if (result.success) {
                     // Remove from cache
@@ -855,22 +826,13 @@
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'addPlayerNote',
-                        playerName: playerName,
-                        category: category,
-                        content: content,
-                        coachName: currentCoach,
-                        coachEmail: 'luketeeling@gmail.com'
-                    })
+                const result = await fetchData('addPlayerNote', {
+                    playerName: playerName,
+                    category: category,
+                    content: content,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     document.getElementById('noteContent').value = '';
@@ -900,24 +862,15 @@
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'updatePlayerStatus',
-                        playerName: playerName,
-                        status: status,
-                        unavailableUntil: until,
-                        unavailableReason: reason,
-                        notes: notes,
-                        coachName: currentCoach,
-                        coachEmail: 'luketeeling@gmail.com'
-                    })
+                const result = await fetchData('updatePlayerStatus', {
+                    playerName: playerName,
+                    status: status,
+                    unavailableUntil: until,
+                    unavailableReason: reason,
+                    notes: notes,
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     await loadData(); // Refresh main table
@@ -948,21 +901,12 @@
             const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
             
             try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'updateSquadTags',
-                        playerName: playerName,
-                        squadTags: squadTags.join(', '),
-                        coachName: currentCoach,
-                        coachEmail: 'luketeeling@gmail.com'
-                    })
+                const result = await fetchData('updateSquadTags', {
+                    playerName: playerName,
+                    squadTags: squadTags.join(', '),
+                    coachName: currentCoach,
+                    coachEmail: 'luketeeling@gmail.com'
                 });
-                
-                const result = await response.json();
                 
                 if (result.success) {
                     await loadData(); // Refresh main table
