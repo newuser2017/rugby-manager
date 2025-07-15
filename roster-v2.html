@@ -253,6 +253,12 @@
             console.log('HTML inserted into container');
             console.log('Container innerHTML length after insert:', container.innerHTML.length);
             
+            // Force correct positioning of the container
+            container.style.position = 'relative';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.zIndex = '1';
+            
             // Check if notes are actually visible after insertion
             setTimeout(() => {
                 const noteItems = container.querySelectorAll('.note-item');
@@ -262,7 +268,7 @@
                     const computedStyle = window.getComputedStyle(firstNote);
                     console.log('First note visibility:', computedStyle.display);
                     console.log('First note height:', computedStyle.height);
-                    console.log('First note position:', firstNote.getBoundingClientRect());
+                    console.log('First note position AFTER fix:', firstNote.getBoundingClientRect());
                 }
             }, 100);
         }
@@ -1528,6 +1534,15 @@
         /* Notes Section */
         .notes-section {
             margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        #notesContainer {
+            position: relative;
+            z-index: 1;
+            top: 0;
+            left: 0;
         }
 
         .add-note-form {
@@ -1601,6 +1616,9 @@
             border-left: 4px solid #1e3c72;
             position: relative;
             transition: all 0.2s ease;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
 
         .note-item:hover {
