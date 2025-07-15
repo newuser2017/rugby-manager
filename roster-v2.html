@@ -180,6 +180,11 @@
                 return;
             }
             
+            // Check if notes tab is visible
+            const notesTab = document.getElementById('notesTab');
+            console.log('Notes tab found:', !!notesTab);
+            console.log('Notes tab visibility:', notesTab ? window.getComputedStyle(notesTab).display : 'N/A');
+            
             if (!notes || notes.length === 0) {
                 console.log('No notes to display');
                 container.innerHTML = '<p style="color: #666; font-style: italic;">No notes yet.</p>';
@@ -246,6 +251,7 @@
             console.log('Generated HTML length:', notesHTML.length);
             container.innerHTML = notesHTML;
             console.log('HTML inserted into container');
+            console.log('Container innerHTML length after insert:', container.innerHTML.length);
         }
 
         // Start editing a note (inline)
