@@ -432,6 +432,13 @@
                 return;
             }
             
+            console.log('Attempting to edit note:', {
+                playerName: popupCurrentPlayer,
+                noteIndex: noteIndex,
+                newContent: newContent,
+                action: 'editPlayerNote'
+            });
+            
             try {
                 const result = await fetchData('editPlayerNote', {
                     playerName: popupCurrentPlayer,
@@ -441,14 +448,18 @@
                     coachEmail: 'luketeeling@gmail.com'
                 });
                 
+                console.log('Edit note result:', result);
+                
                 if (result.success) {
                     // Reload notes to show changes
                     await loadNotesForPopup(popupCurrentPlayer);
                     showSuccess('Note updated successfully!');
                 } else {
+                    console.error('Edit failed:', result.error);
                     alert('Error updating note: ' + result.error);
                 }
             } catch (error) {
+                console.error('Edit error:', error);
                 alert('Error updating note: ' + error.message);
             }
         }
@@ -459,6 +470,12 @@
                 return;
             }
             
+            console.log('Attempting to delete note:', {
+                playerName: popupCurrentPlayer,
+                noteIndex: noteIndex,
+                action: 'deletePlayerNote'
+            });
+            
             try {
                 const result = await fetchData('deletePlayerNote', {
                     playerName: popupCurrentPlayer,
@@ -467,14 +484,18 @@
                     coachEmail: 'luketeeling@gmail.com'
                 });
                 
+                console.log('Delete note result:', result);
+                
                 if (result.success) {
                     // Reload notes to show changes
                     await loadNotesForPopup(popupCurrentPlayer);
                     showSuccess('Note deleted successfully!');
                 } else {
+                    console.error('Delete failed:', result.error);
                     alert('Error deleting note: ' + result.error);
                 }
             } catch (error) {
+                console.error('Delete error:', error);
                 alert('Error deleting note: ' + error.message);
             }
         }
@@ -765,7 +786,7 @@
                             <a href="#" class="player-name" onclick="openPlayerModal('${playerName}'); return false;">${playerName}</a>
                         </td>
                         <td>${squadBadges}</td>
-                        <td>${player['Positions'] || ''}</td>
+                        <td>${player['Positions'] ? player['Positions'].match(/\d+/g)?.join(', ') || '' : ''}</td>
                         <td>
                             <div>${player['Phone'] || ''}</div>
                             <div style="color: #666; font-size: 0.75rem;">${player['Email'] || ''}</div>
@@ -2609,7 +2630,6 @@
                 <!-- Tabs -->
                 <div class="modal-tabs">
                     <button class="modal-tab active" onclick="showTab('info')" data-tab="info">Basic Info</button>
-                    <button class="modal-tab" onclick="showTab('notes')" data-tab="notes">Notes</button>
                     <button class="modal-tab" onclick="showTab('availability')" data-tab="availability">Availability</button>
                     <button class="modal-tab" onclick="showTab('squad')" data-tab="squad">Squad Management</button>
                 </div>
