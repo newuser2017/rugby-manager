@@ -696,25 +696,26 @@
             }
         }
         
-        async function loadPlayerDetails(playerName) {
-            try {
-                console.log('Loading player details for:', playerName);
-                const data = await fetchData('getPlayerDetails', { playerName: playerName });
-                
-                if (data.success) {
-                    currentPlayerData = data.data;
-                    populatePlayerModal(data.data);
-                    // Don't load notes here - they'll be loaded when Notes tab is clicked
-                    console.log('Player details loaded successfully');
-                } else {
-                    console.error('Failed to load player details:', data.error);
-                    showError('Failed to load player details');
-                }
-            } catch (error) {
-                console.error('Error loading player details:', error);
-                showError('Error loading player details');
-            }
+       async function loadPlayerDetails(playerName) {
+    try {
+        console.log('Loading player details for:', playerName);
+        
+        // ✅ Search locally instead of calling slow API
+        const playerData = findPlayerLocally(playerName);
+        
+        if (playerData) {
+            currentPlayerData = playerData;
+            populatePlayerModal(playerData);
+            console.log('Player details loaded from cache (instant!)');
+        } else {
+            console.error('Player not found in local data:', playerName);
+            showError('Player not found');
         }
+    } catch (error) {
+        console.error('Error loading player details:', error);
+        showError('Error loading player details');
+    }
+}
         
         // ============================================================================
         // DISPLAY FUNCTIONS
