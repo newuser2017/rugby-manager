@@ -172,65 +172,80 @@
         function displayNotes(notes) {
             const container = document.getElementById('notesContainer');
             
+            console.log('displayNotes called with:', notes);
+            console.log('Notes container found:', !!container);
+            
             if (!container) {
                 console.error('Notes container not found');
                 return;
             }
             
             if (!notes || notes.length === 0) {
+                console.log('No notes to display');
                 container.innerHTML = '<p style="color: #666; font-style: italic;">No notes yet.</p>';
                 return;
             }
             
-            container.innerHTML = notes.map((note, index) => `
-                <div class="note-item" data-note-index="${note.index || index}">
-                    <div class="note-header">
-                        <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
-                        <div class="note-actions">
-                            <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note">
-                                ✏️
-                            </button>
-                            <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note">
-                                🗑️
-                            </button>
+            console.log('Displaying', notes.length, 'notes');
+            console.log('First note structure:', notes[0]);
+            
+            const notesHTML = notes.map((note, index) => {
+                console.log('Processing note:', note);
+                
+                return `
+                    <div class="note-item" data-note-index="${note.index || index}">
+                        <div class="note-header">
+                            <span class="note-category ${note.category || 'general'}">${(note.category || 'general').charAt(0).toUpperCase() + (note.category || 'general').slice(1)}</span>
+                            <div class="note-actions">
+                                <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note">
+                                    ✏️
+                                </button>
+                                <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="note-content" id="noteContent_${note.index || index}">
+                            ${note.content || 'No content'}
+                        </div>
+                        
+                        <div class="note-edit-area" id="noteEdit_${note.index || index}">
+                            <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}">${note.content || ''}</textarea>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes">
+                                    💾
+                                </button>
+                                <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel">
+                                    ❌
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="delete-confirmation" id="deleteConfirm_${note.index || index}">
+                            <p><strong>Delete this note?</strong></p>
+                            <p>This action cannot be undone.</p>
+                            <div class="delete-confirmation-buttons">
+                                <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})">
+                                    Delete
+                                </button>
+                                <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="note-meta">
+                            Added by ${note.addedBy || note.coachName || 'Unknown'} on ${note.timestamp || note.dateAdded ? new Date(note.timestamp || note.dateAdded).toLocaleString() : 'Unknown date'}
+                            ${note.editLog ? `<div class="note-edit-log">${note.editLog}</div>` : ''}
                         </div>
                     </div>
-                    
-                    <div class="note-content" id="noteContent_${note.index || index}">
-                        ${note.content}
-                    </div>
-                    
-                    <div class="note-edit-area" id="noteEdit_${note.index || index}">
-                        <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}">${note.content}</textarea>
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes">
-                                💾
-                            </button>
-                            <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel">
-                                ❌
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="delete-confirmation" id="deleteConfirm_${note.index || index}">
-                        <p><strong>Delete this note?</strong></p>
-                        <p>This action cannot be undone.</p>
-                        <div class="delete-confirmation-buttons">
-                            <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})">
-                                Delete
-                            </button>
-                            <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="note-meta">
-                        Added by ${note.addedBy || note.coachName || 'Unknown'} on ${new Date(note.timestamp || note.dateAdded).toLocaleString()}
-                        ${note.editLog ? `<div class="note-edit-log">${note.editLog}</div>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            console.log('Generated HTML length:', notesHTML.length);
+            container.innerHTML = notesHTML;
+            console.log('HTML inserted into container');
         }
 
         // Start editing a note (inline)
