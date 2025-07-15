@@ -148,20 +148,23 @@
         // Load and display notes for a player
         async function loadPlayerNotes(playerName) {
             try {
+                console.log('Loading notes for:', playerName);
                 currentPlayerName = playerName;
                 
                 const result = await fetchData('getPlayerNotes', { playerName: playerName });
+                console.log('Notes result:', result);
                 
                 if (result.success) {
                     notesCache[playerName] = result.data;
                     displayNotes(result.data);
+                    console.log('Loaded', result.data.length, 'notes for', playerName);
                 } else {
                     console.error('Error loading notes:', result.error);
-                    showError('Error loading notes');
+                    displayNotes([]); // Show empty state
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('Error loading notes');
+                console.error('Error loading notes:', error);
+                displayNotes([]); // Show empty state
             }
         }
 
@@ -169,56 +172,61 @@
         function displayNotes(notes) {
             const container = document.getElementById('notesContainer');
             
+            if (!container) {
+                console.error('Notes container not found');
+                return;
+            }
+            
             if (!notes || notes.length === 0) {
                 container.innerHTML = '<p style="color: #666; font-style: italic;">No notes yet.</p>';
                 return;
             }
             
             container.innerHTML = notes.map((note, index) => `
-                <div class="note-item" data-note-index="${note.index}">
+                <div class="note-item" data-note-index="${note.index || index}">
                     <div class="note-header">
                         <span class="note-category ${note.category}">${note.category.charAt(0).toUpperCase() + note.category.slice(1)}</span>
                         <div class="note-actions">
-                            <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index})" title="Edit note">
+                            <button class="note-action-btn edit-btn" onclick="startEditNote(${note.index || index})" title="Edit note">
                                 ✏️
                             </button>
-                            <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index})" title="Delete note">
+                            <button class="note-action-btn delete-btn" onclick="startDeleteNote(${note.index || index})" title="Delete note">
                                 🗑️
                             </button>
                         </div>
                     </div>
                     
-                    <div class="note-content" id="noteContent_${note.index}">
+                    <div class="note-content" id="noteContent_${note.index || index}">
                         ${note.content}
                     </div>
                     
-                    <div class="note-edit-area" id="noteEdit_${note.index}">
-                        <textarea class="note-edit-textarea" id="noteTextarea_${note.index}">${note.content}</textarea>
+                    <div class="note-edit-area" id="noteEdit_${note.index || index}">
+                        <textarea class="note-edit-textarea" id="noteTextarea_${note.index || index}">${note.content}</textarea>
                         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index})" title="Save changes">
+                            <button class="note-action-btn save-btn" onclick="saveEditNote(${note.index || index})" title="Save changes">
                                 💾
                             </button>
-                            <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index})" title="Cancel">
+                            <button class="note-action-btn cancel-btn" onclick="cancelEditNote(${note.index || index})" title="Cancel">
                                 ❌
                             </button>
                         </div>
                     </div>
                     
-                    <div class="delete-confirmation" id="deleteConfirm_${note.index}">
+                    <div class="delete-confirmation" id="deleteConfirm_${note.index || index}">
                         <p><strong>Delete this note?</strong></p>
                         <p>This action cannot be undone.</p>
                         <div class="delete-confirmation-buttons">
-                            <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index})">
+                            <button class="confirm-delete-btn" onclick="confirmDeleteNote(${note.index || index})">
                                 Delete
                             </button>
-                            <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index})">
+                            <button class="cancel-delete-btn" onclick="cancelDeleteNote(${note.index || index})">
                                 Cancel
                             </button>
                         </div>
                     </div>
                     
                     <div class="note-meta">
-                        Added by ${note.addedBy} on ${new Date(note.timestamp).toLocaleString()}
+                        Added by ${note.addedBy || note.coachName || 'Unknown'} on ${new Date(note.timestamp || note.dateAdded).toLocaleString()}
                         ${note.editLog ? `<div class="note-edit-log">${note.editLog}</div>` : ''}
                     </div>
                 </div>
@@ -526,17 +534,21 @@
         
         async function loadPlayerDetails(playerName) {
             try {
+                console.log('Loading player details for:', playerName);
                 const data = await fetchData('getPlayerDetails', { playerName: playerName });
                 
                 if (data.success) {
                     currentPlayerData = data.data;
                     populatePlayerModal(data.data);
+                    // Load notes after modal is populated
                     await loadPlayerNotes(playerName);
                 } else {
                     console.error('Failed to load player details:', data.error);
+                    showError('Failed to load player details');
                 }
             } catch (error) {
                 console.error('Error loading player details:', error);
+                showError('Error loading player details');
             }
         }
         
@@ -1023,12 +1035,28 @@
         // EVENT LISTENERS
         // ============================================================================
         
+        // Initialize filters when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up filters after a delay to ensure elements exist
+            setTimeout(setupFilters, 2000);
+        });
+        
+        // Also try to set up filters when data is loaded
+        function initializeFiltersWhenReady() {
+            if (document.getElementById('searchBox')) {
+                setupFilters();
+            } else {
+                setTimeout(initializeFiltersWhenReady, 500);
+            }
+        }
+        
         // Initialize filters when data is loaded
-        setTimeout(setupFilters, 1000);
+        setTimeout(initializeFiltersWhenReady, 1000);
         
         // Close modal when clicking outside
-        document.getElementById('playerModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('playerModal');
+            if (modal && e.target === modal) {
                 closePlayerModal();
             }
         });
