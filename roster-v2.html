@@ -983,7 +983,18 @@
             
             // Notes are now handled by the popup - no need to load them here
         }
-        
+// ============================================================================
+// FRONTEND CACHING - FIND PLAYER LOCALLY
+// ============================================================================
+
+function findPlayerLocally(playerName) {
+    // Search through already-loaded players instead of API call
+    return allPlayers.find(player => 
+        `${player['First Name']} ${player['Last Name']}` === playerName
+    );
+}
+
+      
         // UPDATE FUNCTIONS - USING SIMPLE POPUP APPROACH
         // ============================================================================
         
