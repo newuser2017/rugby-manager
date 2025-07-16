@@ -752,126 +752,171 @@
             document.getElementById('playerTable').style.display = 'table';
         }
         
-        function populatePlayerModal(playerData) {
-            const playerName = `${playerData['First Name']} ${playerData['Last Name']}`;
-            document.getElementById('modalPlayerName').textContent = playerName;
-            
-            // Update player summary
-            const squadTags = playerData['Squad Tags'] || '';
-            let squadBadges = '';
-            if (squadTags.includes('4ths')) {
-                squadBadges += '<span class="team-badge fourths">4ths</span>';
-            }
-            if (squadTags.includes('5ths')) {
-                squadBadges += '<span class="team-badge fifths">5ths</span>';
-            }
-            
-            const status = playerData['Status'] || 'Active';
-            const statusClass = status.toLowerCase().replace(' ', '');
-            
-            document.getElementById('playerSummary').innerHTML = `
-                ${squadBadges}
-                <span class="status-badge ${statusClass}">${status}</span>
-                <span style="opacity: 0.8;">Positions: ${playerData['Positions'] || 'None specified'}</span>
-            `;
-            
-            // Update form fields with real data
-            document.getElementById('playerStatus').value = status;
-            
-            if (playerData['Unavailable Until']) {
-                const date = new Date(playerData['Unavailable Until']);
-                document.getElementById('unavailableUntil').value = date.toISOString().split('T')[0];
-            } else {
-                document.getElementById('unavailableUntil').value = '';
-            }
-            
-            document.getElementById('unavailableReason').value = playerData['Unavailable Reason'] || '';
-            
-            // Squad checkboxes
-            document.getElementById('squad4ths').checked = squadTags.includes('4ths');
-            document.getElementById('squad5ths').checked = squadTags.includes('5ths');
-            
-            // Populate info tab with real data
-            const infoTab = document.getElementById('infoTab');
-            infoTab.innerHTML = `
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Email</div>
-                        <div class="info-value">${playerData['Email'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">${playerData['Phone'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">WhatsApp</div>
-                        <div class="info-value">${playerData['WhatsApp'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">IRFU Number</div>
-                        <div class="info-value">${playerData['IRFU Number'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Age</div>
-                        <div class="info-value">${playerData['Age'] || 'Unknown'} years</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Registration Date</div>
-                        <div class="info-value">${playerData['Registration Date'] ? new Date(playerData['Registration Date']).toLocaleDateString() : 'Unknown'}</div>
-                    </div>
-                </div>
-
-                <h3>Emergency Contact</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Name</div>
-                        <div class="info-value">${playerData['Emergency Contact'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Relationship</div>
-                        <div class="info-value">${playerData['Emergency Relationship'] || 'Not provided'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">${playerData['Emergency Phone'] || 'Not provided'}</div>
-                    </div>
-                </div>
-
-                <h3>Season Statistics</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">4ths Games</div>
-                        <div class="info-value">${playerData['4ths All Games'] || 0} total (${playerData['4ths League Games'] || 0} league)</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">5ths Games</div>
-                        <div class="info-value">${playerData['5ths All Games'] || 0} total</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">League Eligibility</div>
-                        <div class="info-value">Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths</div>
-                    </div>
-                </div>
-            `;
-            
-            // Update current status section
-            document.getElementById('currentStatus').innerHTML = `
-                <h4>Current Availability Status</h4>
-                <p><strong>Status:</strong> ${status}</p>
-                <p><strong>Last Updated:</strong> ${playerData['Last Updated'] ? new Date(playerData['Last Updated']).toLocaleDateString() : 'Unknown'}</p>
-                ${playerData['Unavailable Until'] ? `<p><strong>Available Again:</strong> ${new Date(playerData['Unavailable Until']).toLocaleDateString()}</p>` : ''}
-            `;
-            
-            // Update league tracking
-            document.getElementById('leagueTracking').innerHTML = `
-                <h4>League Game Tracking</h4>
-                <p><strong>4ths League Games:</strong> ${playerData['4ths League Games'] || 0} of 4 played</p>
-                <p><strong>Status:</strong> Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths this season</p>
-                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
-                    <strong>Note:</strong> Players can only play 4 league games per season for any single team.
-                </p>
-            `;
+        // ✅ SAFER populatePlayerModal function
+function populatePlayerModal(playerData) {
+    const playerName = `${playerData['First Name']} ${playerData['Last Name']}`;
+    
+    // Safely update modal title
+    const modalTitle = document.getElementById('modalPlayerName');
+    if (modalTitle) {
+        modalTitle.textContent = playerName;
+    } else {
+        console.error('modalPlayerName element not found');
+    }
+    
+    // Update player summary
+    const squadTags = playerData['Squad Tags'] || '';
+    let squadBadges = '';
+    if (squadTags.includes('4ths')) {
+        squadBadges += '<span class="team-badge fourths">4ths</span>';
+    }
+    if (squadTags.includes('5ths')) {
+        squadBadges += '<span class="team-badge fifths">5ths</span>';
+    }
+    
+    const status = playerData['Status'] || 'Active';
+    const statusClass = status.toLowerCase().replace(' ', '');
+    
+    const playerSummary = document.getElementById('playerSummary');
+    if (playerSummary) {
+        playerSummary.innerHTML = `
+            ${squadBadges}
+            <span class="status-badge ${statusClass}">${status}</span>
+            <span style="opacity: 0.8;">Positions: ${playerData['Positions'] || 'None specified'}</span>
+        `;
+    }
+    
+    // ✅ SAFELY update form fields - check if each element exists first
+    const playerStatusEl = document.getElementById('playerStatus');
+    if (playerStatusEl) {
+        playerStatusEl.value = status;
+    } else {
+        console.warn('playerStatus element not found - availability tab may not be loaded');
+    }
+    
+    const unavailableUntilEl = document.getElementById('unavailableUntil');
+    if (unavailableUntilEl) {
+        if (playerData['Unavailable Until']) {
+            const date = new Date(playerData['Unavailable Until']);
+            unavailableUntilEl.value = date.toISOString().split('T')[0];
+        } else {
+            unavailableUntilEl.value = '';
         }
+    } else {
+        console.warn('unavailableUntil element not found');
+    }
+    
+    const unavailableReasonEl = document.getElementById('unavailableReason');
+    if (unavailableReasonEl) {
+        unavailableReasonEl.value = playerData['Unavailable Reason'] || '';
+    } else {
+        console.warn('unavailableReason element not found');
+    }
+    
+    // Squad checkboxes
+    const squad4thsEl = document.getElementById('squad4ths');
+    if (squad4thsEl) {
+        squad4thsEl.checked = squadTags.includes('4ths');
+    } else {
+        console.warn('squad4ths element not found');
+    }
+    
+    const squad5thsEl = document.getElementById('squad5ths');
+    if (squad5thsEl) {
+        squad5thsEl.checked = squadTags.includes('5ths');
+    } else {
+        console.warn('squad5ths element not found');
+    }
+    
+    // Populate info tab with real data
+    const infoTab = document.getElementById('infoTab');
+    if (infoTab) {
+        infoTab.innerHTML = `
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">${playerData['Email'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">${playerData['Phone'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">WhatsApp</div>
+                    <div class="info-value">${playerData['WhatsApp'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">IRFU Number</div>
+                    <div class="info-value">${playerData['IRFU Number'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">${playerData['Age'] || 'Unknown'} years</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Registration Date</div>
+                    <div class="info-value">${playerData['Registration Date'] ? new Date(playerData['Registration Date']).toLocaleDateString() : 'Unknown'}</div>
+                </div>
+            </div>
+
+            <h3>Emergency Contact</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value">${playerData['Emergency Contact'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Relationship</div>
+                    <div class="info-value">${playerData['Emergency Relationship'] || 'Not provided'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">${playerData['Emergency Phone'] || 'Not provided'}</div>
+                </div>
+            </div>
+
+            <h3>Season Statistics</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">4ths Games</div>
+                    <div class="info-value">${playerData['4ths All Games'] || 0} total (${playerData['4ths League Games'] || 0} league)</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">5ths Games</div>
+                    <div class="info-value">${playerData['5ths All Games'] || 0} total</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">League Eligibility</div>
+                    <div class="info-value">Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Update current status section
+    const currentStatusEl = document.getElementById('currentStatus');
+    if (currentStatusEl) {
+        currentStatusEl.innerHTML = `
+            <h4>Current Availability Status</h4>
+            <p><strong>Status:</strong> ${status}</p>
+            <p><strong>Last Updated:</strong> ${playerData['Last Updated'] ? new Date(playerData['Last Updated']).toLocaleDateString() : 'Unknown'}</p>
+            ${playerData['Unavailable Until'] ? `<p><strong>Available Again:</strong> ${new Date(playerData['Unavailable Until']).toLocaleDateString()}</p>` : ''}
+        `;
+    }
+    
+    // Update league tracking
+    const leagueTrackingEl = document.getElementById('leagueTracking');
+    if (leagueTrackingEl) {
+        leagueTrackingEl.innerHTML = `
+            <h4>League Game Tracking</h4>
+            <p><strong>4ths League Games:</strong> ${playerData['4ths League Games'] || 0} of 4 played</p>
+            <p><strong>Status:</strong> Can play ${4 - (playerData['4ths League Games'] || 0)} more league games for 4ths this season</p>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
+                <strong>Note:</strong> Players can only play 4 league games per season for any single team.
+            </p>
+        `;
+    }
+}
         
         function displayPlayerNotes(notes) {
             const notesSection = document.querySelector('#notesTab .notes-section');
@@ -899,32 +944,69 @@
             notesSection.innerHTML = `<h3>Player Notes</h3>${notesHtml}`;
         }
         
-        // ============================================================================
-        // PLAYER MODAL FUNCTIONS
-        // ============================================================================
+      // ============================================================================
+// PLAYER MODAL FUNCTIONS
+// ============================================================================
+
+// ✅ CORRECT - Each function is separate and independent
+async function openPlayerModal(playerName, activeTab = 'info') {
+    console.log('Opening modal for:', playerName);
+    
+    const modal = document.getElementById('playerModal');
+    if (!modal) {
+        console.error('Player modal not found');
+        return;
+    }
+    
+    modal.classList.add('active');
+    
+    // Load player details first
+    await loadPlayerDetails(playerName);
+    
+    // Then show the requested tab
+    showTab(activeTab);
+}
+
+function closePlayerModal() {
+    document.getElementById('playerModal').classList.remove('active');
+    currentPlayerData = null;
+    currentPlayerName = '';
+}
+
+// ✅ SAFER showTab function
+function showTab(tabName) {
+    console.log('Switching to tab:', tabName);
+    
+    // Hide all tabs and remove active class from buttons
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+        if (tab) tab.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.tab-content').forEach(content => {
+        if (content) content.classList.remove('active');
+    });
+    
+    // Show selected tab button
+    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    } else {
+        console.error(`Tab button with data-tab="${tabName}" not found`);
+        console.log('Available tab buttons:', document.querySelectorAll('[data-tab]'));
+        return;
+    }
+    
+    // Show selected tab content
+    const tabContent = document.getElementById(tabName + 'Tab');
+    if (tabContent) {
+        tabContent.classList.add('active');
+        console.log(`Successfully switched to ${tabName} tab`);
+    } else {
+        console.error(`Tab content with id="${tabName}Tab" not found`);
+        console.log('Available tab contents:', document.querySelectorAll('.tab-content'));
+    }
+}
         
-        async function openPlayerModal(playerName, activeTab = 'info') {
-            document.getElementById('playerModal').classList.add('active');
-            showTab(activeTab);
-            
-            await loadPlayerDetails(playerName);
-        }
-        
-        function closePlayerModal() {
-            document.getElementById('playerModal').classList.remove('active');
-            currentPlayerData = null;
-            currentPlayerName = '';
-        }
-        
-        function showTab(tabName) {
-            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            
-            // Notes are now handled by the popup - no need to load them here
-        }
 // ============================================================================
 // FRONTEND CACHING - FIND PLAYER LOCALLY
 // ============================================================================
