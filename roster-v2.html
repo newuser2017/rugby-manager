@@ -1028,42 +1028,118 @@ function findPlayerLocally(playerName) {
             alert('Please use the notes popup by clicking the notes indicator in the main table');
         }
         
-        async function updateAvailability() {
-            const status = document.getElementById('playerStatus').value;
-            const until = document.getElementById('unavailableUntil').value;
-            const reason = document.getElementById('unavailableReason').value;
-            const notes = document.getElementById('availabilityNotes').value;
-            
-            if (!currentPlayerData) {
-                showError('No player selected');
-                return;
-            }
-            
-            const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-            
-            try {
-                const result = await fetchData('updatePlayerStatus', {
-                    playerName: playerName,
-                    status: status,
-                    unavailableUntil: until,
-                    unavailableReason: reason,
-                    notes: notes,
-                    coachName: currentCoach,
-                    coachEmail: 'luketeeling@gmail.com'
-                });
-                
-                if (result.success) {
-                    await loadData(); // Refresh main table
-                    await loadPlayerDetails(playerName); // Refresh modal
-                    logActivity('status', `Updated <strong>${playerName}</strong> status to ${status}`, playerName);
-                    showSuccess('Availability updated successfully!');
-                } else {
-                    showError('Error updating availability: ' + result.error);
-                }
-            } catch (error) {
-                showError('Error updating availability: ' + error.message);
-            }
+       // ✅ DEBUGGING VERSION - Replace your current updateAvailability function
+async function updateAvailability() {
+    console.log('=== DEBUG updateAvailability ===');
+    
+    // 1. Check if player is selected
+    if (!currentPlayerData) {
+        console.error('❌ No player selected');
+        showError('No player selected');
+        return;
+    }
+    
+    const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+    console.log('✅ Player selected:', playerName);
+    
+    // 2. Check if form elements exist and get their values
+    const statusEl = document.getElementById('playerStatus');
+    const untilEl = document.getElementById('unavailableUntil');
+    const reasonEl = document.getElementById('unavailableReason');
+    const notesEl = document.getElementById('availabilityNotes');
+    
+    console.log('Form elements check:');
+    console.log('- playerStatus element:', statusEl ? '✅ Found' : '❌ Missing');
+    console.log('- unavailableUntil element:', untilEl ? '✅ Found' : '❌ Missing');
+    console.log('- unavailableReason element:', reasonEl ? '✅ Found' : '❌ Missing');
+    console.log('- availabilityNotes element:', notesEl ? '✅ Found' : '❌ Missing');
+    
+    if (!statusEl) {
+        console.error('❌ playerStatus element not found');
+        showError('Form elements not found. Please refresh and try again.');
+        return;
+    }
+    
+    // 3. Get form values
+    const status = statusEl.value;
+    const until = untilEl ? untilEl.value : '';
+    const reason = reasonEl ? reasonEl.value : '';
+    const notes = notesEl ? notesEl.value : '';
+    
+    console.log('Form values:');
+    console.log('- Status:', status);
+    console.log('- Until:', until);
+    console.log('- Reason:', reason);
+    console.log('- Notes:', notes);
+    
+    // 4. Validate the data
+    if (status !== 'Active' && !until) {
+        console.warn('⚠️ Player marked as unavailable but no return date provided');
+        if (!confirm('Player is marked as unavailable but no return date is provided. Continue anyway?')) {
+            return;
         }
+    }
+    
+    // 5. Prepare data for API call
+    const updateData = {
+        playerName: playerName,
+        status: status,
+        unavailableUntil: until,
+        unavailableReason: reason,
+        notes: notes,
+        coachName: currentCoach,
+        coachEmail: 'luketeeling@gmail.com'
+    };
+    
+    console.log('Data being sent to API:', updateData);
+    
+    try {
+        // 6. Show loading state
+        const updateBtn = event?.target;
+        const originalText = updateBtn?.textContent;
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Updating...';
+        }
+        
+        console.log('📡 Calling API...');
+        
+        // 7. Make API call
+        const result = await fetchData('updatePlayerStatus', updateData);
+        
+        console.log('📨 API Response:', result);
+        
+        if (result.success) {
+            console.log('✅ Update successful');
+            
+            // 8. Refresh data and UI
+            await loadData(); // Refresh main table
+            await loadPlayerDetails(playerName); // Refresh modal
+            
+            // 9. Log activity
+            logActivity('status', `Updated status to ${status}${until ? ` until ${until}` : ''}`, playerName);
+            
+            // 10. Show success message
+            showSuccess(`Player status updated to: ${status}`);
+            
+        } else {
+            console.error('❌ API Error:', result.error);
+            showError('Error updating availability: ' + result.error);
+        }
+        
+    } catch (error) {
+        console.error('❌ Network Error:', error);
+        showError('Network error updating availability: ' + error.message);
+    } finally {
+        // Reset button state
+        if (updateBtn) {
+            updateBtn.disabled = false;
+            updateBtn.textContent = originalText || 'Update Availability';
+        }
+    }
+    
+    console.log('=== END DEBUG ===');
+}
         
         async function updateSquadAssignment() {
             const squad4ths = document.getElementById('squad4ths').checked;
@@ -1099,7 +1175,85 @@ function findPlayerLocally(playerName) {
                 showError('Error updating squad assignment: ' + error.message);
             }
         }
-        
+
+      // 🔧 TEMPORARY DEBUG FUNCTIONS - Add these to test
+
+// Test form element access
+function testAvailabilityForm() {
+    console.log('=== TESTING AVAILABILITY FORM ===');
+    
+    const modal = document.getElementById('playerModal');
+    console.log('Modal found:', modal ? '✅' : '❌');
+    
+    const availTab = document.getElementById('availabilityTab');
+    console.log('Availability tab found:', availTab ? '✅' : '❌');
+    
+    if (availTab) {
+        console.log('Availability tab display:', availTab.style.display);
+        console.log('Availability tab classes:', availTab.className);
+    }
+    
+    const formElements = [
+        'playerStatus',
+        'unavailableUntil', 
+        'unavailableReason',
+        'availabilityNotes'
+    ];
+    
+    formElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            console.log(`✅ ${id}:`, el.value || '(empty)');
+        } else {
+            console.log(`❌ ${id}: NOT FOUND`);
+        }
+    });
+    
+    console.log('=== END TEST ===');
+}
+
+// Test what happens when you change the status dropdown
+function testStatusChange() {
+    const statusEl = document.getElementById('playerStatus');
+    if (statusEl) {
+        statusEl.addEventListener('change', function() {
+            console.log('Status changed to:', this.value);
+        });
+        console.log('✅ Status change listener added');
+    } else {
+        console.log('❌ Status element not found');
+    }
+}
+
+// Manual test update (bypass the form)
+async function testManualUpdate() {
+    if (!currentPlayerData) {
+        console.log('❌ No player selected');
+        return;
+    }
+    
+    const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
+    
+    const testData = {
+        playerName: playerName,
+        status: 'Injured',
+        unavailableUntil: '2025-08-01',
+        unavailableReason: 'Test injury',
+        notes: 'Test update',
+        coachName: currentCoach,
+        coachEmail: 'luketeeling@gmail.com'
+    };
+    
+    console.log('🧪 Testing with manual data:', testData);
+    
+    try {
+        const result = await fetchData('updatePlayerStatus', testData);
+        console.log('🧪 Manual test result:', result);
+    } catch (error) {
+        console.log('🧪 Manual test error:', error);
+    }
+}
+      
         // ============================================================================
         // FILTER FUNCTIONS
         // ============================================================================
