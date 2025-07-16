@@ -2944,54 +2944,140 @@ function showLoadingComplete() {
         </div>
     </div>
 
-    <!-- Player Modal -->
-    <div class="modal" id="playerModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close-btn" onclick="closePlayerModal()">&times;</button>
-                <h2 id="modalPlayerName">Loading...</h2>
-                <div class="player-summary" id="playerSummary">
-                    <!-- Will be populated with player data -->
+ <!-- Player Modal - COMPLETE CORRECTED VERSION -->
+<div class="modal" id="playerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button class="close-btn" onclick="closePlayerModal()">&times;</button>
+            <h2 id="modalPlayerName">Loading...</h2>
+            <div class="player-summary" id="playerSummary">
+                <!-- Will be populated with player data -->
+            </div>
+        </div>
+        
+        <!-- ✅ ADD THIS MISSING modal-body wrapper -->
+        <div class="modal-body">
+            <!-- Tabs -->
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="showTab('info')" data-tab="info">Basic Info</button>
+                <button class="modal-tab" onclick="showTab('availability')" data-tab="availability">Availability</button>
+                <button class="modal-tab" onclick="showTab('squad')" data-tab="squad">Squad Management</button>
+            </div>
+
+            <!-- Basic Info Tab -->
+            <div class="tab-content active" id="infoTab">
+                <!-- Will be populated with player data -->
+            </div>
+
+            <!-- Notes Tab -->
+            <div class="tab-content" id="notesTab">
+                <div class="add-note-form">
+                    <h3 style="margin-bottom: 1rem;">Add New Note</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select id="noteCategory">
+                                <option value="general">General</option>
+                                <option value="performance">Performance</option>
+                                <option value="medical">Medical/Injury</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Note</label>
+                        <textarea id="noteContent" placeholder="Add your note here..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="addNote()">Add Note</button>
+                </div>
+                <div class="notes-section">
+                    <h3>Player Notes</h3>
+                    <div id="notesContainer">
+                        <!-- Notes will be loaded here -->
+                    </div>
                 </div>
             </div>
+
+            <!-- ✅ ADD THESE TWO MISSING TABS -->
             
-            <div class="modal-body">
-                <!-- Tabs -->
-                <div class="modal-tabs">
-                    <button class="modal-tab active" onclick="showTab('info')" data-tab="info">Basic Info</button>
-                    <button class="modal-tab" onclick="showTab('availability')" data-tab="availability">Availability</button>
-                    <button class="modal-tab" onclick="showTab('squad')" data-tab="squad">Squad Management</button>
-                </div>
-
-                <!-- Basic Info Tab -->
-                <div class="tab-content active" id="infoTab">
-                    <!-- Will be populated with player data -->
-                </div>
-
-                <!-- Notes Tab -->
-                <div class="tab-content" id="notesTab">
-                    <div class="add-note-form">
-                        <h3 style="margin-bottom: 1rem;">Add New Note</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Category</label>
-                                <select id="noteCategory">
-                                    <option value="general">General</option>
-                                    <option value="performance">Performance</option>
-                                    <option value="medical">Medical/Injury</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Note</label>
-                            <textarea id="noteContent" placeholder="Add your note here..."></textarea>
-                        </div>
-                        <button class="btn btn-primary" onclick="addNote()">Add Note</button>
+            <!-- Availability Tab -->
+            <div class="tab-content" id="availabilityTab">
+                <div class="availability-form">
+                    <h3 style="margin-bottom: 1rem;">Update Player Availability</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Current Status</label>
+                        <select id="playerStatus">
+                            <option value="Active">Active</option>
+                            <option value="Injured">Injured</option>
+                            <option value="Unavailable">Unavailable</option>
+                        </select>
                     </div>
 
-                    <div class="notes-section">
-                        <h3>Player Notes</h3>
-                        <div id="notesContainer">
-                            <!-- Notes will be loaded here -->
+                    <div class="form-group">
+                        <label class="form-label">Unavailable Until (if applicable)</label>
+                        <input type="date" id="unavailableUntil">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Reason for Unavailability</label>
+                        <select id="unavailableReason">
+                            <option value="">Select reason...</option>
+                            <option value="Holiday">Holiday</option>
+                            <option value="Injury">Injury</option>
+                            <option value="Retired">Retired</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea id="availabilityNotes" placeholder="Additional details about availability..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="updateAvailability()">Update Availability</button>
+                </div>
+
+                <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="currentStatus">
+                    <h4>Current Availability Status</h4>
+                    <p><strong>Status:</strong> Active</p>
+                    <p><strong>Last Updated:</strong> 7/15/2025</p>
+                </div>
+            </div>
+
+            <!-- Squad Management Tab -->
+            <div class="tab-content" id="squadTab">
+                <div class="squad-management">
+                    <h3 style="margin-bottom: 1rem;">Squad Assignments</h3>
+                    
+                    <div class="squad-options">
+                        <div class="squad-checkbox">
+                            <input type="checkbox" id="squad4ths">
+                            <label for="squad4ths">4ths Squad</label>
+                        </div>
+                        <div class="squad-checkbox">
+                            <input type="checkbox" id="squad5ths">
+                            <label for="squad5ths">5ths Squad</label>
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Position Notes</label>
+                        <textarea id="positionNotes" placeholder="Any notes about position preferences or capabilities..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="updateSquadAssignment()">Update Squad Assignment</button>
+                </div>
+
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem;" id="leagueTracking">
+                    <h4>League Game Tracking</h4>
+                    <p><strong>4ths League Games:</strong> 0 of 4 played</p>
+                    <p><strong>Status:</strong> Can play 4 more league games for 4ths this season</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #856404;">
+                        <strong>Note:</strong> Players can only play 4 league games per season for any single team.
+                    </p>
+                </div>
+            </div>
+
+        </div> <!-- ✅ CLOSING modal-body -->
+    </div> <!-- ✅ CLOSING modal-content -->
+</div> <!-- ✅ CLOSING modal -->
