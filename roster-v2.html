@@ -391,7 +391,8 @@
                 addSpinner.style.display = 'none';
             }
         }
-        
+
+      
         // Edit note in popup
         function editNoteInPopup(noteIndex) {
             const contentDiv = document.getElementById(`popupNoteContent_${noteIndex}`);
@@ -419,7 +420,136 @@
             contentDiv.style.display = 'block';
             editDiv.classList.remove('active');
         }
-        
+
+      /* ============================================================================ */
+/* FAST FANCY LOADING STYLES */
+/* ============================================================================ */
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+    border: 1px solid #e5e5e5;
+}
+
+.loading-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.loading-icon {
+    font-size: 2.5rem;
+    animation: bounce 2s infinite;
+}
+
+.loading-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+    margin: 0;
+}
+
+.progress-container {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #dc2626 100%);
+    border-radius: 6px;
+    transition: width 0.4s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.progress-percentage {
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e3c72;
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.loading-stage {
+    color: #666;
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    min-height: 24px;
+    transition: all 0.2s ease;
+}
+
+.loading-subtext {
+    color: #999;
+    font-size: 0.875rem;
+    text-align: center;
+    font-style: italic;
+}
+
+.loading-stats {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+    60% { transform: translateY(-4px); }
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.progress-complete {
+    background: linear-gradient(90deg, #28a745, #20c997) !important;
+}
+
+.loading-complete .loading-icon {
+    animation: none;
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+}
+      
         // Save edited note in popup
         async function saveNoteInPopup(noteIndex) {
             const textarea = document.getElementById(`popupNoteTextarea_${noteIndex}`);
@@ -670,31 +800,44 @@
         // ============================================================================
         
         async function loadData() {
-            try {
-                showLoading(true);
-                
-                // Load stats
-                const statsData = await fetchData('getTeamStats');
-                
-                if (statsData.success) {
-                    displayStats(statsData.data);
-                }
-                
-                // Load players
-                const playersData = await fetchData('getAllPlayers');
-                
-                if (playersData.success) {
-                    allPlayers = playersData.data;
-                    displayPlayers(allPlayers);
-                    showLoading(false);
-                } else {
-                    showError('Failed to load players: ' + playersData.error);
-                }
-                
-            } catch (error) {
-                showError('Connection error: ' + error.message);
-            }
+    try {
+        showFancyLoading(true);
+        
+        // Step 1: Connect
+        updateLoadingProgress(0);
+        
+        // Step 2: Load stats
+        updateLoadingProgress(1);
+        const statsData = await fetchData('getTeamStats');
+        if (statsData.success) {
+            displayStats(statsData.data);
         }
+        
+        // Step 3: Load players
+        updateLoadingProgress(2);
+        const playersData = await fetchData('getAllPlayers');
+        
+        if (playersData.success) {
+            allPlayers = playersData.data;
+            displayPlayers(allPlayers);
+        } else {
+            showError('Failed to load players: ' + playersData.error);
+            return;
+        }
+        
+        // Step 4: Load activity
+        updateLoadingProgress(3);
+        await loadActivityLog();
+        
+        // Step 5: Complete
+        updateLoadingProgress(4);
+        setTimeout(() => showFancyLoading(false), 200);
+        
+    } catch (error) {
+        stopLoadingTimer();
+        showError('Connection error: ' + error.message);
+    }
+}
         
        async function loadPlayerDetails(playerName) {
     try {
@@ -1136,23 +1279,112 @@ function findPlayerLocally(playerName) {
             statusFilter.addEventListener('change', applyFilters);
             positionFilter.addEventListener('change', applyFilters);
         }
+
+      // ============================================================================
+// FAST FANCY LOADING SYSTEM
+// ============================================================================
+
+let loadingStartTime = 0;
+let loadingTimer = null;
+let currentStep = 0;
+
+const loadingStages = [
+    { text: "Connecting to team database...", subtext: "Establishing connection to Google Sheets", progress: 20 },
+    { text: "Loading team statistics...", subtext: "Calculating player counts and squad data", progress: 40 },
+    { text: "Fetching player roster...", subtext: "Retrieving player details and status", progress: 70 },
+    { text: "Loading recent activity...", subtext: "Getting latest updates and notes", progress: 95 },
+    { text: "Ready! Welcome to team management", subtext: "All data loaded successfully", progress: 100 }
+];
+
+function showFancyLoading(show) {
+    const loadingDiv = document.getElementById('loadingMessage');
+    const playerTable = document.getElementById('playerTable');
+    const statsGrid = document.getElementById('statsGrid');
+    
+    if (show) {
+        loadingStartTime = Date.now();
+        currentStep = 0;
         
+        loadingDiv.style.display = 'flex';
+        playerTable.style.display = 'none';
+        if (statsGrid) statsGrid.style.opacity = '0.3';
+        
+        updateLoadingProgress(0);
+        startLoadingTimer();
+        
+    } else {
+        loadingDiv.style.display = 'none';
+        playerTable.style.display = 'table';
+        if (statsGrid) statsGrid.style.opacity = '1';
+        
+        stopLoadingTimer();
+        showLoadingComplete();
+    }
+}
+
+function updateLoadingProgress(step) {
+    if (step >= loadingStages.length) return;
+    
+    const stage = loadingStages[step];
+    currentStep = step;
+    
+    // Update progress bar
+    const progressFill = document.getElementById('progressFill');
+    const progressPercentage = document.getElementById('progressPercentage');
+    
+    if (progressFill && progressPercentage) {
+        progressFill.style.width = stage.progress + '%';
+        progressPercentage.textContent = stage.progress + '%';
+        
+        if (stage.progress === 100) {
+            progressFill.classList.add('progress-complete');
+        }
+    }
+    
+    // Update text
+    const loadingStage = document.getElementById('loadingStage');
+    const loadingSubtext = document.getElementById('loadingSubtext');
+    const loadingStep = document.getElementById('loadingStep');
+    
+    if (loadingStage) loadingStage.textContent = stage.text;
+    if (loadingSubtext) loadingSubtext.textContent = stage.subtext;
+    if (loadingStep) loadingStep.textContent = `Step ${step + 1} of ${loadingStages.length}`;
+}
+
+function startLoadingTimer() {
+    loadingTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - loadingStartTime) / 1000);
+        const loadingTimerEl = document.getElementById('loadingTimer');
+        if (loadingTimerEl) {
+            loadingTimerEl.textContent = `Elapsed: ${elapsed}s`;
+        }
+    }, 100);
+}
+
+function stopLoadingTimer() {
+    if (loadingTimer) {
+        clearInterval(loadingTimer);
+        loadingTimer = null;
+    }
+}
+
+function showLoadingComplete() {
+    const loadingDiv = document.getElementById('loadingMessage');
+    if (loadingDiv) {
+        loadingDiv.classList.add('loading-complete');
+        setTimeout(() => {
+            loadingDiv.classList.remove('loading-complete');
+        }, 600);
+    }
+}
         // ============================================================================
         // UTILITY FUNCTIONS
         // ============================================================================
         
         function showLoading(show) {
-            const loadingDiv = document.getElementById('loadingMessage');
-            const playerTable = document.getElementById('playerTable');
-            
-            if (show) {
-                loadingDiv.style.display = 'block';
-                playerTable.style.display = 'none';
-            } else {
-                loadingDiv.style.display = 'none';
-                playerTable.style.display = 'table';
-            }
-        }
+    // Legacy function - redirect to fancy loading
+    showFancyLoading(show);
+}
         
         function showError(message) {
             hideMessages();
@@ -2554,7 +2786,27 @@ function findPlayerLocally(playerName) {
     <!-- Main Content -->
     <div class="container">
         <!-- Loading/Error Messages -->
-        <div id="loadingMessage" class="loading" style="display: none;">Loading players...</div>
+        <div id="loadingMessage" class="loading-container" style="display: none;">
+    <div class="loading-header">
+        <div class="loading-icon">🏉</div>
+        <h2 class="loading-title">Clontarf Rugby</h2>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-percentage" id="progressPercentage">0%</div>
+    </div>
+    
+    <div class="loading-stage" id="loadingStage">Connecting to team database...</div>
+    <div class="loading-subtext" id="loadingSubtext">Fetching latest team data</div>
+    
+    <div class="loading-stats">
+        <span id="loadingTimer">Elapsed: 0s</span>
+        <span id="loadingStep">Step 1 of 4</span>
+    </div>
+</div>
         <div id="errorMessage" class="error" style="display: none;"></div>
         <div id="successMessage" class="success" style="display: none;"></div>
         
