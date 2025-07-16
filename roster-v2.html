@@ -1028,117 +1028,128 @@ function findPlayerLocally(playerName) {
             alert('Please use the notes popup by clicking the notes indicator in the main table');
         }
         
-       // ✅ DEBUGGING VERSION - Replace your current updateAvailability function
+       // ✅ FIXED VERSION - Replace your current updateAvailability function
 async function updateAvailability() {
-    console.log('=== DEBUG updateAvailability ===');
+    console.log('=== updateAvailability called ===');
     
-    // 1. Check if player is selected
+    // Check if player is selected
     if (!currentPlayerData) {
-        console.error('❌ No player selected');
         showError('No player selected');
         return;
     }
     
     const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-    console.log('✅ Player selected:', playerName);
+    console.log('Updating availability for:', playerName);
     
-    // 2. Check if form elements exist and get their values
+    // Get form elements
     const statusEl = document.getElementById('playerStatus');
     const untilEl = document.getElementById('unavailableUntil');
     const reasonEl = document.getElementById('unavailableReason');
     const notesEl = document.getElementById('availabilityNotes');
     
-    console.log('Form elements check:');
-    console.log('- playerStatus element:', statusEl ? '✅ Found' : '❌ Missing');
-    console.log('- unavailableUntil element:', untilEl ? '✅ Found' : '❌ Missing');
-    console.log('- unavailableReason element:', reasonEl ? '✅ Found' : '❌ Missing');
-    console.log('- availabilityNotes element:', notesEl ? '✅ Found' : '❌ Missing');
-    
     if (!statusEl) {
-        console.error('❌ playerStatus element not found');
         showError('Form elements not found. Please refresh and try again.');
         return;
     }
     
-    // 3. Get form values
+    // Get form values
     const status = statusEl.value;
     const until = untilEl ? untilEl.value : '';
     const reason = reasonEl ? reasonEl.value : '';
     const notes = notesEl ? notesEl.value : '';
     
-    console.log('Form values:');
-    console.log('- Status:', status);
-    console.log('- Until:', until);
-    console.log('- Reason:', reason);
-    console.log('- Notes:', notes);
+    console.log('Form values:', { status, until, reason, notes });
     
-    // 4. Validate the data
-    if (status !== 'Active' && !until) {
-        console.warn('⚠️ Player marked as unavailable but no return date provided');
-        if (!confirm('Player is marked as unavailable but no return date is provided. Continue anyway?')) {
-            return;
-        }
-    }
+    // ✅ IMPROVED: Find the update button more reliably
+    const updateBtn = document.querySelector('#availabilityTab .btn-primary');
+    const originalText = 'Update Availability';
     
-    // 5. Prepare data for API call
-    const updateData = {
-        playerName: playerName,
-        status: status,
-        unavailableUntil: until,
-        unavailableReason: reason,
-        notes: notes,
-        coachName: currentCoach,
-        coachEmail: 'luketeeling@gmail.com'
-    };
-    
-    console.log('Data being sent to API:', updateData);
+    console.log('Update button found:', updateBtn ? '✅' : '❌');
     
     try {
-        // 6. Show loading state
-        const updateBtn = event?.target;
-        const originalText = updateBtn?.textContent;
+        // ✅ FIXED: Better button state management
         if (updateBtn) {
             updateBtn.disabled = true;
             updateBtn.textContent = 'Updating...';
+            updateBtn.style.opacity = '0.7';
         }
         
-        console.log('📡 Calling API...');
+        // Prepare data for API call
+        const updateData = {
+            playerName: playerName,
+            status: status,
+            unavailableUntil: until,
+            unavailableReason: reason,
+            notes: notes,
+            coachName: currentCoach,
+            coachEmail: 'luketeeling@gmail.com'
+        };
         
-        // 7. Make API call
+        console.log('Sending to API:', updateData);
+        
+        // Make API call
         const result = await fetchData('updatePlayerStatus', updateData);
-        
-        console.log('📨 API Response:', result);
+        console.log('API result:', result);
         
         if (result.success) {
             console.log('✅ Update successful');
             
-            // 8. Refresh data and UI
-            await loadData(); // Refresh main table
-            await loadPlayerDetails(playerName); // Refresh modal
+            // ✅ IMPROVED: Show immediate feedback
+            if (updateBtn) {
+                updateBtn.textContent = '✅ Updated!';
+                updateBtn.style.backgroundColor = '#28a745';
+            }
             
-            // 9. Log activity
-            logActivity('status', `Updated status to ${status}${until ? ` until ${until}` : ''}`, playerName);
-            
-            // 10. Show success message
-            showSuccess(`Player status updated to: ${status}`);
+            // ✅ IMPROVED: Give user time to see success state
+            setTimeout(async () => {
+                try {
+                    // Refresh data
+                    await loadData(); // Refresh main table
+                    await loadPlayerDetails(playerName); // Refresh modal
+                    
+                    // Log activity
+                    logActivity('status', `Updated status to ${status}${until ? ` until ${until}` : ''}`, playerName);
+                    
+                    // Show success message
+                    showSuccess(`${playerName}'s availability updated successfully!`);
+                    
+                } catch (refreshError) {
+                    console.error('Error during refresh:', refreshError);
+                    showError('Update saved but there was an error refreshing the display');
+                } finally {
+                    // ✅ FIXED: Always reset button state
+                    if (updateBtn) {
+                        updateBtn.disabled = false;
+                        updateBtn.textContent = originalText;
+                        updateBtn.style.backgroundColor = '';
+                        updateBtn.style.opacity = '';
+                    }
+                }
+            }, 1000); // Show success for 1 second
             
         } else {
             console.error('❌ API Error:', result.error);
             showError('Error updating availability: ' + result.error);
+            
+            // ✅ FIXED: Reset button on error
+            if (updateBtn) {
+                updateBtn.disabled = false;
+                updateBtn.textContent = originalText;
+                updateBtn.style.opacity = '';
+            }
         }
         
     } catch (error) {
         console.error('❌ Network Error:', error);
-        showError('Network error updating availability: ' + error.message);
-    } finally {
-        // Reset button state
+        showError('Network error: ' + error.message);
+        
+        // ✅ FIXED: Reset button on exception
         if (updateBtn) {
             updateBtn.disabled = false;
-            updateBtn.textContent = originalText || 'Update Availability';
+            updateBtn.textContent = originalText;
+            updateBtn.style.opacity = '';
         }
     }
-    
-    console.log('=== END DEBUG ===');
 }
         
         async function updateSquadAssignment() {
