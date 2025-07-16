@@ -2574,7 +2574,7 @@ function showLoadingComplete() {
         }
 
         .activity-feed {
-            max-height: 400px;
+            max-height: 240px;
             overflow-y: auto;
         }
 
@@ -2712,6 +2712,29 @@ function showLoadingComplete() {
                 justify-content: center;
             }
         }
+  /* Fix Modal Tab Content Positioning */
+.modal-body {
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-content {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    z-index: 1 !important;
+}
+
+#availabilityTab,
+#squadTab {
+    position: relative !important;
+}
+
+#availabilityTab.active,
+#squadTab.active {
+    display: block !important;
+}
     </style>
 </head>
 <body>
@@ -2726,7 +2749,6 @@ function showLoadingComplete() {
                 </div>
             </div>
             <div class="user-info">
-                <span class="coach-badge">Coach: Luke Teeling</span>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
@@ -2817,14 +2839,23 @@ function showLoadingComplete() {
                 <div class="filter-group">
                     <label class="filter-label">Position</label>
                     <select id="positionFilter">
-                        <option value="">All Positions</option>
-                        <option value="1">1 - Loosehead Prop</option>
-                        <option value="2">2 - Hooker</option>
-                        <option value="3">3 - Tighthead Prop</option>
-                        <option value="9">9 - Scrum-half</option>
-                        <option value="10">10 - Fly-half</option>
-                        <option value="15">15 - Fullback</option>
-                    </select>
+                      <option value="">All Positions</option>
+                      <option value="1">1 - Loosehead Prop</option>
+                      <option value="2">2 - Hooker</option>
+                      <option value="3">3 - Tighthead Prop</option>
+                      <option value="4">4 - Lock</option>
+                      <option value="5">5 - Lock</option>
+                      <option value="6">6 - Blindside Flanker</option>
+                      <option value="7">7 - Openside Flanker</option>
+                      <option value="8">8 - Number 8</option>
+                      <option value="9">9 - Scrum-half</option>
+                      <option value="10">10 - Fly-half</option>
+                      <option value="11">11 - Left Wing</option>
+                      <option value="12">12 - Inside Centre</option>
+                      <option value="13">13 - Outside Centre</option>
+                      <option value="14">14 - Right Wing</option>
+                      <option value="15">15 - Fullback</option>
+                      </select>
                 </div>
             </div>
         </div>
