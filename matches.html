@@ -787,32 +787,41 @@
     </div>
 
     <script>
+        // Debug: Add this to verify JavaScript is running
+        console.log('JavaScript loaded successfully');
+        
         // Global variables
         let allMatches = [];
         let filteredMatches = [];
 
         // Configuration - UPDATE THESE WITH YOUR ACTUAL VALUES
         const CONFIG = {
-            GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx-Ubsc34pLiLGXWxu4TBKUjZrV8pTp5c_bTpwE8pnSko73yCFrCNxuL-7Fo1MzF1T5/exec',
-            SHEET_ID: '1_WZbZn9ql44s4Sm_ZNvmLTlbsKGJ4KBCEqvjwQzHWjk'
+            GOOGLE_APPS_SCRIPT_URL: 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE',
+            SHEET_ID: 'YOUR_GOOGLE_SHEET_ID_HERE'
         };
 
         // Load matches on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, calling loadMatches');
             loadMatches();
         });
 
         // Load matches from Google Sheets
         async function loadMatches() {
+            console.log('loadMatches function called');
             showLoadingState();
             
             try {
                 // For now, show empty state until Google Apps Script is configured
-                if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx-Ubsc34pLiLGXWxu4TBKUjZrV8pTp5c_bTpwE8pnSko73yCFrCNxuL-7Fo1MzF1T5/exec') {
-                    showEmptyState();
+                if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                    console.log('No Google Apps Script URL configured, showing empty state');
+                    setTimeout(() => {
+                        showEmptyState();
+                    }, 1000); // Show loading for 1 second, then empty state
                     return;
                 }
 
+                console.log('Fetching from:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
                 const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL + '?action=getMatches');
                 
                 if (!response.ok) {
@@ -821,6 +830,8 @@
                 
                 const data = await response.json();
                 allMatches = data.matches || [];
+                
+                console.log('Loaded matches:', allMatches);
                 
                 if (allMatches.length === 0) {
                     showEmptyState();
@@ -834,9 +845,71 @@
             }
         }
 
+        // State management functions
+        function showLoadingState() {
+            console.log('Showing loading state');
+            hideAllStates();
+            const loadingElement = document.getElementById('loadingState');
+            if (loadingElement) {
+                loadingElement.style.display = 'flex';
+                console.log('Loading state displayed');
+            } else {
+                console.error('Loading state element not found');
+            }
+        }
+
+        function showErrorState() {
+            console.log('Showing error state');
+            hideAllStates();
+            const errorElement = document.getElementById('errorState');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+                console.log('Error state displayed');
+            } else {
+                console.error('Error state element not found');
+            }
+        }
+
+        function showEmptyState() {
+            console.log('Showing empty state');
+            hideAllStates();
+            const emptyElement = document.getElementById('emptyState');
+            if (emptyElement) {
+                emptyElement.style.display = 'block';
+                console.log('Empty state displayed');
+            } else {
+                console.error('Empty state element not found');
+            }
+        }
+
+        function hideAllStates() {
+            console.log('Hiding all states');
+            const elements = [
+                'loadingState',
+                'errorState', 
+                'emptyState',
+                'matchesContainer'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                } else {
+                    console.warn(`Element ${id} not found`);
+                }
+            });
+        }
+
         // Display matches on the page
         function displayMatches(matches) {
+            console.log('Displaying matches:', matches);
             const container = document.getElementById('matchesContainer');
+            
+            if (!container) {
+                console.error('Matches container not found');
+                return;
+            }
             
             if (matches.length === 0) {
                 showEmptyState();
@@ -847,6 +920,7 @@
             
             hideAllStates();
             container.style.display = 'block';
+            console.log('Matches displayed successfully');
         }
 
         // Create HTML for a single match card
@@ -1046,31 +1120,9 @@
             return buttons.join('');
         }
 
-        // State management functions
-        function showLoadingState() {
-            hideAllStates();
-            document.getElementById('loadingState').style.display = 'flex';
-        }
-
-        function showErrorState() {
-            hideAllStates();
-            document.getElementById('errorState').style.display = 'block';
-        }
-
-        function showEmptyState() {
-            hideAllStates();
-            document.getElementById('emptyState').style.display = 'block';
-        }
-
-        function hideAllStates() {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('errorState').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('matchesContainer').style.display = 'none';
-        }
-
         // Filter functions
         function filterMatches() {
+            console.log('Filter matches called');
             const teamFilter = document.getElementById('teamFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
             const dateFilter = document.getElementById('dateFilter').value;
@@ -1123,67 +1175,93 @@
 
         // Action functions (to be connected to Google Apps Script)
         function sendAvailability(matchId, team) {
+            console.log('Send availability called:', matchId, team);
             if (confirm(`Send availability request to all ${team} players for this match?`)) {
                 alert(`This will be connected to Google Apps Script to send WhatsApp and email notifications to ${team} players.`);
             }
         }
 
         function sendReminder(matchId, team) {
+            console.log('Send reminder called:', matchId, team);
             if (confirm(`Send reminder to players who haven't responded yet?`)) {
                 alert(`This will be connected to Google Apps Script to send targeted reminders.`);
             }
         }
 
         function viewResponses(matchId) {
+            console.log('View responses called:', matchId);
             alert(`This will show detailed availability responses for match ${matchId}`);
         }
 
         function shareTeamSheet(matchId) {
+            console.log('Share team sheet called:', matchId);
             if (confirm('Share team sheet with players via WhatsApp and email?')) {
                 alert(`This will be connected to Google Apps Script to share the team sheet.`);
             }
         }
 
         function editResults(matchId) {
+            console.log('Edit results called:', matchId);
             window.location.href = `match-detail.html?matchId=${matchId}&tab=notes`;
         }
 
         function sendWeeklyAvailability() {
+            console.log('Send weekly availability called');
             if (confirm('Send availability requests for all matches this week?')) {
                 alert('This will be connected to Google Apps Script to send bulk availability requests.');
             }
         }
 
         function exportMatches() {
+            console.log('Export matches called');
             alert('This will export matches to Excel format.');
         }
 
         function refreshMatches() {
+            console.log('Refresh matches called');
             loadMatches();
         }
 
         // Modal functions
         function showAddMatchModal() {
+            console.log('Show add match modal called');
             document.getElementById('addMatchModal').classList.add('active');
         }
         
         function closeAddMatchModal() {
+            console.log('Close add match modal called');
             document.getElementById('addMatchModal').classList.remove('active');
             document.getElementById('addMatchForm').reset();
         }
 
         // Form submission
         document.getElementById('addMatchForm').addEventListener('submit', function(e) {
+            console.log('Form submitted');
             e.preventDefault();
             
             const formData = new FormData(this);
             const matchData = Object.fromEntries(formData.entries());
             
+            console.log('Match data:', matchData);
             // This will be connected to Google Apps Script
             alert(`Match data ready to save to Google Sheets:\n${JSON.stringify(matchData, null, 2)}`);
             
             closeAddMatchModal();
         });
+
+        // Test function - you can call this in the console
+        window.testPage = function() {
+            console.log('Testing page functionality...');
+            console.log('All states:', {
+                loading: document.getElementById('loadingState'),
+                error: document.getElementById('errorState'),
+                empty: document.getElementById('emptyState'),
+                container: document.getElementById('matchesContainer')
+            });
+            
+            // Force show empty state for testing
+            showEmptyState();
+        };
     </script>
 </body>
 </html>
