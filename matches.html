@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matches - Clontarf Rugby</title>
-    <script src="config.js"></script>  
     <style>
         * {
             margin: 0;
@@ -795,37 +794,43 @@
         let allMatches = [];
         let filteredMatches = [];
 
-               // Load matches on page load
+        // Configuration - UPDATE THESE WITH YOUR ACTUAL VALUES
+        const CONFIG = {
+            GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzsXHlxDIxjVOBzEnC-KkjqGc98FyeD1GKyXivho3eQhLqvyyQN_igho_31Zmq2cnsF/exec',
+            SHEET_ID: '1_WZbZn9ql44s4Sm_ZNvmLTlbsKGJ4KBCEqvjwQzHWjk'
+        };
+
+        // Load matches on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, calling loadMatches');
             loadMatches();
         });
 
-       // Load matches from Google Sheets using JSONP to avoid CORS
-function loadMatches() {
-    console.log('loadMatches function called');
-    console.log('CONFIG check:', CONFIG);
-    showLoadingState();
-    
-    try {
-        if (!CONFIG.WEB_APP_URL) {
-            console.log('No WEB_APP_URL configured, showing empty state');
-            setTimeout(() => showEmptyState(), 1000);
-            return;
-        }
-
-        console.log('Fetching from:', CONFIG.WEB_APP_URL);
-        
-        // Use JSONP to avoid CORS issues
-        const script = document.createElement('script');
-        const callbackName = 'matchesCallback_' + Date.now();
-        
-        // Set up callback function
-        window[callbackName] = function(data) {
-            console.log('JSONP response received:', data);
+        // Load matches from Google Sheets
+        async function loadMatches() {
+            console.log('loadMatches function called');
+            showLoadingState();
             
-            if (data.success) {
+            try {
+                // For now, show empty state until Google Apps Script is configured
+                if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                    console.log('No Google Apps Script URL configured, showing empty state');
+                    setTimeout(() => {
+                        showEmptyState();
+                    }, 1000); // Show loading for 1 second, then empty state
+                    return;
+                }
+
+                console.log('Fetching from:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
+                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL + '?action=getMatches');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch matches');
+                }
+                
+                const data = await response.json();
                 allMatches = data.matches || [];
+                
                 console.log('Loaded matches:', allMatches);
                 
                 if (allMatches.length === 0) {
@@ -833,33 +838,12 @@ function loadMatches() {
                 } else {
                     displayMatches(allMatches);
                 }
-            } else {
-                console.error('Server error:', data.error);
+                
+            } catch (error) {
+                console.error('Error loading matches:', error);
                 showErrorState();
             }
-            
-            // Cleanup
-            document.body.removeChild(script);
-            delete window[callbackName];
-        };
-        
-        // Handle errors
-        script.onerror = function() {
-            console.error('JSONP request failed');
-            showErrorState();
-            document.body.removeChild(script);
-            delete window[callbackName];
-        };
-        
-        // Make JSONP request
-        script.src = `${CONFIG.WEB_APP_URL}?action=getMatches&callback=${callbackName}`;
-        document.body.appendChild(script);
-        
-    } catch (error) {
-        console.error('Error loading matches:', error);
-        showErrorState();
-    }
-}
+        }
 
         // State management functions
         function showLoadingState() {
