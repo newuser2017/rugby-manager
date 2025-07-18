@@ -1133,7 +1133,7 @@
         let availablePlayers = [];
 
         // Configuration - loaded from config.js
-        const CONFIG = window.RUGBY_CONFIG;
+        // CONFIG will be available as window.RUGBY_CONFIG
 
         // Load match data on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -1172,7 +1172,7 @@
             showLoading();
             
             try {
-                const response = await fetch(`${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch match data');
@@ -1198,7 +1198,7 @@
         // Load available players for team selection
         async function loadAvailablePlayers() {
             try {
-                const response = await fetch(`${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getPlayers&team=${currentMatch.squad}`);
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getPlayers&team=${currentMatch.squad}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1216,7 +1216,7 @@
         // Load match history
         async function loadMatchHistory() {
             try {
-                const response = await fetch(`${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchHistory&opponent=${encodeURIComponent(currentMatch.opponent)}`);
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchHistory&opponent=${encodeURIComponent(currentMatch.opponent)}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1525,7 +1525,7 @@
             }
             
             try {
-                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1560,7 +1560,7 @@
             const matchStrategy = document.getElementById('matchStrategy').value;
             
             try {
-                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1598,7 +1598,7 @@
             if (!currentMatch) return;
             
             try {
-                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1871,7 +1871,7 @@
             const notes = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
