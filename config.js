@@ -2,7 +2,7 @@
 const CONFIG = {
     // ✅ KEEP YOUR EXISTING SETTINGS
     COACH_PASSWORD: 'clontarf2025',
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbx-Ubsc34pLiLGXWxu4TBKUjZrV8pTp5c_bTpwE8pnSko73yCFrCNxuL-7Fo1MzF1T5/exec',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzTufmqaN070rwPVtTsvAM7EzDGVe0mBUdzajKNH4TRwWUygyhOCQklqK6zeRHOSxlH/exec',
     CLUB_NAME: 'Clontarf Rugby',
     SQUADS: ['4ths', '5ths'],
     POSITIONS: {
