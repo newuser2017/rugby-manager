@@ -23,8 +23,6 @@ const CONFIG = {
         '15': 'Fullback'
     },
     
-    // ✅ ADD THESE NEW SETTINGS
-    
     // Default Coach Information
     DEFAULT_COACH: {
         name: 'Luke Teeling',
@@ -50,16 +48,51 @@ const CONFIG = {
     }
 };
 
-// ✅ ADD THIS EXPORT FUNCTIONALITY
-// Export for different environments
+// ✅ COMPATIBILITY LAYER - Makes new pages work with existing config
+window.RUGBY_CONFIG = {
+    GOOGLE_APPS_SCRIPT_URL: CONFIG.WEB_APP_URL,  // Maps your WEB_APP_URL to new format
+    SHEET_ID: CONFIG.SHEET_ID || '',             // Optional, not always needed
+    CLUB_NAME: CONFIG.CLUB_NAME,
+    DEFAULT_TEAM: CONFIG.SQUADS[0],              // Uses first squad as default
+    SEASON: '2025/26',
+    WHATSAPP_ENABLED: CONFIG.FEATURES.whatsappIntegration,
+    DEBUG_MODE: CONFIG.DEBUG_MODE
+};
+
+// ✅ UTILITY FUNCTIONS FOR NEW PAGES
+window.checkConfig = function() {
+    if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL === 'YOUR_URL_HERE') {
+        console.error('❌ WEB_APP_URL not configured in config.js');
+        return false;
+    }
+    
+    console.log('✅ Configuration loaded successfully');
+    console.log('🔗 Google Apps Script URL:', CONFIG.WEB_APP_URL);
+    return true;
+};
+
+// Test connection function
+window.testConnection = async function() {
+    try {
+        console.log('🧪 Testing connection to Google Apps Script...');
+        const response = await fetch(`${CONFIG.WEB_APP_URL}?action=test`);
+        const data = await response.json();
+        console.log('✅ Connection test successful:', data);
+        return true;
+    } catch (error) {
+        console.error('❌ Connection test failed:', error);
+        return false;
+    }
+};
+
+// ✅ EXPORT FOR DIFFERENT ENVIRONMENTS (Keep your existing export)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG; // Node.js
 } else if (typeof window !== 'undefined') {
-    window.CONFIG = CONFIG; // Browser
+    window.CONFIG = CONFIG; // Browser - your existing pages use this
 }
 
-// ✅ ADD THIS DEBUG LOGGING
-// Debug logging
+// ✅ DEBUG LOGGING (Keep your existing logging)
 if (CONFIG.DEBUG_MODE && typeof console !== 'undefined') {
     console.log('🏉 Clontarf Rugby Config Loaded:', CONFIG.WEB_APP_URL);
     console.log('📊 Debug mode enabled - check console for API logs');
