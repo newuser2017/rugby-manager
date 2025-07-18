@@ -1139,31 +1139,34 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Page loaded, initializing...');
             
-            // Check if configuration is properly loaded
-            if (!window.checkConfig()) {
-                showError('Configuration not properly set. Please check config.js file.');
-                return;
-            }
-            
-            // Get match ID from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const matchId = urlParams.get('matchId');
-            
-            if (!matchId) {
-                showError('No match ID provided in URL');
-                return;
-            }
-            
-            console.log('Loading match:', matchId);
-            loadMatchData(matchId);
-            
-            // Set default active tab to overview
-            showTab('overview');
-            
-            // Set up score calculation
+            // Wait a moment for config.js to fully load
             setTimeout(() => {
-                setupScoreCalculation();
-            }, 1500);
+                // Check if configuration is properly loaded
+                if (typeof window.checkConfig === 'function' && !window.checkConfig()) {
+                    showError('Configuration not properly set. Please check config.js file.');
+                    return;
+                }
+                
+                // Get match ID from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const matchId = urlParams.get('matchId');
+                
+                if (!matchId) {
+                    showError('No match ID provided in URL');
+                    return;
+                }
+                
+                console.log('Loading match:', matchId);
+                loadMatchData(matchId);
+                
+                // Set default active tab to overview
+                showTab('overview');
+                
+                // Set up score calculation
+                setTimeout(() => {
+                    setupScoreCalculation();
+                }, 1500);
+            }, 100); // Small delay to ensure config.js is loaded
         });
 
         // Load match data from Google Sheets
