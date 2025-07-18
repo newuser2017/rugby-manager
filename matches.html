@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matches - Clontarf Rugby</title>
+    <script src="config.js"></script>  
     <style>
         * {
             margin: 0;
@@ -794,13 +795,7 @@
         let allMatches = [];
         let filteredMatches = [];
 
-        // Configuration - UPDATE THESE WITH YOUR ACTUAL VALUES
-        const CONFIG = {
-            GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx-Ubsc34pLiLGXWxu4TBKUjZrV8pTp5c_bTpwE8pnSko73yCFrCNxuL-7Fo1MzF1T5/exec',
-            SHEET_ID: '1_WZbZn9ql44s4Sm_ZNvmLTlbsKGJ4KBCEqvjwQzHWjk'
-        };
-
-        // Load matches on page load
+               // Load matches on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, calling loadMatches');
             loadMatches();
@@ -822,7 +817,7 @@
                 }
 
                 console.log('Fetching from:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
-                const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL + '?action=getMatches');
+                const response = await fetch(CONFIG.WEB_APP_URL + '?action=getMatches');
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch matches');
