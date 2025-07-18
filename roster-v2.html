@@ -50,36 +50,58 @@
             </div>
         </div>
     </div>
-
-    <script>
-        // Configuration - REPLACE WITH YOUR WEB APP URL
-// ✅ Use CONFIG instead of hardcoded URL
-const WEB_APP_URL = CONFIG?.WEB_APP_URL || 'MISSING_CONFIG';
-const DEBUG_MODE = CONFIG?.DEBUG_MODE || false;
-
-// Check if config loaded properly
-if (!CONFIG || !CONFIG.WEB_APP_URL) {
-    console.error('❌ CONFIG not loaded! Check that config.js is accessible.');
-    alert('Configuration error: Please check that config.js is properly loaded.');
-}
-
-if (DEBUG_MODE) {
-    console.log('🏉 Roster v2 initialized with:', {
-        webAppUrl: WEB_APP_URL,
-        version: CONFIG?.APP_VERSION
-    });
-}        
+<script>
+        // ============================================================================
+        // WAIT FOR CONFIG TO LOAD BEFORE INITIALIZING
+        // ============================================================================
+        
+        let WEB_APP_URL;
+        let DEBUG_MODE = false;
         let allPlayers = [];
         let currentCoach = 'Luke Teeling';
         let currentPlayerData = null;
         let currentPlayerName = '';
         let notesCache = {};
         
+        // Function to initialize when CONFIG is ready
+        function initializeApp() {
+            if (typeof CONFIG === 'undefined') {
+                console.error('❌ CONFIG still not available, retrying...');
+                setTimeout(initializeApp, 100); // Retry in 100ms
+                return;
+            }
+            
+            // ✅ Now CONFIG is available - set all variables
+            WEB_APP_URL = CONFIG.WEB_APP_URL;
+            DEBUG_MODE = CONFIG.DEBUG_MODE || false;
+            currentCoach = CONFIG.DEFAULT_COACH?.name || 'Luke Teeling';
+            
+            console.log('✅ App initialized with CONFIG:', {
+                webAppUrl: WEB_APP_URL,
+                debug: DEBUG_MODE,
+                coach: currentCoach
+            });
+            
+            // Check authentication and start the app
+            if (!sessionStorage.getItem('authenticated')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            loadData();
+            loadActivityLog();
+        }
+        
         // ============================================================================
         // CORS-FRIENDLY API FUNCTIONS
         // ============================================================================
         
         async function fetchData(action, params = {}) {
+            // Add safety check
+            if (!WEB_APP_URL) {
+                throw new Error('WEB_APP_URL not initialized. Please wait for config to load.');
+            }
+            
             const url = new URL(WEB_APP_URL);
             url.searchParams.append('action', action);
             
@@ -91,13 +113,23 @@ if (DEBUG_MODE) {
             });
 
             try {
+                if (DEBUG_MODE) {
+                    console.log('🔄 API Request:', action, params);
+                }
+                
                 const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                return await response.json();
+                const result = await response.json();
+                
+                if (DEBUG_MODE) {
+                    console.log('✅ API Response:', action, result);
+                }
+                
+                return result;
             } catch (error) {
                 console.error('Fetch error:', error);
                 throw error;
@@ -333,7 +365,6 @@ if (DEBUG_MODE) {
             }
         }
 
-      
         // Edit note in popup
         function editNoteInPopup(noteIndex) {
             const contentDiv = document.getElementById(`popupNoteContent_${noteIndex}`);
@@ -362,7 +393,6 @@ if (DEBUG_MODE) {
             editDiv.classList.remove('active');
         }
 
-      
         // Save edited note in popup
         async function saveNoteInPopup(noteIndex) {
             const textarea = document.getElementById(`popupNoteTextarea_${noteIndex}`);
@@ -479,19 +509,8 @@ if (DEBUG_MODE) {
         }
 
         // ============================================================================
-        // AUTHENTICATION & INITIALIZATION
+        // LOGOUT FUNCTION
         // ============================================================================
-        
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            if (!sessionStorage.getItem('authenticated')) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            loadData();
-            loadActivityLog();
-        });
         
         function logout() {
             sessionStorage.removeItem('authenticated');
@@ -1032,17 +1051,7 @@ function findPlayerLocally(playerName) {
     );
 }
 
-      
-        // UPDATE FUNCTIONS - USING SIMPLE POPUP APPROACH
-        // ============================================================================
-        
-        // OLD addNote function is disabled - using popup instead
-        async function addNote() {
-            console.log('addNote disabled - using popup approach instead');
-            alert('Please use the notes popup by clicking the notes indicator in the main table');
-        }
-        
-       // ✅ FIXED VERSION - Replace your current updateAvailability function
+        // ✅ FIXED VERSION - Replace your current updateAvailability function
 async function updateAvailability() {
     console.log('=== updateAvailability called ===');
     
@@ -1201,84 +1210,6 @@ async function updateAvailability() {
             }
         }
 
-      // 🔧 TEMPORARY DEBUG FUNCTIONS - Add these to test
-
-// Test form element access
-function testAvailabilityForm() {
-    console.log('=== TESTING AVAILABILITY FORM ===');
-    
-    const modal = document.getElementById('playerModal');
-    console.log('Modal found:', modal ? '✅' : '❌');
-    
-    const availTab = document.getElementById('availabilityTab');
-    console.log('Availability tab found:', availTab ? '✅' : '❌');
-    
-    if (availTab) {
-        console.log('Availability tab display:', availTab.style.display);
-        console.log('Availability tab classes:', availTab.className);
-    }
-    
-    const formElements = [
-        'playerStatus',
-        'unavailableUntil', 
-        'unavailableReason',
-        'availabilityNotes'
-    ];
-    
-    formElements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            console.log(`✅ ${id}:`, el.value || '(empty)');
-        } else {
-            console.log(`❌ ${id}: NOT FOUND`);
-        }
-    });
-    
-    console.log('=== END TEST ===');
-}
-
-// Test what happens when you change the status dropdown
-function testStatusChange() {
-    const statusEl = document.getElementById('playerStatus');
-    if (statusEl) {
-        statusEl.addEventListener('change', function() {
-            console.log('Status changed to:', this.value);
-        });
-        console.log('✅ Status change listener added');
-    } else {
-        console.log('❌ Status element not found');
-    }
-}
-
-// Manual test update (bypass the form)
-async function testManualUpdate() {
-    if (!currentPlayerData) {
-        console.log('❌ No player selected');
-        return;
-    }
-    
-    const playerName = `${currentPlayerData['First Name']} ${currentPlayerData['Last Name']}`;
-    
-    const testData = {
-        playerName: playerName,
-        status: 'Injured',
-        unavailableUntil: '2025-08-01',
-        unavailableReason: 'Test injury',
-        notes: 'Test update',
-        coachName: currentCoach,
-        coachEmail: 'luketeeling@gmail.com'
-    };
-    
-    console.log('🧪 Testing with manual data:', testData);
-    
-    try {
-        const result = await fetchData('updatePlayerStatus', testData);
-        console.log('🧪 Manual test result:', result);
-    } catch (error) {
-        console.log('🧪 Manual test error:', error);
-    }
-}
-      
         // ============================================================================
         // FILTER FUNCTIONS
         // ============================================================================
@@ -1469,7 +1400,7 @@ function showLoadingComplete() {
         }
         
         // ============================================================================
-        // EVENT LISTENERS
+        // EVENT LISTENERS & INITIALIZATION
         // ============================================================================
         
         // Initialize filters when DOM is ready
@@ -1537,6 +1468,23 @@ function showLoadingComplete() {
             toggleBodyScroll(false);
             originalCloseNotesPopup();
         };
+        
+        // ============================================================================
+        // MAIN INITIALIZATION
+        // ============================================================================
+        
+        // Wait for page load, then initialize
+        window.addEventListener('load', function() {
+            initializeApp();
+        });
+        
+        // Also try to initialize immediately if DOM is already ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+        
     </script>
 </body>
 </html><!DOCTYPE html>
