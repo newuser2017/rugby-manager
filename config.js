@@ -1,6 +1,6 @@
 // Configuration for Clontarf Rugby Team Management
 const CONFIG = {
-    // ✅ KEEP YOUR EXISTING SETTINGS
+    // ✅ YOUR EXISTING SETTINGS (UNCHANGED)
     COACH_PASSWORD: 'clontarf2025',
     WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbw9sSZwEEY-fl1ZnbYP1yNPc2H_kkwIHet4Z6m_VurCi1tyHxFnVl4KZT-KeFE75r75/exec',
     CLUB_NAME: 'Clontarf Rugby',
@@ -48,52 +48,62 @@ const CONFIG = {
     }
 };
 
-// ✅ COMPATIBILITY LAYER - Makes new pages work with existing config
-window.RUGBY_CONFIG = {
-    GOOGLE_APPS_SCRIPT_URL: CONFIG.WEB_APP_URL,  // Maps your WEB_APP_URL to new format
-    SHEET_ID: CONFIG.SHEET_ID || '',             // Optional, not always needed
-    CLUB_NAME: CONFIG.CLUB_NAME,
-    DEFAULT_TEAM: CONFIG.SQUADS[0],              // Uses first squad as default
-    SEASON: '2025/26',
-    WHATSAPP_ENABLED: CONFIG.FEATURES.whatsappIntegration,
-    DEBUG_MODE: CONFIG.DEBUG_MODE
-};
-
-// ✅ UTILITY FUNCTIONS FOR NEW PAGES
-window.checkConfig = function() {
-    if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL === 'YOUR_URL_HERE') {
-        console.error('❌ WEB_APP_URL not configured in config.js');
-        return false;
-    }
-    
-    console.log('✅ Configuration loaded successfully');
-    console.log('🔗 Google Apps Script URL:', CONFIG.WEB_APP_URL);
-    return true;
-};
-
-// Test connection function
-window.testConnection = async function() {
-    try {
-        console.log('🧪 Testing connection to Google Apps Script...');
-        const response = await fetch(`${CONFIG.WEB_APP_URL}?action=test`);
-        const data = await response.json();
-        console.log('✅ Connection test successful:', data);
-        return true;
-    } catch (error) {
-        console.error('❌ Connection test failed:', error);
-        return false;
-    }
-};
-
-// ✅ EXPORT FOR DIFFERENT ENVIRONMENTS (Keep your existing export)
+// ✅ EXPORT FOR DIFFERENT ENVIRONMENTS (Keep your existing export - UNCHANGED)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG; // Node.js
 } else if (typeof window !== 'undefined') {
     window.CONFIG = CONFIG; // Browser - your existing pages use this
 }
 
-// ✅ DEBUG LOGGING (Keep your existing logging)
+// ✅ DEBUG LOGGING (Keep your existing logging - UNCHANGED)
 if (CONFIG.DEBUG_MODE && typeof console !== 'undefined') {
     console.log('🏉 Clontarf Rugby Config Loaded:', CONFIG.WEB_APP_URL);
     console.log('📊 Debug mode enabled - check console for API logs');
 }
+
+// ✅ ADDITIONAL COMPATIBILITY FOR NEW PAGES ONLY
+// Wait for DOM to load before setting up compatibility
+document.addEventListener('DOMContentLoaded', function() {
+    // Only add compatibility layer if not already exists
+    if (typeof window.RUGBY_CONFIG === 'undefined') {
+        window.RUGBY_CONFIG = {
+            GOOGLE_APPS_SCRIPT_URL: CONFIG.WEB_APP_URL,
+            SHEET_ID: CONFIG.SHEET_ID || '',
+            CLUB_NAME: CONFIG.CLUB_NAME,
+            DEFAULT_TEAM: CONFIG.SQUADS[0],
+            SEASON: '2025/26',
+            WHATSAPP_ENABLED: CONFIG.FEATURES.whatsappIntegration,
+            DEBUG_MODE: CONFIG.DEBUG_MODE
+        };
+    }
+    
+    // Add utility functions for new pages only
+    if (typeof window.checkConfig === 'undefined') {
+        window.checkConfig = function() {
+            if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL === 'YOUR_URL_HERE') {
+                console.error('❌ WEB_APP_URL not configured in config.js');
+                return false;
+            }
+            
+            console.log('✅ Configuration loaded successfully');
+            console.log('🔗 Google Apps Script URL:', CONFIG.WEB_APP_URL);
+            return true;
+        };
+    }
+    
+    // Test connection function
+    if (typeof window.testConnection === 'undefined') {
+        window.testConnection = async function() {
+            try {
+                console.log('🧪 Testing connection to Google Apps Script...');
+                const response = await fetch(`${CONFIG.WEB_APP_URL}?action=test`);
+                const data = await response.json();
+                console.log('✅ Connection test successful:', data);
+                return true;
+            } catch (error) {
+                console.error('❌ Connection test failed:', error);
+                return false;
+            }
+        };
+    }
+});
