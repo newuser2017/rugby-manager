@@ -801,50 +801,59 @@
             loadMatches();
         });
 
-        // Load matches from Google Sheets
-async function loadMatches() {
+       // Load matches from Google Sheets using JSONP to avoid CORS
+function loadMatches() {
     console.log('loadMatches function called');
     console.log('CONFIG check:', CONFIG);
     showLoadingState();
     
     try {
-        // Check if CONFIG is loaded
-        if (typeof CONFIG === 'undefined') {
-            console.error('CONFIG is not defined - config.js may not be loading');
-            throw new Error('Configuration not loaded');
-        }
-        
-        // Check if WEB_APP_URL is configured
-        if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+        if (!CONFIG.WEB_APP_URL) {
             console.log('No WEB_APP_URL configured, showing empty state');
-            setTimeout(() => {
-                showEmptyState();
-            }, 1000);
+            setTimeout(() => showEmptyState(), 1000);
             return;
         }
 
         console.log('Fetching from:', CONFIG.WEB_APP_URL);
-        const response = await fetch(CONFIG.WEB_APP_URL + '?action=getMatches', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+        
+        // Use JSONP to avoid CORS issues
+        const script = document.createElement('script');
+        const callbackName = 'matchesCallback_' + Date.now();
+        
+        // Set up callback function
+        window[callbackName] = function(data) {
+            console.log('JSONP response received:', data);
+            
+            if (data.success) {
+                allMatches = data.matches || [];
+                console.log('Loaded matches:', allMatches);
+                
+                if (allMatches.length === 0) {
+                    showEmptyState();
+                } else {
+                    displayMatches(allMatches);
+                }
+            } else {
+                console.error('Server error:', data.error);
+                showErrorState();
             }
-        });
+            
+            // Cleanup
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Handle errors
+        script.onerror = function() {
+            console.error('JSONP request failed');
+            showErrorState();
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
         
-        const data = await response.json();
-        allMatches = data.matches || [];
-        
-        console.log('Loaded matches:', allMatches);
-        
-        if (allMatches.length === 0) {
-            showEmptyState();
-        } else {
-            displayMatches(allMatches);
-        }
+        // Make JSONP request
+        script.src = `${CONFIG.WEB_APP_URL}?action=getMatches&callback=${callbackName}`;
+        document.body.appendChild(script);
         
     } catch (error) {
         console.error('Error loading matches:', error);
