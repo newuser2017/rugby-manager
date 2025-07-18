@@ -802,43 +802,55 @@
         });
 
         // Load matches from Google Sheets
-        async function loadMatches() {
-            console.log('loadMatches function called');
-            showLoadingState();
-            
-            try {
-                // For now, show empty state until Google Apps Script is configured
-                if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                    console.log('No Google Apps Script URL configured, showing empty state');
-                    setTimeout(() => {
-                        showEmptyState();
-                    }, 1000); // Show loading for 1 second, then empty state
-                    return;
-                }
-
-                console.log('Fetching from:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
-                const response = await fetch(CONFIG.WEB_APP_URL + '?action=getMatches');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch matches');
-                }
-                
-                const data = await response.json();
-                allMatches = data.matches || [];
-                
-                console.log('Loaded matches:', allMatches);
-                
-                if (allMatches.length === 0) {
-                    showEmptyState();
-                } else {
-                    displayMatches(allMatches);
-                }
-                
-            } catch (error) {
-                console.error('Error loading matches:', error);
-                showErrorState();
-            }
+async function loadMatches() {
+    console.log('loadMatches function called');
+    console.log('CONFIG check:', CONFIG);
+    showLoadingState();
+    
+    try {
+        // Check if CONFIG is loaded
+        if (typeof CONFIG === 'undefined') {
+            console.error('CONFIG is not defined - config.js may not be loading');
+            throw new Error('Configuration not loaded');
         }
+        
+        // Check if WEB_APP_URL is configured
+        if (!CONFIG.WEB_APP_URL || CONFIG.WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+            console.log('No WEB_APP_URL configured, showing empty state');
+            setTimeout(() => {
+                showEmptyState();
+            }, 1000);
+            return;
+        }
+
+        console.log('Fetching from:', CONFIG.WEB_APP_URL);
+        const response = await fetch(CONFIG.WEB_APP_URL + '?action=getMatches', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        allMatches = data.matches || [];
+        
+        console.log('Loaded matches:', allMatches);
+        
+        if (allMatches.length === 0) {
+            showEmptyState();
+        } else {
+            displayMatches(allMatches);
+        }
+        
+    } catch (error) {
+        console.error('Error loading matches:', error);
+        showErrorState();
+    }
+}
 
         // State management functions
         function showLoadingState() {
