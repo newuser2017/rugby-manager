@@ -1212,9 +1212,10 @@ loadMatchHistory();
                     throw new Error(data.error);
                 }
             } catch (error) {
-                console.error('Error loading players:', error);
-                showError('Unable to load player data');
-            }
+    console.error('Error loading players:', error);
+    // showError('Unable to load player data'); // Comment out this line
+    console.log('Continuing without player data - team selection will be limited');
+}
         }
 
         // Load match history
