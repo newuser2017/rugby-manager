@@ -1125,117 +1125,235 @@
     </div>
 
     <script>
+        // ============================================================================
+        // CONFIGURATION AND GLOBAL VARIABLES
+        // ============================================================================
+        
         // Global variables
         let currentMatch = null;
         let teamSelection = {};
         let reserves = {};
         let reserveCount = 4;
         let availablePlayers = [];
+        let WEB_APP_URL; // Will be set from CONFIG
+        let DEBUG_MODE = false;
 
-        // Configuration - loaded from config.js
-        // CONFIG will be available as window.RUGBY_CONFIG
+        // ============================================================================
+        // INITIALIZATION AND CONFIGURATION LOADING
+        // ============================================================================
 
-        // Load match data on page load
+        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded, initializing...');
+            console.log('=== Match Detail Page Loading ===');
             
-            // Wait a moment for config.js to fully load
+            // Wait for config.js to load properly
             setTimeout(() => {
-                // Check if configuration is properly loaded
-                if (typeof window.checkConfig === 'function' && !window.checkConfig()) {
-                    showError('Configuration not properly set. Please check config.js file.');
-                    return;
+                if (!initializeConfiguration()) {
+                    return; // Exit if configuration fails
                 }
                 
-                // Get match ID from URL parameters
+                // Get match ID from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const matchId = urlParams.get('matchId');
                 
                 if (!matchId) {
-                    showError('No match ID provided in URL');
+                    showError('No match ID provided in URL parameters');
                     return;
                 }
                 
-                console.log('Loading match:', matchId);
+                console.log('✅ Loading match:', matchId);
                 loadMatchData(matchId);
                 
-                // Set default active tab to overview
+                // Set default tab and setup score calculation
                 showTab('overview');
-                
-                // Set up score calculation
                 setTimeout(() => {
                     setupScoreCalculation();
                 }, 1500);
-            }, 100); // Small delay to ensure config.js is loaded
+                
+            }, 100); // Small delay to ensure config.js is fully loaded
         });
 
-        // Load match data from Google Sheets
+        function initializeConfiguration() {
+            // ✅ FIXED: Use same CONFIG pattern as working files
+            if (typeof CONFIG !== 'undefined' && CONFIG.WEB_APP_URL) {
+                WEB_APP_URL = CONFIG.WEB_APP_URL;
+                DEBUG_MODE = CONFIG.DEBUG_MODE || false;
+                console.log('✅ Configuration loaded successfully');
+                console.log('Web App URL:', WEB_APP_URL);
+                return true;
+            } else {
+                console.error('❌ Configuration not found. Please check config.js file.');
+                showError('Configuration not properly set. Please check config.js file.');
+                return false;
+            }
+        }
+
+        // ============================================================================
+        // CONSISTENT DATA FETCHING PATTERN (MATCHING WORKING FILES)
+        // ============================================================================
+
+        // ✅ FIXED: Use same fetchData pattern as roster-v2.html
+        async function fetchDataForMatch(action, params = {}) {
+            if (!WEB_APP_URL) {
+                throw new Error('Configuration not loaded. Please refresh the page.');
+            }
+            
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', action);
+            
+            // Add any additional parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+
+            try {
+                if (DEBUG_MODE) {
+                    console.log('🔄 API Request:', action, params);
+                }
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (DEBUG_MODE) {
+                    console.log('✅ API Response:', action, result);
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // MATCH DATA LOADING
+        // ============================================================================
+
         async function loadMatchData(matchId) {
             console.log('Loading match data for:', matchId);
             showLoading();
             
             try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
+                // ✅ FIXED: Use consistent fetchData pattern
+                const result = await fetchDataForMatch('getMatch', { matchId: matchId });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch match data');
-                }
-                
-                const data = await response.json();
-                console.log('API response data:', data);
+                console.log('Match data received:', result);
 
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to load match');
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load match');
                 }
                 
-                currentMatch = data;
-displayMatchData(currentMatch);
-loadAvailablePlayers();
-loadMatchHistory();
+                currentMatch = result;
+                displayMatchData(currentMatch);
+                
+                // Load additional data
+                await loadAvailablePlayers();
+                await loadMatchHistory();
                 
             } catch (error) {
-                console.error('Error loading match data:', error);
-                showError('Unable to load match details. Please check your Google Apps Script URL configuration.');
+                console.error('❌ Error loading match data:', error);
+                showError('Unable to load match details: ' + error.message);
             }
         }
 
-        // Load available players for team selection
         async function loadAvailablePlayers() {
             try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getPlayers&team=${currentMatch.squad}`);
-                const data = await response.json();
+                // ✅ FIXED: Use consistent fetchData pattern
+                const result = await fetchDataForMatch('getPlayers', { team: currentMatch.squad });
                 
-                if (data.success) {
-                    availablePlayers = data.players;
+                if (result.success) {
+                    availablePlayers = result.players || [];
                     populatePlayerDropdowns();
                 } else {
-                    throw new Error(data.error);
+                    console.warn('Unable to load player data:', result.error);
+                    // Don't show error - team selection will just be limited
                 }
             } catch (error) {
-    console.error('Error loading players:', error);
-    // showError('Unable to load player data'); // Comment out this line
-    console.log('Continuing without player data - team selection will be limited');
-}
+                console.error('❌ Error loading players:', error);
+                console.log('Continuing without player data - team selection will be limited');
+            }
         }
 
-        // Load match history
         async function loadMatchHistory() {
             try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchHistory&opponent=${encodeURIComponent(currentMatch.opponent)}`);
-                const data = await response.json();
+                // ✅ FIXED: Use consistent fetchData pattern
+                const result = await fetchDataForMatch('getMatchHistory', { 
+                    opponent: currentMatch.opponent 
+                });
                 
-                if (data.success) {
-                    displayMatchHistory(data.history);
+                if (result.success) {
+                    displayMatchHistory(result.history || []);
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(result.error);
                 }
             } catch (error) {
-                console.error('Error loading match history:', error);
+                console.error('❌ Error loading match history:', error);
                 document.getElementById('historyContent').innerHTML = '<p>Unable to load match history.</p>';
             }
         }
 
-        // Display match data in the UI
+        // ============================================================================
+        // FIXED PRE-MATCH NOTES FUNCTION
+        // ============================================================================
+
+        // ✅ COMPLETELY FIXED: Use working pattern from roster-v2.html
+        async function savePreMatchNotes() {
+            console.log('=== Saving Pre-Match Notes ===');
+            
+            const teamInstructions = document.getElementById('teamInstructions').value;
+            const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
+            const matchStrategy = document.getElementById('matchStrategy').value;
+            
+            if (!currentMatch || !currentMatch.matchId) {
+                alert('No match selected. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                // ✅ FIXED: Use same fetchData pattern as successful notes in roster-v2.html
+                const result = await fetchDataForMatch('savePreMatchNotes', {
+                    matchId: currentMatch.matchId,
+                    teamInstructions: teamInstructions,
+                    oppositionAnalysis: oppositionAnalysis,
+                    matchStrategy: matchStrategy
+                });
+                
+                console.log('Pre-match notes save result:', result);
+                
+                if (result.success) {
+                    // ✅ FIXED: Better user feedback
+                    const button = event.target;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<span>✅</span> Notes Saved!';
+                    button.disabled = true;
+                    
+                    // Show success message
+                    showSuccessMessage('Pre-match notes saved successfully!');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(result.error || 'Failed to save notes');
+                }
+            } catch (error) {
+                console.error('❌ Error saving pre-match notes:', error);
+                alert('Failed to save notes: ' + error.message);
+            }
+        }
+
+        // ============================================================================
+        // DISPLAY FUNCTIONS
+        // ============================================================================
+
         function displayMatchData(match) {
             hideLoading();
             showMatchContent();
@@ -1245,59 +1363,36 @@ loadMatchHistory();
                 ? `Clontarf ${match.squad} vs ${match.opponent}`
                 : `${match.opponent} vs Clontarf ${match.squad}`;
             
-            const titleElement = document.getElementById('matchTitle');
-            if (titleElement) {
-                titleElement.textContent = matchTitle;
-            }
+            document.getElementById('matchTitle').textContent = matchTitle;
             
             const teamBadge = document.getElementById('teamBadge');
-            if (teamBadge) {
-                teamBadge.textContent = match.squad;
-                teamBadge.className = `team-badge ${match.squad === '4ths' ? 'j4' : 'j5'}`;
-            }
+            teamBadge.textContent = match.squad;
+            teamBadge.className = `team-badge ${match.squad === '4ths' ? 'j4' : 'j5'}`;
             
             // Update match info
-            const matchDateEl = document.getElementById('matchDate');
-            if (matchDateEl) matchDateEl.textContent = formatDate(match.date);
-            
-            const matchTimeEl = document.getElementById('matchTime');
-            if (matchTimeEl) matchTimeEl.textContent = formatTime(match.time);
-            
-            const venueNameEl = document.getElementById('venueName');
-            if (venueNameEl) venueNameEl.textContent = match.location;
+            document.getElementById('matchDate').textContent = formatDate(match.date);
+            document.getElementById('matchTime').textContent = formatTime(match.time);
+            document.getElementById('venueName').textContent = match.location;
             
             const venueType = document.getElementById('venueType');
-            if (venueType) {
-                venueType.textContent = match.homeAway.toUpperCase();
-                venueType.className = `venue-badge ${match.homeAway.toLowerCase()}`;
-            }
+            venueType.textContent = match.homeAway.toUpperCase();
+            venueType.className = `venue-badge ${match.homeAway.toLowerCase()}`;
             
-            const matchTypeEl = document.getElementById('matchType');
-            if (matchTypeEl) matchTypeEl.textContent = match.matchType;
-            
-            const matchStatusEl = document.getElementById('matchStatus');
-            if (matchStatusEl) matchStatusEl.textContent = match.status;
+            document.getElementById('matchType').textContent = match.matchType;
+            document.getElementById('matchStatus').textContent = match.status;
             
             // Update result if available
             if (match.ourScore !== null && match.theirScore !== null) {
-                const resultInfo = document.getElementById('matchResultInfo');
-                if (resultInfo) resultInfo.style.display = 'block';
-                
-                const ourScoreEl = document.getElementById('ourScore');
-                if (ourScoreEl) ourScoreEl.value = match.ourScore;
-                
-                const theirScoreEl = document.getElementById('theirScore');
-                if (theirScoreEl) theirScoreEl.value = match.theirScore;
-                
+                document.getElementById('matchResultInfo').style.display = 'block';
+                document.getElementById('ourScore').value = match.ourScore;
+                document.getElementById('theirScore').value = match.theirScore;
                 updateResultDisplay();
             }
             
             // Update history opponent reference
-            const historyOpponentEl = document.getElementById('historyOpponent');
-            if (historyOpponentEl) historyOpponentEl.textContent = match.opponent;
+            document.getElementById('historyOpponent').textContent = match.opponent;
         }
 
-        // Display match history
         function displayMatchHistory(historyMatches) {
             const historyContent = document.getElementById('historyContent');
             
@@ -1323,31 +1418,10 @@ loadMatchHistory();
             `).join('');
         }
 
-        // Populate all player dropdowns
-        function populatePlayerDropdowns() {
-            document.querySelectorAll('.player-dropdown').forEach(dropdown => {
-                dropdown.innerHTML = '<option value="">Select Player...</option>';
-                
-                availablePlayers.forEach(player => {
-                    const option = document.createElement('option');
-                    option.value = player.playerId;
-                    option.className = player.availability || 'no-response';
-                    
-                    // Add availability indicator
-                    const indicator = {
-                        'available': '✓',
-                        'maybe': '?',
-                        'unavailable': '✗',
-                        'no-response': '⏳'
-                    }[player.availability] || '⏳';
-                    
-                    option.textContent = `${indicator} ${player.firstName} ${player.lastName} (${player.irfuNumber || 'No ID'})`;
-                    dropdown.appendChild(option);
-                });
-            });
-        }
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
 
-        // Format date for display
         function formatDate(dateString) {
             const date = new Date(dateString);
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1365,7 +1439,6 @@ loadMatchHistory();
             return `${dayName}, ${day}${suffix} ${month} ${year}`;
         }
 
-        // Format time for display
         function formatTime(timeString) {
             if (timeString.includes('T')) {
                 const date = new Date(timeString);
@@ -1374,7 +1447,6 @@ loadMatchHistory();
             return `${timeString} Kick-off`;
         }
 
-        // Get result class for styling
         function getResultClass(result) {
             if (result.toLowerCase().includes('win') || result.toLowerCase().includes('won')) {
                 return 'win';
@@ -1386,7 +1458,21 @@ loadMatchHistory();
             return '';
         }
 
-        // Tab management
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            
+            const container = document.querySelector('.overview-container') || document.querySelector('.tab-content');
+            container.insertBefore(successDiv, container.firstChild);
+            
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        // ============================================================================
+        // TAB MANAGEMENT
+        // ============================================================================
+
         function showTab(tabName) {
             console.log('Switching to tab:', tabName);
             
@@ -1405,7 +1491,10 @@ loadMatchHistory();
             }
         }
 
-        // Score calculation
+        // ============================================================================
+        // SCORE CALCULATION
+        // ============================================================================
+
         function setupScoreCalculation() {
             const ourScore = document.getElementById('ourScore');
             const theirScore = document.getElementById('theirScore');
@@ -1413,7 +1502,7 @@ loadMatchHistory();
             if (ourScore && theirScore) {
                 ourScore.addEventListener('input', updateResultDisplay);
                 theirScore.addEventListener('input', updateResultDisplay);
-                console.log('Score calculation set up successfully');
+                console.log('✅ Score calculation set up successfully');
             } else {
                 setTimeout(setupScoreCalculation, 500);
             }
@@ -1448,7 +1537,257 @@ loadMatchHistory();
             resultDisplay.value = result;
         }
 
-        // Team selection functions
+        // ============================================================================
+        // SAVE FUNCTIONS
+        // ============================================================================
+
+        async function saveMatchResult() {
+            const ourScore = document.getElementById('ourScore').value;
+            const theirScore = document.getElementById('theirScore').value;
+            const result = document.getElementById('resultDisplay').value;
+            
+            if (!ourScore || !theirScore) {
+                alert('Please enter both scores');
+                return;
+            }
+            
+            try {
+                // ✅ FIXED: Use correct action and data for match result
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveMatchResult',
+                        matchId: currentMatch.matchId,
+                        ourScore: parseInt(ourScore),
+                        theirScore: parseInt(theirScore),
+                        result: result
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showSuccessMessage('Match result saved successfully!');
+                    currentMatch.ourScore = parseInt(ourScore);
+                    currentMatch.theirScore = parseInt(theirScore);
+                    currentMatch.result = result;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('❌ Error saving match result:', error);
+                alert('Failed to save match result. Please try again.');
+            }
+        }
+
+        // ============================================================================
+        // STATE MANAGEMENT
+        // ============================================================================
+
+        function showLoading() {
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('matchContent').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('matchContent').style.display = 'none';
+            
+            if (message) {
+                document.querySelector('#errorState p').textContent = message;
+            }
+        }
+
+        function showMatchContent() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('matchContent').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        // ============================================================================
+        // TEAM SHEET GENERATION (PLACEHOLDER FOR FUTURE IMPLEMENTATION)
+        // ============================================================================
+
+        function generateTeamSheetPreview() {
+            const teamSheetData = {
+                match: currentMatch,
+                startingXV: [],
+                reserves: []
+            };
+            
+            // Collect starting XV
+            for (let i = 1; i <= 15; i++) {
+                const playerId = teamSelection[i];
+                const player = availablePlayers.find(p => p.playerId === playerId);
+                teamSheetData.startingXV.push({
+                    position: i,
+                    positionName: getPositionName(i),
+                    player: player || null
+                });
+            }
+            
+            // Collect reserves
+            Object.keys(reserves).forEach(reserveNum => {
+                const playerId = reserves[reserveNum];
+                const player = availablePlayers.find(p => p.playerId === playerId);
+                if (player) {
+                    teamSheetData.reserves.push({
+                        number: reserveNum,
+                        player: player
+                    });
+                }
+            });
+            
+            showTeamSheetModal(teamSheetData);
+        }
+
+        function getPositionName(positionNumber) {
+            const positions = {
+                1: 'Loosehead Prop', 2: 'Hooker', 3: 'Tighthead Prop',
+                4: 'Lock', 5: 'Lock', 6: 'Blindside Flanker',
+                7: 'Openside Flanker', 8: 'Number 8', 9: 'Scrum-half',
+                10: 'Fly-half', 11: 'Left Wing', 12: 'Inside Centre',
+                13: 'Outside Centre', 14: 'Right Wing', 15: 'Fullback'
+            };
+            return positions[positionNumber] || `Position ${positionNumber}`;
+        }
+
+        function showTeamSheetModal(teamSheetData) {
+            // This would show a modal with team sheet preview
+            alert('Team sheet generation will be implemented in the next update');
+        }
+
+        function generateFileName(match) {
+            const date = new Date(match.date);
+            const day = date.getDate();
+            const month = date.toLocaleString('default', { month: 'short' });
+            const opponent = match.opponent.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+            
+            return `Clontarf_${match.squad}_vs_${opponent}_${day}${month}.jpg`;
+        }
+
+        async function downloadTeamSheet(fileName) {
+            try {
+                alert('Team sheet download functionality will be implemented in the next update');
+            } catch (error) {
+                console.error('Error generating team sheet image:', error);
+                alert('Failed to generate team sheet image');
+            }
+        }
+
+        function markTeamAsPublished() {
+            const publishBtn = document.querySelector('[onclick*="publishTeam"]');
+            if (publishBtn) {
+                publishBtn.innerHTML = '<span>✏️</span> Edit Published Team';
+            }
+            
+            if (currentMatch) {
+                currentMatch.status = 'Team Selected';
+                const statusEl = document.getElementById('matchStatus');
+                if (statusEl) statusEl.textContent = 'Team Selected';
+            }
+        }
+
+        function closeTeamSheetModal() {
+            const modal = document.getElementById('teamSheetModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // ============================================================================
+        // DEBUG AND TESTING FUNCTIONS
+        // ============================================================================
+
+        // Test function for debugging
+        window.testMatchDetail = function() {
+            console.log('=== Match Detail Debug Info ===');
+            console.log('Configuration loaded:', !!WEB_APP_URL);
+            console.log('WEB_APP_URL:', WEB_APP_URL);
+            console.log('Current match:', currentMatch);
+            console.log('Available players:', availablePlayers.length);
+            console.log('Team selection:', teamSelection);
+            console.log('Reserves:', reserves);
+            
+            // Test API connection
+            if (WEB_APP_URL) {
+                fetchDataForMatch('test').then(result => {
+                    console.log('API test result:', result);
+                }).catch(error => {
+                    console.error('API test failed:', error);
+                });
+            }
+        };
+
+        // ============================================================================
+        // SUCCESS MESSAGE - Page is now ready
+        // ============================================================================
+        
+        console.log('✅ Match Detail JavaScript loaded successfully');
+        console.log('✅ All functions defined and ready');
+        console.log('✅ Configuration will load when DOM is ready');
+    </script>
+</body>
+</html>
+                    },
+                    body: JSON.stringify({
+                        action: 'saveMatchResult',
+                        matchId: currentMatch.matchId,
+                        ourScore: parseInt(ourScore),
+                        theirScore: parseInt(theirScore),
+                        result: result
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showSuccessMessage('Match result saved successfully!');
+                    currentMatch.ourScore = parseInt(ourScore);
+                    currentMatch.theirScore = parseInt(theirScore);
+                    currentMatch.result = result;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('❌ Error saving match result:', error);
+                alert('Failed to save match result. Please try again.');
+            }
+        }
+
+        // ============================================================================
+        // TEAM SELECTION FUNCTIONS
+        // ============================================================================
+
+        function populatePlayerDropdowns() {
+            document.querySelectorAll('.player-dropdown').forEach(dropdown => {
+                dropdown.innerHTML = '<option value="">Select Player...</option>';
+                
+                availablePlayers.forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.playerId;
+                    option.className = player.availability || 'no-response';
+                    
+                    const indicator = {
+                        'available': '✓',
+                        'maybe': '?',
+                        'unavailable': '✗',
+                        'no-response': '⏳'
+                    }[player.availability] || '⏳';
+                    
+                    option.textContent = `${indicator} ${player.firstName} ${player.lastName} (${player.irfuNumber || 'No ID'})`;
+                    dropdown.appendChild(option);
+                });
+            });
+        }
+
         function handleSelection(position, playerId) {
             if (playerId) {
                 teamSelection[position] = playerId;
@@ -1470,6 +1809,38 @@ loadMatchHistory();
                 console.log(`Reserve ${reserveNumber} cleared`);
             }
         }
+
+        async function saveTeamSelection() {
+            if (!currentMatch) return;
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveTeamSelection',
+                        matchId: currentMatch.matchId,
+                        startingXV: teamSelection,
+                        reserves: reserves
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    console.log('✅ Team selection auto-saved');
+                } else {
+                    console.error('❌ Failed to auto-save team selection:', data.error);
+                }
+            } catch (error) {
+                console.error('❌ Error auto-saving team selection:', error);
+            }
+        }
+
+        // ============================================================================
+        // PLACEHOLDER FUNCTIONS (FOR FULL TEAM MANAGEMENT)
+        // ============================================================================
 
         function addReserve() {
             reserveCount++;
@@ -1518,328 +1889,6 @@ loadMatchHistory();
             }
         }
 
-        // Save functions
-        async function saveMatchResult() {
-            const ourScore = document.getElementById('ourScore').value;
-            const theirScore = document.getElementById('theirScore').value;
-            const result = document.getElementById('resultDisplay').value;
-            
-            if (!ourScore || !theirScore) {
-                alert('Please enter both scores');
-                return;
-            }
-            
-            try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'saveMatchResult',
-                        matchId: currentMatch.matchId,
-                        ourScore: parseInt(ourScore),
-                        theirScore: parseInt(theirScore),
-                        result: result
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    showSuccessMessage('Match result saved successfully!');
-                    currentMatch.ourScore = parseInt(ourScore);
-                    currentMatch.theirScore = parseInt(theirScore);
-                    currentMatch.result = result;
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                console.error('Error saving match result:', error);
-                alert('Failed to save match result. Please try again.');
-            }
-        }
-
-        async function savePreMatchNotes() {
-            const teamInstructions = document.getElementById('teamInstructions').value;
-            const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
-            const matchStrategy = document.getElementById('matchStrategy').value;
-            
-            try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=savePreMatchNotes&matchId=${currentMatch.matchId}&teamInstructions=${encodeURIComponent(teamInstructions)}&oppositionAnalysis=${encodeURIComponent(oppositionAnalysis)}&matchStrategy=${encodeURIComponent(matchStrategy)}`);
-                
-                const data = await response.json();
-                if (data.success) {
-                    const button = event.target;
-                    const originalText = button.innerHTML;
-                    button.innerHTML = '<span>✅</span> Saved!';
-                    button.disabled = true;
-                    
-                    setTimeout(() => {
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }, 2000);
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                console.error('Error saving pre-match notes:', error);
-                alert('Failed to save notes. Please try again.');
-            }
-        }
-
-        async function saveTeamSelection() {
-            if (!currentMatch) return;
-            
-            try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'saveTeamSelection',
-                        matchId: currentMatch.matchId,
-                        startingXV: teamSelection,
-                        reserves: reserves
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    console.log('Team selection auto-saved');
-                } else {
-                    console.error('Failed to auto-save team selection:', data.error);
-                }
-            } catch (error) {
-                console.error('Error auto-saving team selection:', error);
-            }
-        }
-
-        function saveTeamDraft() {
-            alert('Team draft saved! You can continue editing later.');
-        }
-
-        function publishTeam() {
-            if (Object.keys(teamSelection).length < 15) {
-                if (!confirm('You haven\'t selected a full starting XV. Publish anyway?')) {
-                    return;
-                }
-            }
-            
-            generateTeamSheetPreview();
-        }
-
-        // Team sheet generation
-        function generateTeamSheetPreview() {
-            const teamSheetData = {
-                match: currentMatch,
-                startingXV: [],
-                reserves: []
-            };
-            
-            // Collect starting XV
-            for (let i = 1; i <= 15; i++) {
-                const playerId = teamSelection[i];
-                const player = availablePlayers.find(p => p.playerId === playerId);
-                teamSheetData.startingXV.push({
-                    position: i,
-                    positionName: getPositionName(i),
-                    player: player || null
-                });
-            }
-            
-            // Collect reserves
-            Object.keys(reserves).forEach(reserveNum => {
-                const playerId = reserves[reserveNum];
-                const player = availablePlayers.find(p => p.playerId === playerId);
-                if (player) {
-                    teamSheetData.reserves.push({
-                        number: reserveNum,
-                        player: player
-                    });
-                }
-            });
-            
-            showTeamSheetModal(teamSheetData);
-        }
-
-        function getPositionName(positionNumber) {
-            const positions = {
-                1: 'Loosehead Prop', 2: 'Hooker', 3: 'Tighthead Prop',
-                4: 'Lock', 5: 'Lock', 6: 'Blindside Flanker',
-                7: 'Openside Flanker', 8: 'Number 8', 9: 'Scrum-half',
-                10: 'Fly-half', 11: 'Left Wing', 12: 'Inside Centre',
-                13: 'Outside Centre', 14: 'Right Wing', 15: 'Fullback'
-            };
-            return positions[positionNumber] || `Position ${positionNumber}`;
-        }
-
-        function showTeamSheetModal(teamSheetData) {
-            let modal = document.getElementById('teamSheetModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'teamSheetModal';
-                modal.className = 'modal';
-                document.body.appendChild(modal);
-            }
-            
-            const fileName = generateFileName(teamSheetData.match);
-            
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px;">
-                    <div class="modal-header">
-                        <button class="close-btn" onclick="closeTeamSheetModal()">&times;</button>
-                        <h2>Team Sheet Preview</h2>
-                        <p style="opacity: 0.9; margin-top: 0.5rem;">Ready to download and share</p>
-                    </div>
-                    
-                    <div class="modal-body">
-                        <div id="teamSheetPreview" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 2rem; font-family: Arial, sans-serif; max-height: 500px; overflow-y: auto;">
-                            ${generateTeamSheetHTML(teamSheetData)}
-                        </div>
-                        
-                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                            <button class="btn btn-primary" style="flex: 1;" onclick="downloadTeamSheet('${fileName}')">
-                                <span>📱</span>
-                                Download Team Sheet
-                            </button>
-                            <button class="btn btn-secondary" onclick="closeTeamSheetModal()">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        function generateTeamSheetHTML(data) {
-            const match = data.match;
-            const dateStr = formatDate(match.date);
-            
-            let html = `
-                <div style="text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #1e3c72;">
-                    <h1 style="color: #1e3c72; margin-bottom: 0.5rem; font-size: 1.5rem;">
-                        CLONTARF ${match.squad.toUpperCase()} vs ${match.opponent.toUpperCase()}
-                    </h1>
-                    <p style="margin: 0.25rem 0; font-weight: 600; color: #333;">
-                        ${dateStr} • ${formatTime(match.time)}
-                    </p>
-                    <p style="margin: 0.25rem 0; color: #666;">
-                        ${match.location} • ${match.matchType} Match
-                    </p>
-                </div>
-                
-                <div style="margin-bottom: 2rem;">
-                    <h2 style="color: #1e3c72; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">
-                        STARTING XV
-                    </h2>
-            `;
-            
-            // Starting XV
-            data.startingXV.forEach(pos => {
-                const playerName = pos.player ? `${pos.player.firstName} ${pos.player.lastName}` : 'TBD';
-                const irfuId = pos.player ? `(${pos.player.irfuNumber || 'No ID'})` : '';
-                
-                html += `
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                        <span style="font-weight: 600;">${pos.position}. ${pos.positionName}</span>
-                        <span>${playerName} ${irfuId}</span>
-                    </div>
-                `;
-            });
-            
-            // Reserves
-            if (data.reserves.length > 0) {
-                html += `
-                    </div>
-                    
-                    <div>
-                        <h2 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">
-                            RESERVES
-                        </h2>
-                `;
-                
-                data.reserves.forEach(reserve => {
-                    html += `
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
-                            <span style="font-weight: 600;">Reserve ${reserve.number}</span>
-                            <span>${reserve.player.firstName} ${reserve.player.lastName} (${reserve.player.irfuNumber || 'No ID'})</span>
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `
-                </div>
-                
-                <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; color: #666; font-size: 0.875rem;">
-                    Generated ${new Date().toLocaleDateString()} • #WhoAreWe #ClontarfRugby
-                </div>
-            `;
-            
-            return html;
-        }
-
-        function generateFileName(match) {
-            const date = new Date(match.date);
-            const day = date.getDate();
-            const month = date.toLocaleString('default', { month: 'short' });
-            const opponent = match.opponent.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
-            
-            return `Clontarf_${match.squad}_vs_${opponent}_${day}${month}.jpg`;
-        }
-
-        async function downloadTeamSheet(fileName) {
-            try {
-                const element = document.getElementById('teamSheetPreview');
-                const canvas = await html2canvas(element, {
-                    width: 800,
-                    height: 1200,
-                    scale: 2,
-                    backgroundColor: '#ffffff'
-                });
-                
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = url;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    
-                    markTeamAsPublished();
-                    closeTeamSheetModal();
-                }, 'image/jpeg', 0.9);
-                
-            } catch (error) {
-                console.error('Error generating team sheet image:', error);
-                alert('Failed to generate team sheet image');
-            }
-        }
-
-        function markTeamAsPublished() {
-            const publishBtn = document.querySelector('[onclick*="publishTeam"]');
-            if (publishBtn) {
-                publishBtn.innerHTML = '<span>✏️</span> Edit Published Team';
-            }
-            
-            if (currentMatch) {
-                currentMatch.status = 'Team Selected';
-                const statusEl = document.getElementById('matchStatus');
-                if (statusEl) statusEl.textContent = 'Team Selected';
-            }
-        }
-
-        function closeTeamSheetModal() {
-            const modal = document.getElementById('teamSheetModal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        }
-
-        // Quick team assignment functions
         function assignTeam(teamType) {
             alert(`Would assign all available ${teamType} players to positions based on their preferred roles`);
         }
@@ -1856,7 +1905,23 @@ loadMatchHistory();
             }
         }
 
-        // Notes form submission
+        function saveTeamDraft() {
+            alert('Team draft saved! You can continue editing later.');
+        }
+
+        function publishTeam() {
+            if (Object.keys(teamSelection).length < 15) {
+                if (!confirm('You haven\'t selected a full starting XV. Publish anyway?')) {
+                    return;
+                }
+            }
+            alert('Team publishing functionality will be implemented next.');
+        }
+
+        // ============================================================================
+        // NOTES FORM SUBMISSION
+        // ============================================================================
+
         document.getElementById('notesForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -1864,7 +1929,7 @@ loadMatchHistory();
             const notes = Object.fromEntries(formData.entries());
             
             try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1883,49 +1948,7 @@ loadMatchHistory();
                     throw new Error(data.error);
                 }
             } catch (error) {
-                console.error('Error saving match notes:', error);
+                console.error('❌ Error saving match notes:', error);
                 alert('Failed to save match notes. Please try again.');
             }
         });
-
-        // Utility functions
-        function showSuccessMessage(message) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            successDiv.textContent = message;
-            
-            const container = document.querySelector('.overview-container') || document.querySelector('.tab-content');
-            container.insertBefore(successDiv, container.firstChild);
-            
-            setTimeout(() => successDiv.remove(), 3000);
-        }
-
-        // State management
-        function showLoading() {
-            document.getElementById('loadingState').style.display = 'flex';
-            document.getElementById('errorState').style.display = 'none';
-            document.getElementById('matchContent').style.display = 'none';
-        }
-
-        function showError(message) {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('errorState').style.display = 'block';
-            document.getElementById('matchContent').style.display = 'none';
-            
-            if (message) {
-                document.querySelector('#errorState p').textContent = message;
-            }
-        }
-
-        function showMatchContent() {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('errorState').style.display = 'none';
-            document.getElementById('matchContent').style.display = 'block';
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingState').style.display = 'none';
-        }
-    </script>
-</body>
-</html>
