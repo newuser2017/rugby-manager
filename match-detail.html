@@ -1187,10 +1187,10 @@
                     throw new Error(data.error || 'Failed to load match');
                 }
                 
-                currentMatch = data.match;
-                displayMatchData(currentMatch);
-                loadAvailablePlayers();
-                loadMatchHistory();
+                currentMatch = data;
+displayMatchData(currentMatch);
+loadAvailablePlayers();
+loadMatchHistory();
                 
             } catch (error) {
                 console.error('Error loading match data:', error);
