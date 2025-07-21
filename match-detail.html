@@ -1565,19 +1565,7 @@ loadMatchHistory();
             const matchStrategy = document.getElementById('matchStrategy').value;
             
             try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'savePreMatchNotes',
-                        matchId: currentMatch.matchId,
-                        teamInstructions,
-                        oppositionAnalysis,
-                        matchStrategy
-                    })
-                });
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=savePreMatchNotes&matchId=${currentMatch.matchId}&teamInstructions=${encodeURIComponent(teamInstructions)}&oppositionAnalysis=${encodeURIComponent(oppositionAnalysis)}&matchStrategy=${encodeURIComponent(matchStrategy)}`);
                 
                 const data = await response.json();
                 if (data.success) {
