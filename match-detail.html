@@ -842,7 +842,7 @@
                                     <textarea class="form-input" id="matchStrategy" placeholder="Game plan and tactical approach..." style="min-height: 100px;"></textarea>
                                 </div>
 
-                                <button class="btn btn-secondary" onclick="savePreMatchNotes()" style="width: 100%;">
+                                <button class="btn btn-secondary" onclick="savePreMatchNotes(event)" style="width: 100%;">
                                     <span>📝</span>
                                     Save Pre-Match Notes
                                 </button>
@@ -1254,7 +1254,7 @@ async function fetchData(action, params = {}) {
 // REPLACE YOUR EXISTING savePreMatchNotes() FUNCTION WITH THIS:
 // ============================================================================
 
-async function savePreMatchNotes() {
+async function savePreMatchNotes(event) {
     const teamInstructions = document.getElementById('teamInstructions').value;
     const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
     const matchStrategy = document.getElementById('matchStrategy').value;
