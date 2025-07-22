@@ -1480,6 +1480,8 @@ function showButtonSuccess(button, message) {
             // Update history opponent reference
             const historyOpponentEl = document.getElementById('historyOpponent');
             if (historyOpponentEl) historyOpponentEl.textContent = match.opponent;
+
+             await loadMatchNotes();
         }
 
         // Display match history
