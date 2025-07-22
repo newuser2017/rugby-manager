@@ -842,7 +842,7 @@
                                     <textarea class="form-input" id="matchStrategy" placeholder="Game plan and tactical approach..." style="min-height: 100px;"></textarea>
                                 </div>
 
-                                <button class="btn btn-secondary" onclick="savePreMatchNotes()" style="width: 100%;">
+                                <button class="btn btn-secondary" onclick="()" style="width: 100%;">
     <span>📝</span>
     Save Pre-Match Notes
 </button>
@@ -1251,13 +1251,6 @@ async function fetchData(action, params = {}) {
 }
 
 // ============================================================================
-// REPLACE YOUR EXISTING savePreMatchNotes() FUNCTION WITH THIS:
-// ============================================================================
-
-// ============================================================================
-// CORRECTED savePreMatchNotes() FUNCTION - REPLACE YOUR EXISTING ONE
-// ============================================================================
-
 async function savePreMatchNotes() {
     const teamInstructions = document.getElementById('teamInstructions').value;
     const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
@@ -1273,7 +1266,6 @@ async function savePreMatchNotes() {
         
         if (result.success) {
             console.log('✅ Pre-match notes saved successfully!');
-            // That's it - no UI feedback needed since data saves correctly
         } else {
             throw new Error(result.error);
         }
