@@ -1258,7 +1258,7 @@ async function fetchData(action, params = {}) {
 // CORRECTED savePreMatchNotes() FUNCTION - REPLACE YOUR EXISTING ONE
 // ============================================================================
 
-async function savePreMatchNotes() {  // ← Removed event parameter since showSuccessMessage doesn't need it
+async function savePreMatchNotes() {
     const teamInstructions = document.getElementById('teamInstructions').value;
     const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
     const matchStrategy = document.getElementById('matchStrategy').value;
@@ -1272,8 +1272,8 @@ async function savePreMatchNotes() {  // ← Removed event parameter since showS
         });
         
         if (result.success) {
-            showSuccessMessage('Pre-match notes saved successfully!');
             console.log('✅ Pre-match notes saved successfully!');
+            // That's it - no UI feedback needed since data saves correctly
         } else {
             throw new Error(result.error);
         }
