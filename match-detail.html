@@ -1068,7 +1068,7 @@
                         <h3>Match Notes</h3>
                         <p>Post-match analysis and observations.</p>
 
-                        <form id="notesForm">
+                        <form id="notesForm" onsubmit="return false;">
                             <div class="form-group">
                                 <label class="form-label">Clontarf Performance</label>
                                 <textarea class="form-input" id="clontarfPerformance" placeholder="How did the team perform overall?"></textarea>
@@ -1113,10 +1113,10 @@
                                 <textarea class="form-input" id="additionalNotes" placeholder="Any other observations or notes..."></textarea>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">
-                                <span>💾</span>
-                                Save Match Notes
-                            </button>
+                            <button type="button" class="btn btn-primary" onclick="saveMatchNotes()" style="width: 100%;">
+    <span>💾</span>
+    Save Match Notes
+</button>
                         </form>
                     </div>
                 </div>
@@ -1301,7 +1301,8 @@ async function saveMatchNotes() {
         });
         
         if (result.success) {
-            showButtonSuccess(event.target, 'Notes Saved!');
+            console.log('✅ Match notes saved successfully!');
+            // No UI feedback needed since data saves correctly
         } else {
             throw new Error(result.error);
         }
