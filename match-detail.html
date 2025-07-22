@@ -1250,13 +1250,17 @@ async function fetchData(action, params = {}) {
     }
 }
 
-// ✅ Updated savePreMatchNotes (same as before)
+// ============================================================================
+// REPLACE YOUR EXISTING savePreMatchNotes() FUNCTION WITH THIS:
+// ============================================================================
+
 async function savePreMatchNotes() {
     const teamInstructions = document.getElementById('teamInstructions').value;
     const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
     const matchStrategy = document.getElementById('matchStrategy').value;
     
     try {
+        // ✅ USE fetchData() LIKE THE WORKING loadMatchNotes()
         const result = await fetchData('savePreMatchNotes', {
             matchId: currentMatch.matchId,
             teamInstructions: teamInstructions,
@@ -1266,6 +1270,7 @@ async function savePreMatchNotes() {
         
         if (result.success) {
             showButtonSuccess(event.target, 'Saved!');
+            console.log('✅ Pre-match notes saved successfully!');
         } else {
             throw new Error(result.error);
         }
@@ -1746,46 +1751,42 @@ function showButtonSuccess(button, message) {
             }
         }
 
-        async function savePreMatchNotes() {
-            const teamInstructions = document.getElementById('teamInstructions').value;
-            const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
-            const matchStrategy = document.getElementById('matchStrategy').value;
+     async function savePreMatchNotes() {
+    const teamInstructions = document.getElementById('teamInstructions').value;
+    const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
+    const matchStrategy = document.getElementById('matchStrategy').value;
+    
+    try {
+        // ✅ Use fetchData() method like player notes - CORS-free GET request
+        const result = await fetchData('savePreMatchNotes', {
+            matchId: currentMatch.matchId,
+            teamInstructions: teamInstructions,
+            oppositionAnalysis: oppositionAnalysis,
+            matchStrategy: matchStrategy
+        });
+        
+        if (result.success) {
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>✅</span> Saved!';
+            button.style.backgroundColor = '#28a745';
+            button.disabled = true;
             
-            try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'savePreMatchNotes',
-                        matchId: currentMatch.matchId,
-                        teamInstructions,
-                        oppositionAnalysis,
-                        matchStrategy
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    const button = event.target;
-                    const originalText = button.innerHTML;
-                    button.innerHTML = '<span>✅</span> Saved!';
-                    button.disabled = true;
-                    
-                    setTimeout(() => {
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }, 2000);
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                console.error('Error saving pre-match notes:', error);
-                alert('Failed to save notes. Please try again.');
-            }
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.backgroundColor = '';
+                button.disabled = false;
+            }, 2000);
+            
+            console.log('✅ Pre-match notes saved successfully!');
+        } else {
+            throw new Error(result.error);
         }
-
+    } catch (error) {
+        console.error('❌ Error saving pre-match notes:', error);
+        alert('Failed to save pre-match notes: ' + error.message);
+    }
+}
         async function saveTeamSelection() {
             if (!currentMatch) return;
             
