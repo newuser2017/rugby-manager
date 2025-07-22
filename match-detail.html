@@ -1421,7 +1421,7 @@ function showButtonSuccess(button, message) {
         }
 
         // Display match data in the UI
-        function displayMatchData(match) {
+        async function displayMatchData(match) {
             hideLoading();
             showMatchContent();
             
@@ -2053,43 +2053,7 @@ function showButtonSuccess(button, message) {
             }
         }
 
-       document.getElementById('notesForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    console.log('Notes form submitted');
-    
-    // Call our new saveMatchNotes function
-    await saveMatchNotes();
-});
-            const formData = new FormData(this);
-            const notes = Object.fromEntries(formData.entries());
-            
-            try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'saveMatchNotes',
-                        matchId: currentMatch.matchId,
-                        notes: notes
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    showSuccessMessage('Match notes saved successfully!');
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                console.error('Error saving match notes:', error);
-                alert('Failed to save match notes. Please try again.');
-            }
-        });
-
-        // Utility functions
+              // Utility functions
         function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.className = 'success-message';
