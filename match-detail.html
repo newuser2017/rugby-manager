@@ -1218,6 +1218,191 @@ loadMatchHistory();
 }
         }
 
+// ============================================================================
+// ADD THESE FUNCTIONS TO match-detail.html
+// ============================================================================
+
+// Add fetchData function if not already present
+async function fetchData(action, params = {}) {
+    const url = new URL(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL);
+    url.searchParams.append('action', action);
+    
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
+        }
+    });
+
+    try {
+        console.log('🔄 API Request:', action, params);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ API Response:', action, result);
+        return result;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
+
+// ✅ Updated savePreMatchNotes (same as before)
+async function savePreMatchNotes() {
+    const teamInstructions = document.getElementById('teamInstructions').value;
+    const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
+    const matchStrategy = document.getElementById('matchStrategy').value;
+    
+    try {
+        const result = await fetchData('savePreMatchNotes', {
+            matchId: currentMatch.matchId,
+            teamInstructions: teamInstructions,
+            oppositionAnalysis: oppositionAnalysis,
+            matchStrategy: matchStrategy
+        });
+        
+        if (result.success) {
+            showButtonSuccess(event.target, 'Saved!');
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('❌ Error saving pre-match notes:', error);
+        alert('Failed to save pre-match notes: ' + error.message);
+    }
+}
+
+// ✅ NEW: Save post-match notes
+async function saveMatchNotes() {
+    // Get all form values from Notes tab
+    const clontarfPerformance = document.getElementById('clontarfPerformance').value;
+    const oppositionNotes = document.getElementById('oppositionNotes').value;
+    const tacticalNotes = document.getElementById('tacticalNotes').value;
+    const keyPlayers = document.getElementById('keyPlayers').value;
+    const areasToImprove = document.getElementById('areasToImprove').value;
+    const injuries = document.getElementById('injuries').value;
+    const disciplinary = document.getElementById('disciplinary').value;
+    const additionalNotes = document.getElementById('additionalNotes').value;
+    
+    try {
+        const result = await fetchData('saveMatchNotes', {
+            matchId: currentMatch.matchId,
+            clontarfPerformance: clontarfPerformance,
+            oppositionNotes: oppositionNotes,
+            tacticalNotes: tacticalNotes,
+            keyPlayers: keyPlayers,
+            areasToImprove: areasToImprove,
+            injuries: injuries,
+            disciplinary: disciplinary,
+            additionalNotes: additionalNotes
+        });
+        
+        if (result.success) {
+            showButtonSuccess(event.target, 'Notes Saved!');
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('❌ Error saving match notes:', error);
+        alert('Failed to save match notes: ' + error.message);
+    }
+}
+
+// ✅ NEW: Load existing notes when match loads
+async function loadMatchNotes() {
+    if (!currentMatch || !currentMatch.matchId) return;
+    
+    try {
+        const result = await fetchData('getMatchNotes', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success && result.data) {
+            const data = result.data;
+            
+            // Load pre-match notes
+            const teamInstructionsEl = document.getElementById('teamInstructions');
+            if (teamInstructionsEl) teamInstructionsEl.value = data.teamInstructions || '';
+            
+            const oppositionAnalysisEl = document.getElementById('oppositionAnalysis');
+            if (oppositionAnalysisEl) oppositionAnalysisEl.value = data.oppositionAnalysis || '';
+            
+            const matchStrategyEl = document.getElementById('matchStrategy');
+            if (matchStrategyEl) matchStrategyEl.value = data.matchStrategy || '';
+            
+            // Parse and load post-match notes (if they exist)
+            if (data.postMatchNotes) {
+                parseAndLoadPostMatchNotes(data.postMatchNotes);
+            }
+            
+            console.log('Match notes loaded successfully');
+        }
+    } catch (error) {
+        console.error('Error loading match notes:', error);
+    }
+}
+
+// Helper function to parse structured post-match notes back into form fields
+function parseAndLoadPostMatchNotes(notesText) {
+    if (!notesText) return;
+    
+    // Simple parsing - look for section headers
+    const sections = {
+        'CLONTARF PERFORMANCE:': 'clontarfPerformance',
+        'OPPOSITION NOTES:': 'oppositionNotes', 
+        'TACTICAL NOTES:': 'tacticalNotes',
+        'KEY PLAYERS:': 'keyPlayers',
+        'AREAS TO IMPROVE:': 'areasToImprove',
+        'INJURIES:': 'injuries',
+        'DISCIPLINARY:': 'disciplinary',
+        'ADDITIONAL NOTES:': 'additionalNotes'
+    };
+    
+    Object.keys(sections).forEach(sectionHeader => {
+        const fieldId = sections[sectionHeader];
+        const field = document.getElementById(fieldId);
+        
+        if (field && notesText.includes(sectionHeader)) {
+            const startIndex = notesText.indexOf(sectionHeader) + sectionHeader.length;
+            let endIndex = notesText.length;
+            
+            // Find the next section header
+            Object.keys(sections).forEach(otherHeader => {
+                if (otherHeader !== sectionHeader) {
+                    const otherIndex = notesText.indexOf(otherHeader, startIndex);
+                    if (otherIndex !== -1 && otherIndex < endIndex) {
+                        endIndex = otherIndex;
+                    }
+                }
+            });
+            
+            const content = notesText.substring(startIndex, endIndex).trim();
+            field.value = content;
+        }
+    });
+}
+
+// Helper function for button success feedback
+function showButtonSuccess(button, message) {
+    const originalText = button.innerHTML;
+    button.innerHTML = `<span>✅</span> ${message}`;
+    button.style.backgroundColor = '#28a745';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.style.backgroundColor = '';
+        button.disabled = false;
+    }, 2000);
+}
+
+// ✅ UPDATE: Call loadMatchNotes after displaying match data
+// Add this line to the end of your displayMatchData() function:
+// loadMatchNotes();
+        
         // Load match history
         async function loadMatchHistory() {
             try {
@@ -1868,10 +2053,14 @@ loadMatchHistory();
             }
         }
 
-        // Notes form submission
-        document.getElementById('notesForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
+       document.getElementById('notesForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    console.log('Notes form submitted');
+    
+    // Call our new saveMatchNotes function
+    await saveMatchNotes();
+});
             const formData = new FormData(this);
             const notes = Object.fromEntries(formData.entries());
             
