@@ -1254,13 +1254,16 @@ async function fetchData(action, params = {}) {
 // REPLACE YOUR EXISTING savePreMatchNotes() FUNCTION WITH THIS:
 // ============================================================================
 
-async function savePreMatchNotes(event) {
+// ============================================================================
+// CORRECTED savePreMatchNotes() FUNCTION - REPLACE YOUR EXISTING ONE
+// ============================================================================
+
+async function savePreMatchNotes() {  // ← Removed event parameter since showSuccessMessage doesn't need it
     const teamInstructions = document.getElementById('teamInstructions').value;
     const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
     const matchStrategy = document.getElementById('matchStrategy').value;
     
     try {
-        // ✅ USE fetchData() LIKE THE WORKING loadMatchNotes()
         const result = await fetchData('savePreMatchNotes', {
             matchId: currentMatch.matchId,
             teamInstructions: teamInstructions,
@@ -1268,10 +1271,9 @@ async function savePreMatchNotes(event) {
             matchStrategy: matchStrategy
         });
         
-    if (result.success) {
-    showSuccessMessage('Pre-match notes saved successfully!');  // ← Use your existing function
-    console.log('✅ Pre-match notes saved successfully!');
-}
+        if (result.success) {
+            showSuccessMessage('Pre-match notes saved successfully!');
+            console.log('✅ Pre-match notes saved successfully!');
         } else {
             throw new Error(result.error);
         }
