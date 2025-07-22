@@ -842,10 +842,10 @@
                                     <textarea class="form-input" id="matchStrategy" placeholder="Game plan and tactical approach..." style="min-height: 100px;"></textarea>
                                 </div>
 
-                                <button class="btn btn-secondary" onclick="savePreMatchNotes(event)" style="width: 100%;">
-                                    <span>📝</span>
-                                    Save Pre-Match Notes
-                                </button>
+                                <button class="btn btn-secondary" onclick="savePreMatchNotes()" style="width: 100%;">
+    <span>📝</span>
+    Save Pre-Match Notes
+</button>
                             </div>
                         </div>
                     </div>
@@ -1268,9 +1268,10 @@ async function savePreMatchNotes(event) {
             matchStrategy: matchStrategy
         });
         
-        if (result.success) {
-            showButtonSuccess(event.target, 'Saved!');
-            console.log('✅ Pre-match notes saved successfully!');
+    if (result.success) {
+    showSuccessMessage('Pre-match notes saved successfully!');  // ← Use your existing function
+    console.log('✅ Pre-match notes saved successfully!');
+}
         } else {
             throw new Error(result.error);
         }
