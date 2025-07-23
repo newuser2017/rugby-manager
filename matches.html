@@ -801,6 +801,9 @@ const TEST_CONFIG = {
 };
 
 // Override the sendAvailabilityRequest function to use test mode
+// Replace your sendAvailabilityRequestSafe function with this version
+// that follows the exact same pattern as match-detail.html
+
 async function sendAvailabilityRequestSafe(matchId) {
     console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
     
@@ -813,34 +816,24 @@ async function sendAvailabilityRequestSafe(matchId) {
     console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
     
     try {
-        // Show loading state
-        const button = document.querySelector(`[onclick*="${matchId}"]`);
-        if (button) {
-            button.disabled = true;
-            button.textContent = 'Sending Test...';
-        }
+        // Use the same pattern as match-detail.html - GET request with URL parameters
+        const url = new URL(CONFIG.GOOGLE_APPS_SCRIPT_URL);
+        url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
+        url.searchParams.append('matchId', matchId);
+        url.searchParams.append('testMode', 'true');
+        url.searchParams.append('testEmail', TEST_CONFIG.testEmail);
+        url.searchParams.append('testPlayerName', TEST_CONFIG.testPlayerName);
         
-        // Call your Apps Script with test mode enabled
-        const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL + '?action=sendMatchSpecificAvailabilityRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                matchId: matchId,
-                testMode: true,
-                testEmail: TEST_CONFIG.testEmail,
-                testPlayerName: TEST_CONFIG.testPlayerName
-            })
-        });
+        console.log('🔄 Making API call to:', url.toString());
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const result = await response.json();
-        
-        // Reset button
-        if (button) {
-            button.disabled = false;
-            button.textContent = '📧 Send Availability Request';
-        }
+        console.log('✅ API Response:', result);
         
         if (result.success) {
             showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
@@ -859,14 +852,6 @@ async function sendAvailabilityRequestSafe(matchId) {
         
     } catch (error) {
         console.error('Error in test availability request:', error);
-        
-        // Reset button
-        const button = document.querySelector(`[onclick*="${matchId}"]`);
-        if (button) {
-            button.disabled = false;
-            button.textContent = '📧 Send Availability Request';
-        }
-        
         showNotification(`❌ Error: ${error.message}`, 'error');
         alert(`❌ Error: ${error.message}`);
         
