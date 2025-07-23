@@ -787,6 +787,121 @@
     </div>
 
     <script>
+
+        // ============================================================================
+// SAFE TEST OVERRIDE FOR MATCHES.HTML
+// Add this to your matches.html JavaScript section
+// ============================================================================
+
+// Test configuration - UPDATE THIS EMAIL
+const TEST_CONFIG = {
+    testMode: true,                           // Set to false when ready for production
+    testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
+    testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
+};
+
+// Override the sendAvailabilityRequest function to use test mode
+async function sendAvailabilityRequestSafe(matchId) {
+    console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
+    
+    if (!TEST_CONFIG.testMode) {
+        // Production mode - call normal function
+        return await sendAvailabilityRequest(matchId);
+    }
+    
+    // TEST MODE - Override to send only to your email
+    console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
+    
+    try {
+        // Show loading state
+        const button = document.querySelector(`[onclick*="${matchId}"]`);
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Sending Test...';
+        }
+        
+        // Call your Apps Script with test mode enabled
+        const response = await fetch(CONFIG.GOOGLE_APPS_SCRIPT_URL + '?action=sendMatchSpecificAvailabilityRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                matchId: matchId,
+                testMode: true,
+                testEmail: TEST_CONFIG.testEmail,
+                testPlayerName: TEST_CONFIG.testPlayerName
+            })
+        });
+        
+        const result = await response.json();
+        
+        // Reset button
+        if (button) {
+            button.disabled = false;
+            button.textContent = '📧 Send Availability Request';
+        }
+        
+        if (result.success) {
+            showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
+            console.log('✅ Test successful:', result);
+            
+            // Show test info
+            alert(`🧪 TEST MODE SUCCESS!\n\n✅ Availability request sent to: ${TEST_CONFIG.testEmail}\n✅ Form created: ${result.formUrl}\n✅ Match: ${result.opponent}\n\nCheck your email!`);
+            
+        } else {
+            showNotification(`❌ Test failed: ${result.error}`, 'error');
+            console.error('❌ Test failed:', result);
+            alert(`❌ Test failed: ${result.error}`);
+        }
+        
+        return result;
+        
+    } catch (error) {
+        console.error('Error in test availability request:', error);
+        
+        // Reset button
+        const button = document.querySelector(`[onclick*="${matchId}"]`);
+        if (button) {
+            button.disabled = false;
+            button.textContent = '📧 Send Availability Request';
+        }
+        
+        showNotification(`❌ Error: ${error.message}`, 'error');
+        alert(`❌ Error: ${error.message}`);
+        
+        return { success: false, error: error.message };
+    }
+}
+
+// Helper function to show notifications (if you don't have one)
+function showNotification(message, type = 'info') {
+    // Simple notification - you can improve this
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 400px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
         // Debug: Add this to verify JavaScript is running
         console.log('JavaScript loaded successfully');
         
@@ -1173,13 +1288,11 @@
             displayMatches(filtered);
         }
 
-        // Action functions (to be connected to Google Apps Script)
-        function sendAvailability(matchId, team) {
-            console.log('Send availability called:', matchId, team);
-            if (confirm(`Send availability request to all ${team} players for this match?`)) {
-                alert(`This will be connected to Google Apps Script to send WhatsApp and email notifications to ${team} players.`);
-            }
-        }
+    function sendAvailability(matchId, team) {
+    console.log('🧪 TEST: Send availability called:', matchId, team);
+    // Use the safe test function
+    return sendAvailabilityRequestSafe(matchId);
+}
 
         function sendReminder(matchId, team) {
             console.log('Send reminder called:', matchId, team);
