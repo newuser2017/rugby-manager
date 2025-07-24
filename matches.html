@@ -859,6 +859,48 @@ async function sendAvailabilityRequestSafe(matchId) {
     }
 }
 
+        // Add this function to your matches.html
+async function loadMatchAvailability(matchId) {
+  try {
+    const response = await fetch(`${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchAvailability&matchId=${matchId}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      return data;
+    } else {
+      console.error('Failed to load availability:', data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error loading availability:', error);
+    return null;
+  }
+}
+
+// Update the display function to show availability data
+function updateMatchAvailabilityDisplay(matchId, availabilityData) {
+  const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
+  if (!matchCard) return;
+  
+  const availabilityElement = matchCard.querySelector('.availability-status');
+  if (!availabilityElement) return;
+  
+  if (availabilityData && availabilityData.summary) {
+    const { available, unavailable, total } = availabilityData.summary;
+    availabilityElement.innerHTML = `
+      <div class="availability-summary">
+        <span class="available">${available} Available</span>
+        <span class="unavailable">${unavailable} Unavailable</span>
+        <span class="total">${total} Total Responses</span>
+      </div>
+    `;
+    availabilityElement.className = 'availability-status has-responses';
+  } else {
+    availabilityElement.innerHTML = 'Availability: not sent';
+    availabilityElement.className = 'availability-status not-sent';
+  }
+}
+        
 // Helper function to show notifications (if you don't have one)
 function showNotification(message, type = 'info') {
     // Simple notification - you can improve this
