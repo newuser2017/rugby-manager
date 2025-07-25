@@ -882,22 +882,23 @@ function updateMatchAvailabilityDisplay(matchId, availabilityData) {
   const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
   if (!matchCard) return;
   
-  const availabilityElement = matchCard.querySelector('.availability-status');
-  if (!availabilityElement) return;
+  // Look for the correct element structure
+  const statusIndicator = matchCard.querySelector('.status-indicator.availability');
+  if (!statusIndicator) return;
   
-  if (availabilityData && availabilityData.summary) {
+  if (availabilityData && availabilityData.summary && availabilityData.summary.total > 0) {
     const { available, unavailable, total } = availabilityData.summary;
-    availabilityElement.innerHTML = `
-      <div class="availability-summary">
-        <span class="available">${available} Available</span>
-        <span class="unavailable">${unavailable} Unavailable</span>
-        <span class="total">${total} Total Responses</span>
-      </div>
+    statusIndicator.innerHTML = `
+      <span>📱</span>
+      <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable)</span>
     `;
-    availabilityElement.className = 'availability-status has-responses';
+    statusIndicator.className = 'status-indicator availability'; // Show as active
   } else {
-    availabilityElement.innerHTML = 'Availability: not sent';
-    availabilityElement.className = 'availability-status not-sent';
+    statusIndicator.innerHTML = `
+      <span>📱</span>
+      <span>Availability: Not sent</span>
+    `;
+    statusIndicator.className = 'status-indicator availability none';
   }
 }
         
@@ -1044,26 +1045,37 @@ function showNotification(message, type = 'info') {
         }
 
         // Display matches on the page
-        function displayMatches(matches) {
-            console.log('Displaying matches:', matches);
-            const container = document.getElementById('matchesContainer');
-            
-            if (!container) {
-                console.error('Matches container not found');
-                return;
-            }
-            
-            if (matches.length === 0) {
-                showEmptyState();
-                return;
-            }
-            
-            container.innerHTML = matches.map(match => createMatchCard(match)).join('');
-            
-            hideAllStates();
-            container.style.display = 'block';
-            console.log('Matches displayed successfully');
-        }
+       async function displayMatches(matches) {
+  console.log('Displaying matches:', matches);
+  const container = document.getElementById('matchesContainer');
+  
+  if (!container) {
+    console.error('Matches container not found');
+    return;
+  }
+  
+  if (matches.length === 0) {
+    showEmptyState();
+    return;
+  }
+  
+  // First, display all match cards
+  container.innerHTML = matches.map(match => createMatchCard(match)).join('');
+  
+  hideAllStates();
+  container.style.display = 'block';
+  console.log('Matches displayed successfully');
+  
+  // Then load availability data for each match
+  for (const match of matches) {
+    console.log(`Loading availability for match ${match.matchId}`);
+    const availabilityData = await loadMatchAvailability(match.matchId);
+    if (availabilityData) {
+      console.log(`Updating display for ${match.matchId}:`, availabilityData);
+      updateMatchAvailabilityDisplay(match.matchId, availabilityData);
+    }
+  }
+}
 
         // Create HTML for a single match card
         function createMatchCard(match) {
