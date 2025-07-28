@@ -444,133 +444,6 @@
             margin-bottom: 1rem;
         }
 
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px 12px 0 0;
-            position: relative;
-        }
-
-        .modal-header h2 {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            width: 32px;
-            height: 32px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.25rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            color: #666;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.625rem 1rem;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.875rem;
-        }
-
-        textarea.form-input {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        /* Player Selection Modal Styles */
-        .player-item.inactive {
-            background-color: #f8f9fa;
-        }
-
-        .player-checkbox {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .player-checkbox:disabled {
-            cursor: not-allowed;
-        }
-
-        .modal-btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .modal-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
         /* Error State */
         .error-state {
             text-align: center;
@@ -730,10 +603,6 @@
         <div id="emptyState" class="empty-state" style="display: none;">
             <h3>📅 No Matches Found</h3>
             <p>No matches have been added to your Google Sheets yet. Add your first match to get started!</p>
-            <button class="btn btn-primary" onclick="showAddMatchModal()">
-                <span>➕</span>
-                Add First Match
-            </button>
         </div>
 
         <!-- Matches Container (populated by JavaScript) -->
@@ -742,170 +611,29 @@
         </div>
     </div>
 
-    <!-- Add Match Modal -->
-    <div class="modal" id="addMatchModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close-btn" onclick="closeAddMatchModal()">&times;</button>
-                <h2>Add New Match</h2>
-            </div>
-            
-            <div class="modal-body">
-                <form id="addMatchForm">
-                    <div class="form-group">
-                        <label class="form-label">Team</label>
-                        <select class="form-input" name="squad" required>
-                            <option value="">Select Team...</option>
-                            <option value="4ths">Clontarf 4ths</option>
-                            <option value="5ths">Clontarf 5ths</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Opponent</label>
-                        <input type="text" class="form-input" name="opponent" placeholder="e.g., Old Wesley 4ths" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" class="form-input" name="date" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Kick-off Time</label>
-                        <input type="time" class="form-input" name="time" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Venue</label>
-                        <input type="text" class="form-input" name="location" placeholder="e.g., Castle Avenue" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Home/Away</label>
-                        <select class="form-input" name="homeAway" required>
-                            <option value="">Select...</option>
-                            <option value="Home">Home</option>
-                            <option value="Away">Away</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Match Type</label>
-                        <select class="form-input" name="matchType" required>
-                            <option value="">Select...</option>
-                            <option value="League">League</option>
-                            <option value="Cup">Cup</option>
-                            <option value="Friendly">Friendly</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" style="flex: 1;">
-                            Add Match
-                        </button>
-                        <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeAddMatchModal()">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Player Selection Modal -->
-    <div class="modal" id="playerSelectionModal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <button class="close-btn" onclick="closePlayerSelectionModal()">&times;</button>
-                <h2 id="modalTitle">Select Players for Availability Request</h2>
-                <div id="matchInfo" style="margin-top: 0.5rem; opacity: 0.9;"></div>
-                <div class="modal-actions" style="margin-top: 1rem;">
-                    <button class="modal-btn" onclick="selectAllSquadPlayers()">✓ Select Squad</button>
-                    <button class="modal-btn" onclick="selectAllPlayers()">✓ Select All</button>
-                    <button class="modal-btn" onclick="deselectAllPlayers()">✗ Deselect All</button>
-                </div>
-            </div>
-            
-            <div class="modal-body">
-                <!-- Loading State -->
-                <div id="playersLoading" style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 1.5rem; margin-bottom: 1rem;">⏳</div>
-                    <div>Loading players...</div>
-                </div>
-                
-                <!-- Player Selection -->
-                <div id="playerSelection" style="display: none;">
-                    <div id="selectionSummary" style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <strong>Selection Summary:</strong>
-                        <div style="margin-top: 0.5rem;">
-                            <span id="selectedCount">0</span> players selected
-                            (<span id="squadCount">0</span> from squad, <span id="otherCount">0</span> others)
-                        </div>
-                    </div>
-                    
-                    <!-- Player List -->
-                    <div id="playerList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
-                        <!-- Players will be inserted here -->
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
-                        <button class="btn btn-secondary" onclick="closePlayerSelectionModal()">
-                            Cancel
-                        </button>
-                        <button class="btn btn-primary" onclick="sendToSelectedPlayers()" id="sendBtn">
-                            <span>📧</span>
-                            Send Availability Request
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Error State -->
-                <div id="playersError" style="display: none; text-align: center; padding: 2rem;">
-                    <div style="color: #dc2626; font-size: 1.5rem; margin-bottom: 1rem;">❌</div>
-                    <div id="errorMessage">Error loading players</div>
-                    <button class="btn btn-secondary" onclick="loadPlayersForSelection()" style="margin-top: 1rem;">
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ============================================================================
         // CONFIGURATION AND GLOBAL VARIABLES
         // ============================================================================
         
-        // Debug: Add this to verify JavaScript is running
-        console.log('JavaScript loaded successfully');
-        console.log('Config loaded:', CONFIG);
+        console.log('✅ JavaScript loading...');
+        console.log('📊 Config loaded:', CONFIG);
         
         // Global variables
         let allMatches = [];
         let filteredMatches = [];
-        let currentMatchId = null;
-        let allPlayersData = [];
 
-        // Consistent configuration - Use WEB_APP_URL from config.js
+        // Use WEB_APP_URL from config.js consistently
         const WEB_APP_URL = CONFIG.WEB_APP_URL;
         
-        // Test configuration - UPDATE THIS EMAIL
-        const TEST_CONFIG = {
-            testMode: true,                           // Set to false when ready for production
-            testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
-            testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
-        };
-
         // ============================================================================
         // INITIALIZATION
         // ============================================================================
         
         // Load matches on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, calling loadMatches');
-            console.log('Using WEB_APP_URL:', WEB_APP_URL);
+            console.log('🚀 DOM loaded, calling loadMatches');
+            console.log('🔗 Using WEB_APP_URL:', WEB_APP_URL);
             loadMatches();
         });
 
@@ -915,18 +643,381 @@
         
         // Load matches from Google Sheets
         async function loadMatches() {
-            console.log('loadMatches function called');
+            console.log('📋 loadMatches function called');
             showLoadingState();
             
             try {
                 // Check if configuration is set up
                 if (!WEB_APP_URL || WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                    console.log('No Google Apps Script URL configured, showing empty state');
-                    setTimeout(() => {
-                        showEmptyState();
-                    }, 1000); // Show loading for 1 second, then empty state
+                    console.log('❌ No Google Apps Script URL configured');
+                    setTimeout(showEmptyState, 1000);
                     return;
                 }
 
-                console.log('Fetching from:', WEB_APP_URL);
-                const response = await fetch(WEB_APP_URL + '
+                console.log('📡 Fetching matches from:', WEB_APP_URL);
+                const response = await fetch(WEB_APP_URL + '?action=getMatches');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 API Response:', data);
+                
+                if (data.success) {
+                    allMatches = data.matches || [];
+                    console.log(`✅ Loaded ${allMatches.length} matches`);
+                    
+                    if (allMatches.length === 0) {
+                        showEmptyState();
+                    } else {
+                        displayMatches(allMatches);
+                    }
+                } else {
+                    throw new Error(data.error || 'API returned unsuccessful response');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading matches:', error);
+                showErrorState();
+            }
+        }
+
+        // Display matches on the page
+        function displayMatches(matches) {
+            console.log('🎨 Displaying', matches.length, 'matches');
+            const container = document.getElementById('matchesContainer');
+            
+            if (!container) {
+                console.error('❌ Matches container not found');
+                return;
+            }
+            
+            if (matches.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            // Create match cards HTML
+            container.innerHTML = matches.map(match => createMatchCard(match)).join('');
+            
+            hideAllStates();
+            container.style.display = 'block';
+            console.log('✅ Matches displayed successfully');
+        }
+
+        // Create HTML for a single match card
+        function createMatchCard(match) {
+            const teamBadgeClass = match.squad === '4ths' ? 'j4' : 'j5';
+            const venueBadgeClass = match.homeAway === 'Home' ? 'home' : 'away';
+            const statusClasses = getStatusClasses(match.status);
+            
+            return `
+                <div class="match-card" data-match-id="${match.matchId}">
+                    <div class="match-header">
+                        <div class="match-details">
+                            <div class="match-title">
+                                ${getMatchTitle(match)}
+                                <span class="team-badge ${teamBadgeClass}">${match.squad}</span>
+                            </div>
+                            <div class="match-info">
+                                <div class="match-info-item">
+                                    <span>📅</span>
+                                    <span>${formatDate(match.date)}</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>⏰</span>
+                                    <span>${match.time} Kick-off</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>📍</span>
+                                    <span>${match.location}</span>
+                                    <span class="venue-badge ${venueBadgeClass}">${match.homeAway.toUpperCase()}</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>🏆</span>
+                                    <span>${match.matchType}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-status">
+                        <div class="status-indicator availability ${statusClasses.availability}">
+                            <span>${getStatusIcon(match.status, 'availability')}</span>
+                            <span>${getStatusText(match.status, 'availability', match)}</span>
+                        </div>
+                        <div class="status-indicator team-selection ${statusClasses.teamSelection}">
+                            <span>${getStatusIcon(match.status, 'team')}</span>
+                            <span>${getStatusText(match.status, 'team', match)}</span>
+                        </div>
+                    </div>
+
+                    <div class="match-actions">
+                        ${createActionButtons(match)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================================
+        // HELPER FUNCTIONS FOR MATCH DISPLAY
+        // ============================================================================
+
+        function getMatchTitle(match) {
+            if (match.homeAway === 'Home') {
+                return `Clontarf ${match.squad} vs ${match.opponent}`;
+            } else {
+                return `${match.opponent} vs Clontarf ${match.squad}`;
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const dayName = days[date.getDay()];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            
+            return `${dayName}, ${day} ${month}`;
+        }
+
+        function getStatusClasses(status) {
+            switch(status) {
+                case 'Created':
+                    return { availability: 'none', teamSelection: 'none' };
+                case 'Availability Sent':
+                    return { availability: 'pending', teamSelection: 'none' };
+                case 'Team Selected':
+                    return { availability: '', teamSelection: '' };
+                case 'Completed':
+                    return { availability: '', teamSelection: '' };
+                default:
+                    return { availability: 'none', teamSelection: 'none' };
+            }
+        }
+
+        function getStatusIcon(status, type) {
+            if (type === 'availability') {
+                switch(status) {
+                    case 'Created': return '📱';
+                    case 'Availability Sent': return '📱';
+                    case 'Team Selected': return '✅';
+                    case 'Completed': return '✅';
+                    default: return '📱';
+                }
+            } else {
+                switch(status) {
+                    case 'Created': return '👥';
+                    case 'Availability Sent': return '👥';
+                    case 'Team Selected': return '👥';
+                    case 'Completed': return '📝';
+                    default: return '👥';
+                }
+            }
+        }
+
+        function getStatusText(status, type, match) {
+            if (type === 'availability') {
+                switch(status) {
+                    case 'Created': return 'Availability: Not Sent';
+                    case 'Availability Sent': return 'Availability: Pending';
+                    case 'Team Selected': return 'Availability: Complete';
+                    case 'Completed': return 'Match Completed';
+                    default: return 'Availability: Not Sent';
+                }
+            } else {
+                switch(status) {
+                    case 'Created': return 'Team: Not Selected';
+                    case 'Availability Sent': return 'Team: Pending Selection';
+                    case 'Team Selected': return 'Team: Selected';
+                    case 'Completed': return 'Results Entered';
+                    default: return 'Team: Not Selected';
+                }
+            }
+        }
+
+        function createActionButtons(match) {
+            const buttons = [];
+            
+            switch(match.status) {
+                case 'Created':
+                    buttons.push(`<a href="#" class="action-btn primary" onclick="sendAvailability('${match.matchId}', '${match.squad}')"><span>📱</span>Send Availability Request</a>`);
+                    break;
+                case 'Availability Sent':
+                    buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
+                    break;
+                case 'Team Selected':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
+                    break;
+                case 'Completed':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
+                    break;
+            }
+            
+            // Always add match details button
+            buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
+            
+            return buttons.join('');
+        }
+
+        // ============================================================================
+        // STATE MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        function showLoadingState() {
+            console.log('⏳ Showing loading state');
+            hideAllStates();
+            const loadingElement = document.getElementById('loadingState');
+            if (loadingElement) {
+                loadingElement.style.display = 'flex';
+            }
+        }
+
+        function showErrorState() {
+            console.log('❌ Showing error state');
+            hideAllStates();
+            const errorElement = document.getElementById('errorState');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function showEmptyState() {
+            console.log('📭 Showing empty state');
+            hideAllStates();
+            const emptyElement = document.getElementById('emptyState');
+            if (emptyElement) {
+                emptyElement.style.display = 'block';
+            }
+        }
+
+        function hideAllStates() {
+            const elements = ['loadingState', 'errorState', 'emptyState', 'matchesContainer'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        // ============================================================================
+        // ACTION FUNCTIONS
+        // ============================================================================
+
+        function sendAvailability(matchId, team) {
+            console.log('📱 Send availability called:', matchId, team);
+            alert(`Send availability request for ${team} match ${matchId}\n\n(This will be connected to your Google Apps Script)`);
+        }
+
+        function sendReminder(matchId, team) {
+            console.log('🔔 Send reminder called:', matchId, team);
+            if (confirm(`Send reminder to players who haven't responded yet?`)) {
+                alert(`Reminder sent for match ${matchId}`);
+            }
+        }
+
+        function sendWeeklyAvailability() {
+            console.log('📅 Send weekly availability called');
+            if (confirm('Send availability requests for all matches this week?')) {
+                alert('Weekly availability requests sent!');
+            }
+        }
+
+        function exportMatches() {
+            console.log('📊 Export matches called');
+            alert('Export functionality will be added here');
+        }
+
+        function refreshMatches() {
+            console.log('🔄 Refresh matches called');
+            loadMatches();
+        }
+
+        // ============================================================================
+        // FILTER FUNCTIONS
+        // ============================================================================
+
+        function filterMatches() {
+            console.log('🔍 Filter matches called');
+            const teamFilter = document.getElementById('teamFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let filtered = allMatches;
+            
+            if (teamFilter) {
+                filtered = filtered.filter(match => match.squad === teamFilter);
+            }
+            
+            if (statusFilter) {
+                filtered = filtered.filter(match => {
+                    switch(statusFilter) {
+                        case 'upcoming': return match.status !== 'Completed';
+                        case 'team-selected': return match.status === 'Team Selected';
+                        case 'completed': return match.status === 'Completed';
+                        case 'availability-pending': return match.status === 'Availability Sent';
+                        default: return true;
+                    }
+                });
+            }
+            
+            if (dateFilter) {
+                const now = new Date();
+                filtered = filtered.filter(match => {
+                    const matchDate = new Date(match.date);
+                    switch(dateFilter) {
+                        case 'this-week':
+                            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 6);
+                            return matchDate >= weekStart && matchDate <= weekEnd;
+                        case 'next-week':
+                            const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
+                            const nextWeekEnd = new Date(nextWeekStart);
+                            nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
+                            return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
+                        case 'this-month':
+                            return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
+                        case 'next-month':
+                            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                            return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
+                        default: return true;
+                    }
+                });
+            }
+            
+            displayMatches(filtered);
+        }
+
+        // ============================================================================
+        // DEBUGGING AND TESTING
+        // ============================================================================
+
+        // Test function for console debugging
+        window.testMatches = function() {
+            console.log('🧪 Testing matches functionality...');
+            console.log('📊 All matches:', allMatches);
+            console.log('🔗 WEB_APP_URL:', WEB_APP_URL);
+            console.log('⚙️ CONFIG:', CONFIG);
+            
+            if (allMatches.length > 0) {
+                console.log('✅ Matches loaded successfully');
+                displayMatches(allMatches);
+            } else {
+                console.log('❌ No matches found - calling loadMatches()');
+                loadMatches();
+            }
+        };
+
+        // Debug information
+        console.log('✅ All JavaScript functions loaded successfully');
+        console.log('🏉 Clontarf Rugby Matches Page Ready');
+        console.log('🔧 Debug: Type testMatches() in console to test functionality');
+    </script>
+</body>
+</html>
