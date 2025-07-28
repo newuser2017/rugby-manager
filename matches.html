@@ -543,6 +543,29 @@
                         </div>
                     </div>
                     
+                    <!-- Position Filter -->
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <div style="margin-bottom: 0.5rem; font-weight: 500; color: #333;">Filter by Position:</div>
+                        <div id="positionFilters" style="display: flex; gap: 0.375rem; flex-wrap: wrap;">
+                            <button class="position-filter-btn active" data-position="all" onclick="filterByPosition('all')">All</button>
+                            <button class="position-filter-btn" data-position="1" onclick="filterByPosition('1')">1</button>
+                            <button class="position-filter-btn" data-position="2" onclick="filterByPosition('2')">2</button>
+                            <button class="position-filter-btn" data-position="3" onclick="filterByPosition('3')">3</button>
+                            <button class="position-filter-btn" data-position="4" onclick="filterByPosition('4')">4</button>
+                            <button class="position-filter-btn" data-position="5" onclick="filterByPosition('5')">5</button>
+                            <button class="position-filter-btn" data-position="6" onclick="filterByPosition('6')">6</button>
+                            <button class="position-filter-btn" data-position="7" onclick="filterByPosition('7')">7</button>
+                            <button class="position-filter-btn" data-position="8" onclick="filterByPosition('8')">8</button>
+                            <button class="position-filter-btn" data-position="9" onclick="filterByPosition('9')">9</button>
+                            <button class="position-filter-btn" data-position="10" onclick="filterByPosition('10')">10</button>
+                            <button class="position-filter-btn" data-position="11" onclick="filterByPosition('11')">11</button>
+                            <button class="position-filter-btn" data-position="12" onclick="filterByPosition('12')">12</button>
+                            <button class="position-filter-btn" data-position="13" onclick="filterByPosition('13')">13</button>
+                            <button class="position-filter-btn" data-position="14" onclick="filterByPosition('14')">14</button>
+                            <button class="position-filter-btn" data-position="15" onclick="filterByPosition('15')">15</button>
+                        </div>
+                    </div>
+                    
                     <!-- Player List -->
                     <div id="playerList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
                         <!-- Players will be inserted here -->
@@ -665,6 +688,31 @@
 
         .modal-btn:hover {
             background: rgba(255,255,255,0.2);
+        }
+
+        .position-filter-btn {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .position-filter-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .position-filter-btn.active {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .player-item.hidden {
+            display: none;
         }
     </style>
                 <div class="club-name">
@@ -1346,6 +1394,28 @@
             displayMatches(filtered);
         }
 
+        // Helper function to convert position names to numbers
+        function getPositionNumbers(positionsString) {
+            if (!positionsString || positionsString === 'Not specified') {
+                return 'Not specified';
+            }
+            
+            // Create reverse mapping from position names to numbers
+            const positionNameToNumber = {};
+            Object.entries(CONFIG.POSITIONS).forEach(([number, name]) => {
+                positionNameToNumber[name] = number;
+            });
+            
+            // Split the positions string and convert to numbers
+            const positionNames = positionsString.split(', ');
+            const positionNumbers = positionNames.map(name => {
+                const trimmedName = name.trim();
+                return positionNameToNumber[trimmedName] || trimmedName;
+            });
+            
+            return positionNumbers.join(', ');
+        }
+
         // ============================================================================
         // PLAYER SELECTION MODAL FUNCTIONALITY
         // ============================================================================
@@ -1414,7 +1484,7 @@
                 const squadIndicator = player.isInMatchSquad ? '⭐' : '';
                 
                 return `
-                    <div class="player-item ${statusClass}">
+                    <div class="player-item ${statusClass}" data-positions="${getPositionNumbers(player.positions)}">
                         <input type="checkbox" 
                                id="player_${player.email}" 
                                class="player-checkbox"
@@ -1433,11 +1503,8 @@
                                 </span>
                             </div>
                             <div class="player-details">
-                                Positions: ${player.positions || 'Not specified'} | 
+                                Positions: ${getPositionNumbers(player.positions)} | 
                                 Squad: ${player.squadTags || 'Unassigned'}
-                            </div>
-                            <div class="player-email">
-                                ${player.email}
                             </div>
                         </div>
                     </div>
@@ -1515,6 +1582,39 @@
             document.querySelectorAll('.player-checkbox:not(:disabled)').forEach(checkbox => {
                 checkbox.checked = false;
             });
+            updateSelectionSummary();
+        }
+
+        // Position filtering functionality
+        function filterByPosition(position) {
+            console.log('🔍 Filtering by position:', position);
+            
+            // Update filter button states
+            document.querySelectorAll('.position-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-position="${position}"]`).classList.add('active');
+            
+            // Show/hide players based on position
+            const playerItems = document.querySelectorAll('.player-item');
+            playerItems.forEach(item => {
+                const playerPositions = item.dataset.positions || '';
+                
+                if (position === 'all') {
+                    // Show all players
+                    item.classList.remove('hidden');
+                } else {
+                    // Check if player can play this position
+                    const positionNumbers = playerPositions.split(', ').map(p => p.trim());
+                    if (positionNumbers.includes(position)) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                }
+            });
+            
+            // Update selection summary after filtering
             updateSelectionSummary();
         }
 
