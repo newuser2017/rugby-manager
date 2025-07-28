@@ -541,6 +541,56 @@
             margin-top: 1.5rem;
         }
 
+        /* Player Selection Modal Styles */
+        .player-item.inactive {
+            background-color: #f8f9fa;
+        }
+
+        .player-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .player-checkbox:disabled {
+            cursor: not-allowed;
+        }
+
+        .modal-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #dc2626;
+        }
+
+        .error-state h3 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+
+        .error-state p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
         /* Responsive */
         @media (max-width: 968px) {
             .filter-row {
@@ -575,26 +625,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        /* Error State */
-        .error-state {
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-left: 4px solid #dc2626;
-        }
-
-        .error-state h3 {
-            color: #dc2626;
-            margin-bottom: 1rem;
-        }
-
-        .error-state p {
-            color: #666;
-            margin-bottom: 2rem;
-        }
     </style>
     <script src="config.js"></script>
 </head>
@@ -622,15 +652,10 @@
         <div class="page-header">
             <h1 class="page-title">Match Fixtures</h1>
             <div class="header-actions">
-    <a href="#" class="btn btn-secondary" onclick="exportMatches()">
-        <span>📊</span>
-        Export Schedule
-    </a>
-    <!-- <a href="#" class="btn btn-primary" onclick="showAddMatchModal()">
-        <span>➕</span>
-        Add New Match
-    </a> -->
-</div>
+                <a href="#" class="btn btn-secondary" onclick="exportMatches()">
+                    <span>📊</span>
+                    Export Schedule
+                </a>
             </div>
         </div>
 
@@ -788,176 +813,114 @@
         </div>
     </div>
 
+    <!-- Player Selection Modal -->
+    <div class="modal" id="playerSelectionModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closePlayerSelectionModal()">&times;</button>
+                <h2 id="modalTitle">Select Players for Availability Request</h2>
+                <div id="matchInfo" style="margin-top: 0.5rem; opacity: 0.9;"></div>
+                <div class="modal-actions" style="margin-top: 1rem;">
+                    <button class="modal-btn" onclick="selectAllSquadPlayers()">✓ Select Squad</button>
+                    <button class="modal-btn" onclick="selectAllPlayers()">✓ Select All</button>
+                    <button class="modal-btn" onclick="deselectAllPlayers()">✗ Deselect All</button>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Loading State -->
+                <div id="playersLoading" style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 1rem;">⏳</div>
+                    <div>Loading players...</div>
+                </div>
+                
+                <!-- Player Selection -->
+                <div id="playerSelection" style="display: none;">
+                    <div id="selectionSummary" style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <strong>Selection Summary:</strong>
+                        <div style="margin-top: 0.5rem;">
+                            <span id="selectedCount">0</span> players selected
+                            (<span id="squadCount">0</span> from squad, <span id="otherCount">0</span> others)
+                        </div>
+                    </div>
+                    
+                    <!-- Player List -->
+                    <div id="playerList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
+                        <!-- Players will be inserted here -->
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="closePlayerSelectionModal()">
+                            Cancel
+                        </button>
+                        <button class="btn btn-primary" onclick="sendToSelectedPlayers()" id="sendBtn">
+                            <span>📧</span>
+                            Send Availability Request
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Error State -->
+                <div id="playersError" style="display: none; text-align: center; padding: 2rem;">
+                    <div style="color: #dc2626; font-size: 1.5rem; margin-bottom: 1rem;">❌</div>
+                    <div id="errorMessage">Error loading players</div>
+                    <button class="btn btn-secondary" onclick="loadPlayersForSelection()" style="margin-top: 1rem;">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-
         // ============================================================================
-// SAFE TEST OVERRIDE FOR MATCHES.HTML
-// Add this to your matches.html JavaScript section
-// ============================================================================
-
-// Test configuration - UPDATE THIS EMAIL
-const TEST_CONFIG = {
-    testMode: true,                           // Set to false when ready for production
-    testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
-    testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
-};
-
-// Override the sendAvailabilityRequest function to use test mode
-// Replace your sendAvailabilityRequestSafe function with this version
-// that follows the exact same pattern as match-detail.html
-
-async function sendAvailabilityRequestSafe(matchId) {
-    console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
-    
-    if (!TEST_CONFIG.testMode) {
-        // Production mode - call normal function
-        return await sendAvailabilityRequest(matchId);
-    }
-    
-    // TEST MODE - Override to send only to your email
-    console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
-    
-    try {
-        // Use the same pattern as match-detail.html - GET request with URL parameters
-        const url = new URL(CONFIG.GOOGLE_APPS_SCRIPT_URL);
-        url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
-        url.searchParams.append('matchId', matchId);
-        url.searchParams.append('testMode', 'true');
-        url.searchParams.append('testEmail', TEST_CONFIG.testEmail);
-        url.searchParams.append('testPlayerName', TEST_CONFIG.testPlayerName);
+        // CONFIGURATION AND GLOBAL VARIABLES
+        // ============================================================================
         
-        console.log('🔄 Making API call to:', url.toString());
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('✅ API Response:', result);
-        
-        if (result.success) {
-            showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
-            console.log('✅ Test successful:', result);
-            
-            // Show test info
-            alert(`🧪 TEST MODE SUCCESS!\n\n✅ Availability request sent to: ${TEST_CONFIG.testEmail}\n✅ Form created: ${result.formUrl}\n✅ Match: ${result.opponent}\n\nCheck your email!`);
-            
-        } else {
-            showNotification(`❌ Test failed: ${result.error}`, 'error');
-            console.error('❌ Test failed:', result);
-            alert(`❌ Test failed: ${result.error}`);
-        }
-        
-        return result;
-        
-    } catch (error) {
-        console.error('Error in test availability request:', error);
-        showNotification(`❌ Error: ${error.message}`, 'error');
-        alert(`❌ Error: ${error.message}`);
-        
-        return { success: false, error: error.message };
-    }
-}
-
-        // Add this function to your matches.html
-async function loadMatchAvailability(matchId) {
-  try {
-    const response = await fetch(`${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchAvailability&matchId=${matchId}`);
-    const data = await response.json();
-    
-    if (data.success) {
-      return data;
-    } else {
-      console.error('Failed to load availability:', data.error);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error loading availability:', error);
-    return null;
-  }
-}
-
-// Update the display function to show availability data
-function updateMatchAvailabilityDisplay(matchId, availabilityData) {
-  const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
-  if (!matchCard) return;
-  
-  // Look for the correct element structure
-  const statusIndicator = matchCard.querySelector('.status-indicator.availability');
-  if (!statusIndicator) return;
-  
-  if (availabilityData && availabilityData.summary && availabilityData.summary.total > 0) {
-    const { available, unavailable, total } = availabilityData.summary;
-    statusIndicator.innerHTML = `
-      <span>📱</span>
-      <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable)</span>
-    `;
-    statusIndicator.className = 'status-indicator availability'; // Show as active
-  } else {
-    statusIndicator.innerHTML = `
-      <span>📱</span>
-      <span>Availability: Not sent</span>
-    `;
-    statusIndicator.className = 'status-indicator availability none';
-  }
-}
-        
-// Helper function to show notifications (if you don't have one)
-function showNotification(message, type = 'info') {
-    // Simple notification - you can improve this
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        max-width: 400px;
-        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    `;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 5000);
-}
         // Debug: Add this to verify JavaScript is running
         console.log('JavaScript loaded successfully');
+        console.log('Config loaded:', CONFIG);
         
         // Global variables
         let allMatches = [];
         let filteredMatches = [];
+        let currentMatchId = null;
+        let allPlayersData = [];
 
-        // Configuration - UPDATE THESE WITH YOUR ACTUAL VALUES
-        const WEB_APP_URL = CONFIG.WEB_APP_URL; // This assumes your config.js uses WEB_APP_URL
-
+        // Consistent configuration - Use WEB_APP_URL from config.js
+        const WEB_APP_URL = CONFIG.WEB_APP_URL;
+        
+        // Test configuration - UPDATE THIS EMAIL
+        const TEST_CONFIG = {
+            testMode: true,                           // Set to false when ready for production
+            testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
+            testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
         };
-//
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        
         // Load matches on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, calling loadMatches');
+            console.log('Using WEB_APP_URL:', WEB_APP_URL);
             loadMatches();
         });
 
+        // ============================================================================
+        // MATCH LOADING AND DISPLAY
+        // ============================================================================
+        
         // Load matches from Google Sheets
         async function loadMatches() {
             console.log('loadMatches function called');
             showLoadingState();
             
             try {
-                // For now, show empty state until Google Apps Script is configured
-                if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                // Check if configuration is set up
+                if (!WEB_APP_URL || WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
                     console.log('No Google Apps Script URL configured, showing empty state');
                     setTimeout(() => {
                         showEmptyState();
@@ -965,777 +928,5 @@ function showNotification(message, type = 'info') {
                     return;
                 }
 
-                console.log('Fetching from:', CONFIG.WEB_APP_URL);
-                const response = await fetch(CONFIG.WEB_APP_URL + '?action=getMatches');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch matches');
-                }
-                
-                const data = await response.json();
-                allMatches = data.matches || [];
-                
-                console.log('Loaded matches:', allMatches);
-                
-                if (allMatches.length === 0) {
-                    showEmptyState();
-                } else {
-                    displayMatches(allMatches);
-                }
-                
-            } catch (error) {
-                console.error('Error loading matches:', error);
-                showErrorState();
-            }
-        }
-
-        // State management functions
-        function showLoadingState() {
-            console.log('Showing loading state');
-            hideAllStates();
-            const loadingElement = document.getElementById('loadingState');
-            if (loadingElement) {
-                loadingElement.style.display = 'flex';
-                console.log('Loading state displayed');
-            } else {
-                console.error('Loading state element not found');
-            }
-        }
-
-        function showErrorState() {
-            console.log('Showing error state');
-            hideAllStates();
-            const errorElement = document.getElementById('errorState');
-            if (errorElement) {
-                errorElement.style.display = 'block';
-                console.log('Error state displayed');
-            } else {
-                console.error('Error state element not found');
-            }
-        }
-
-        function showEmptyState() {
-            console.log('Showing empty state');
-            hideAllStates();
-            const emptyElement = document.getElementById('emptyState');
-            if (emptyElement) {
-                emptyElement.style.display = 'block';
-                console.log('Empty state displayed');
-            } else {
-                console.error('Empty state element not found');
-            }
-        }
-
-        function hideAllStates() {
-            console.log('Hiding all states');
-            const elements = [
-                'loadingState',
-                'errorState', 
-                'emptyState',
-                'matchesContainer'
-            ];
-            
-            elements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.style.display = 'none';
-                } else {
-                    console.warn(`Element ${id} not found`);
-                }
-            });
-        }
-
-        // Display matches on the page
-       async function displayMatches(matches) {
-  console.log('Displaying matches:', matches);
-  const container = document.getElementById('matchesContainer');
-  
-  if (!container) {
-    console.error('Matches container not found');
-    return;
-  }
-  
-  if (matches.length === 0) {
-    showEmptyState();
-    return;
-  }
-  
-  // First, display all match cards
-  container.innerHTML = matches.map(match => createMatchCard(match)).join('');
-  
-  hideAllStates();
-  container.style.display = 'block';
-  console.log('Matches displayed successfully');
-  
-  // Then load availability data for each match
-  for (const match of matches) {
-    console.log(`Loading availability for match ${match.matchId}`);
-    const availabilityData = await loadMatchAvailability(match.matchId);
-    if (availabilityData) {
-      console.log(`Updating display for ${match.matchId}:`, availabilityData);
-      updateMatchAvailabilityDisplay(match.matchId, availabilityData);
-    }
-  }
-}
-
-        // Create HTML for a single match card
-        function createMatchCard(match) {
-            const teamBadgeClass = match.squad === '4ths' ? 'j4' : 'j5';
-            const venueBadgeClass = match.homeAway === 'Home' ? 'home' : 'away';
-            const statusClasses = getStatusClasses(match.status);
-            
-            return `
-                <div class="match-card" data-match-id="${match.matchId}">
-                    <div class="match-header">
-                        <div class="match-details">
-                            <div class="match-title">
-                                ${getMatchTitle(match)}
-                                <span class="team-badge ${teamBadgeClass}">${match.squad}</span>
-                                ${match.result ? `<span style="background: ${getResultColor(match.result)}; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem;">${match.result}</span>` : ''}
-                            </div>
-                            <div class="match-info">
-                                <div class="match-info-item">
-                                    <span>📅</span>
-                                    <span>${formatDate(match.date)}</span>
-                                </div>
-                                <div class="match-info-item">
-                                    <span>⏰</span>
-                                    <span>${match.time} Kick-off</span>
-                                </div>
-                                <div class="match-info-item">
-                                    <span>📍</span>
-                                    <span>${match.location}</span>
-                                    <span class="venue-badge ${venueBadgeClass}">${match.homeAway.toUpperCase()}</span>
-                                </div>
-                                <div class="match-info-item">
-                                    <span>🏆</span>
-                                    <span>${match.matchType}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="match-status">
-                        <div class="status-indicator availability ${statusClasses.availability}">
-                            <span>${getStatusIcon(match.status, 'availability')}</span>
-                            <span>${getStatusText(match.status, 'availability', match)}</span>
-                        </div>
-                        <div class="status-indicator team-selection ${statusClasses.teamSelection}">
-                            <span>${getStatusIcon(match.status, 'team')}</span>
-                            <span>${getStatusText(match.status, 'team', match)}</span>
-                        </div>
-                    </div>
-
-                    ${match.stats ? createStatsSection(match.stats) : ''}
-
-                    <div class="match-actions">
-                        ${createActionButtons(match)}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Helper functions for match display
-        function getMatchTitle(match) {
-            if (match.homeAway === 'Home') {
-                return `Clontarf ${match.squad} vs ${match.opponent}`;
-            } else {
-                return `${match.opponent} vs Clontarf ${match.squad}`;
-            }
-        }
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            const dayName = days[date.getDay()];
-            const day = date.getDate();
-            const month = months[date.getMonth()];
-            const year = date.getFullYear();
-            
-            const suffix = day === 1 || day === 21 || day === 31 ? 'st' : 
-                          day === 2 || day === 22 ? 'nd' : 
-                          day === 3 || day === 23 ? 'rd' : 'th';
-            
-            return `${dayName}, ${day}${suffix} ${month} ${year}`;
-        }
-
-        function getStatusClasses(status) {
-            switch(status) {
-                case 'Created':
-                    return { availability: 'none', teamSelection: 'none' };
-                case 'Availability Sent':
-                    return { availability: 'pending', teamSelection: 'none' };
-                case 'Team Selected':
-                    return { availability: '', teamSelection: '' };
-                case 'Completed':
-                    return { availability: '', teamSelection: '' };
-                default:
-                    return { availability: 'none', teamSelection: 'none' };
-            }
-        }
-
-        function getStatusIcon(status, type) {
-            if (type === 'availability') {
-                switch(status) {
-                    case 'Created': return '📱';
-                    case 'Availability Sent': return '📱';
-                    case 'Team Selected': return '✅';
-                    case 'Completed': return '✅';
-                    default: return '📱';
-                }
-            } else {
-                switch(status) {
-                    case 'Created': return '👥';
-                    case 'Availability Sent': return '👥';
-                    case 'Team Selected': return '👥';
-                    case 'Completed': return '📝';
-                    default: return '👥';
-                }
-            }
-        }
-
-        function getStatusText(status, type, match) {
-            if (type === 'availability') {
-                switch(status) {
-                    case 'Created': return 'Availability: Not Sent';
-                    case 'Availability Sent': return `Availability: ${match.responses || 0}/${match.totalPlayers || 0} Responses`;
-                    case 'Team Selected': return 'Availability: Complete';
-                    case 'Completed': return 'Match Completed';
-                    default: return 'Availability: Not Sent';
-                }
-            } else {
-                switch(status) {
-                    case 'Created': return 'Team: Not Selected';
-                    case 'Availability Sent': return 'Team: Pending Selection';
-                    case 'Team Selected': return 'Team: Selected & Published';
-                    case 'Completed': return 'Results Entered';
-                    default: return 'Team: Not Selected';
-                }
-            }
-        }
-
-        function getResultColor(result) {
-            if (result.includes('WON')) return '#22c55e';
-            if (result.includes('LOST')) return '#dc2626';
-            if (result.includes('DRAW')) return '#f59e0b';
-            return '#6b7280';
-        }
-
-        function createStatsSection(stats) {
-            return `
-                <div class="match-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.available || 0}</div>
-                        <div class="stat-label">Available</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.unavailable || 0}</div>
-                        <div class="stat-label">Unavailable</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.noResponse || 0}</div>
-                        <div class="stat-label">No Response</div>
-                    </div>
-                    ${stats.transportNeeded ? `
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.transportNeeded}</div>
-                        <div class="stat-label">Need Transport</div>
-                    </div>` : ''}
-                </div>
-            `;
-        }
-
-        function createActionButtons(match) {
-            const buttons = [];
-            
-            switch(match.status) {
-                case 'Created':
-                    buttons.push(`<a href="#" class="action-btn primary" onclick="sendAvailability('${match.matchId}', '${match.squad}')"><span>📱</span>Send Availability Request</a>`);
-                    break;
-                case 'Availability Sent':
-                    buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
-                    buttons.push(`<a href="#" class="action-btn" onclick="viewResponses('${match.matchId}')"><span>📊</span>View Responses</a>`);
-                    break;
-                case 'Team Selected':
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
-                    buttons.push(`<a href="#" class="action-btn" onclick="shareTeamSheet('${match.matchId}')"><span>📤</span>Share Team</a>`);
-                    break;
-                case 'Completed':
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
-                    buttons.push(`<a href="#" class="action-btn" onclick="editResults('${match.matchId}')"><span>✏️</span>Edit Results</a>`);
-                    break;
-            }
-            
-            // Always add match details button
-            buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
-            
-            return buttons.join('');
-        }
-
-        // Filter functions
-        function filterMatches() {
-            console.log('Filter matches called');
-            const teamFilter = document.getElementById('teamFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-            
-            let filtered = allMatches;
-            
-            if (teamFilter) {
-                filtered = filtered.filter(match => match.squad === teamFilter);
-            }
-            
-            if (statusFilter) {
-                filtered = filtered.filter(match => {
-                    switch(statusFilter) {
-                        case 'upcoming': return match.status !== 'Completed';
-                        case 'team-selected': return match.status === 'Team Selected';
-                        case 'completed': return match.status === 'Completed';
-                        case 'availability-pending': return match.status === 'Availability Sent';
-                        default: return true;
-                    }
-                });
-            }
-            
-            if (dateFilter) {
-                const now = new Date();
-                filtered = filtered.filter(match => {
-                    const matchDate = new Date(match.date);
-                    switch(dateFilter) {
-                        case 'this-week':
-                            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-                            const weekEnd = new Date(weekStart);
-                            weekEnd.setDate(weekEnd.getDate() + 6);
-                            return matchDate >= weekStart && matchDate <= weekEnd;
-                        case 'next-week':
-                            const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
-                            const nextWeekEnd = new Date(nextWeekStart);
-                            nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
-                            return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
-                        case 'this-month':
-                            return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
-                        case 'next-month':
-                            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                            return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
-                        default: return true;
-                    }
-                });
-            }
-            
-            displayMatches(filtered);
-        }
-
-    function sendAvailability(matchId, team) {
-    console.log('🧪 TEST: Send availability called:', matchId, team);
-    // Use the safe test function
-    return sendAvailabilityRequestSafe(matchId);
-}
-
-        function sendReminder(matchId, team) {
-            console.log('Send reminder called:', matchId, team);
-            if (confirm(`Send reminder to players who haven't responded yet?`)) {
-                alert(`This will be connected to Google Apps Script to send targeted reminders.`);
-            }
-        }
-
-        function viewResponses(matchId) {
-            console.log('View responses called:', matchId);
-            alert(`This will show detailed availability responses for match ${matchId}`);
-        }
-
-        function shareTeamSheet(matchId) {
-            console.log('Share team sheet called:', matchId);
-            if (confirm('Share team sheet with players via WhatsApp and email?')) {
-                alert(`This will be connected to Google Apps Script to share the team sheet.`);
-            }
-        }
-
-        function editResults(matchId) {
-            console.log('Edit results called:', matchId);
-            window.location.href = `match-detail.html?matchId=${matchId}&tab=notes`;
-        }
-
-        function sendWeeklyAvailability() {
-            console.log('Send weekly availability called');
-            if (confirm('Send availability requests for all matches this week?')) {
-                alert('This will be connected to Google Apps Script to send bulk availability requests.');
-            }
-        }
-
-        function exportMatches() {
-            console.log('Export matches called');
-            alert('This will export matches to Excel format.');
-        }
-
-        function refreshMatches() {
-            console.log('Refresh matches called');
-            loadMatches();
-        }
-
-        // Modal functions
-        function showAddMatchModal() {
-            console.log('Show add match modal called');
-            document.getElementById('addMatchModal').classList.add('active');
-        }
-        
-        function closeAddMatchModal() {
-            console.log('Close add match modal called');
-            document.getElementById('addMatchModal').classList.remove('active');
-            document.getElementById('addMatchForm').reset();
-        }
-
-        // Form submission
-        document.getElementById('addMatchForm').addEventListener('submit', function(e) {
-            console.log('Form submitted');
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const matchData = Object.fromEntries(formData.entries());
-            
-            console.log('Match data:', matchData);
-            // This will be connected to Google Apps Script
-            alert(`Match data ready to save to Google Sheets:\n${JSON.stringify(matchData, null, 2)}`);
-            
-            closeAddMatchModal();
-        });
-
-        // Test function - you can call this in the console
-        window.testPage = function() {
-            console.log('Testing page functionality...');
-            console.log('All states:', {
-                loading: document.getElementById('loadingState'),
-                error: document.getElementById('errorState'),
-                empty: document.getElementById('emptyState'),
-                container: document.getElementById('matchesContainer')
-            });
-            
-            // Force show empty state for testing
-            showEmptyState();
-        };
-    </script>
-<!-- Add this modal HTML to your matches.html file, just before the closing </body> tag -->
-
-<!-- Player Selection Modal -->
-<div class="modal" id="playerSelectionModal">
-  <div class="modal-content" style="max-width: 800px;">
-    <div class="modal-header">
-      <button class="close-btn" onclick="closePlayerSelectionModal()">&times;</button>
-      <h2 id="modalTitle">Select Players for Availability Request</h2>
-      <div id="matchInfo" style="margin-top: 0.5rem; opacity: 0.9;"></div>
-      <div class="modal-actions" style="margin-top: 1rem;">
-        <button class="modal-btn" onclick="selectAllSquadPlayers()">✓ Select Squad</button>
-        <button class="modal-btn" onclick="selectAllPlayers()">✓ Select All</button>
-        <button class="modal-btn" onclick="deselectAllPlayers()">✗ Deselect All</button>
-      </div>
-    </div>
-    
-    <div class="modal-body">
-      <!-- Loading State -->
-      <div id="playersLoading" style="text-align: center; padding: 2rem;">
-        <div style="font-size: 1.5rem; margin-bottom: 1rem;">⏳</div>
-        <div>Loading players...</div>
-      </div>
-      
-      <!-- Player Selection -->
-      <div id="playerSelection" style="display: none;">
-        <div id="selectionSummary" style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-          <strong>Selection Summary:</strong>
-          <div style="margin-top: 0.5rem;">
-            <span id="selectedCount">0</span> players selected
-            (<span id="squadCount">0</span> from squad, <span id="otherCount">0</span> others)
-          </div>
-        </div>
-        
-        <!-- Player List -->
-        <div id="playerList" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px;">
-          <!-- Players will be inserted here -->
-        </div>
-        
-        <!-- Action Buttons -->
-        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
-          <button class="btn btn-secondary" onclick="closePlayerSelectionModal()">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="sendToSelectedPlayers()" id="sendBtn">
-            <span>📧</span>
-            Send Availability Request
-          </button>
-        </div>
-      </div>
-      
-      <!-- Error State -->
-      <div id="playersError" style="display: none; text-align: center; padding: 2rem;">
-        <div style="color: #dc2626; font-size: 1.5rem; margin-bottom: 1rem;">❌</div>
-        <div id="errorMessage">Error loading players</div>
-        <button class="btn btn-secondary" onclick="loadPlayersForSelection()" style="margin-top: 1rem;">
-          Try Again
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// Player selection modal functionality
-let currentMatchId = null;
-let allPlayersData = [];
-
-// Show player selection modal
-function showPlayerSelectionModal(matchId) {
-  console.log('Opening player selection modal for match:', matchId);
-  currentMatchId = matchId;
-  
-  document.getElementById('playerSelectionModal').classList.add('active');
-  document.getElementById('playersLoading').style.display = 'block';
-  document.getElementById('playerSelection').style.display = 'none';
-  document.getElementById('playersError').style.display = 'none';
-  
-  loadPlayersForSelection();
-}
-
-// Close player selection modal
-function closePlayerSelectionModal() {
-  document.getElementById('playerSelectionModal').classList.remove('active');
-  currentMatchId = null;
-  allPlayersData = [];
-}
-
-// Load players for selection
-async function loadPlayersForSelection() {
-  try {
-    console.log('Loading players for selection...');
-    
-    const response = await fetch(`${WEB_APP_URL}?action=getPlayersForSelectionModal&matchId=${currentMatchId}`);
-    const data = await response.json();
-    
-    if (data.success) {
-      allPlayersData = data.players;
-      displayPlayerSelection(data);
-    } else {
-      showPlayersError(data.error || 'Failed to load players');
-    }
-    
-  } catch (error) {
-    console.error('Error loading players:', error);
-    showPlayersError('Network error loading players');
-  }
-}
-
-// Display player selection interface
-function displayPlayerSelection(data) {
-  console.log('Displaying player selection for', data.players.length, 'players');
-  
-  // Update modal title
-  document.getElementById('modalTitle').textContent = `Select Players - ${data.matchSquad} Squad`;
-  document.getElementById('matchInfo').textContent = `Match: ${currentMatchId} | ${data.totalPlayers} players available | ${data.autoSelectedCount} auto-selected`;
-  
-  // Generate player list HTML
-  const playerListHtml = data.players.map(player => {
-    const isDisabled = !player.canSend;
-    const statusClass = player.isActive ? 'active' : 'inactive';
-    const squadIndicator = player.isInMatchSquad ? '⭐' : '';
-    
-    return `
-      <div class="player-item ${statusClass}" style="display: flex; align-items: center; padding: 0.75rem; border-bottom: 1px solid #e5e5e5; ${isDisabled ? 'opacity: 0.5;' : ''}">
-        <input type="checkbox" 
-               id="player_${player.email}" 
-               class="player-checkbox"
-               data-email="${player.email}"
-               data-in-squad="${player.isInMatchSquad}"
-               ${player.autoSelected ? 'checked' : ''}
-               ${isDisabled ? 'disabled' : ''}
-               onchange="updateSelectionSummary()"
-               style="margin-right: 1rem;">
-        <div style="flex: 1;">
-          <div style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
-            ${player.name}
-            ${squadIndicator}
-            <span style="background: ${player.isActive ? '#d4edda' : '#f8d7da'}; color: ${player.isActive ? '#155724' : '#721c24'}; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">
-              ${player.status}
-            </span>
-          </div>
-          <div style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">
-            Positions: ${player.positions || 'Not specified'} | 
-            Squad: ${player.squadTags || 'Unassigned'}
-          </div>
-          <div style="font-size: 0.75rem; color: #999; margin-top: 0.25rem;">
-            ${player.email}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-  
-  document.getElementById('playerList').innerHTML = playerListHtml;
-  
-  // Show player selection interface
-  document.getElementById('playersLoading').style.display = 'none';
-  document.getElementById('playerSelection').style.display = 'block';
-  
-  // Update initial summary
-  updateSelectionSummary();
-}
-
-// Show error state
-function showPlayersError(message) {
-  document.getElementById('playersLoading').style.display = 'none';
-  document.getElementById('playerSelection').style.display = 'none';
-  document.getElementById('playersError').style.display = 'block';
-  document.getElementById('errorMessage').textContent = message;
-}
-
-// Update selection summary
-function updateSelectionSummary() {
-  const checkboxes = document.querySelectorAll('.player-checkbox:not(:disabled)');
-  const selectedBoxes = document.querySelectorAll('.player-checkbox:not(:disabled):checked');
-  
-  let squadCount = 0;
-  let otherCount = 0;
-  
-  selectedBoxes.forEach(checkbox => {
-    if (checkbox.dataset.inSquad === 'true') {
-      squadCount++;
-    } else {
-      otherCount++;
-    }
-  });
-  
-  document.getElementById('selectedCount').textContent = selectedBoxes.length;
-  document.getElementById('squadCount').textContent = squadCount;
-  document.getElementById('otherCount').textContent = otherCount;
-  
-  // Enable/disable send button
-  const sendBtn = document.getElementById('sendBtn');
-  if (selectedBoxes.length > 0) {
-    sendBtn.disabled = false;
-    sendBtn.style.opacity = '1';
-  } else {
-    sendBtn.disabled = true;
-    sendBtn.style.opacity = '0.5';
-  }
-}
-
-// Selection helper functions
-function selectAllSquadPlayers() {
-  document.querySelectorAll('.player-checkbox:not(:disabled)').forEach(checkbox => {
-    if (checkbox.dataset.inSquad === 'true') {
-      checkbox.checked = true;
-    }
-  });
-  updateSelectionSummary();
-}
-
-function selectAllPlayers() {
-  document.querySelectorAll('.player-checkbox:not(:disabled)').forEach(checkbox => {
-    checkbox.checked = true;
-  });
-  updateSelectionSummary();
-}
-
-function deselectAllPlayers() {
-  document.querySelectorAll('.player-checkbox:not(:disabled)').forEach(checkbox => {
-    checkbox.checked = false;
-  });
-  updateSelectionSummary();
-}
-
-// Send availability request to selected players
-async function sendToSelectedPlayers() {
-  const selectedBoxes = document.querySelectorAll('.player-checkbox:not(:disabled):checked');
-  
-  if (selectedBoxes.length === 0) {
-    alert('Please select at least one player');
-    return;
-  }
-  
-  const selectedEmails = Array.from(selectedBoxes).map(checkbox => checkbox.dataset.email);
-  
-  console.log('Sending availability request to', selectedEmails.length, 'players');
-  
-  // Disable send button and show loading
-  const sendBtn = document.getElementById('sendBtn');
-  const originalText = sendBtn.innerHTML;
-  sendBtn.disabled = true;
-  sendBtn.innerHTML = '<span>⏳</span> Sending...';
-  
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'sendAvailabilityToSelectedPlayers',
-        matchId: currentMatchId,
-        selectedPlayerEmails: selectedEmails,
-        testMode: false // Set to true for testing
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      alert(`✅ Availability request sent successfully!\n\nSent to: ${result.sentTo} players\nErrors: ${result.errors}`);
-      closePlayerSelectionModal();
-      
-      // Refresh the matches display
-      if (typeof loadMatches === 'function') {
-        loadMatches();
-      }
-    } else {
-      alert(`❌ Error sending availability request:\n${result.error}`);
-    }
-    
-  } catch (error) {
-    console.error('Error sending availability request:', error);
-    alert('❌ Network error sending availability request');
-  } finally {
-    // Restore send button
-    sendBtn.disabled = false;
-    sendBtn.innerHTML = originalText;
-  }
-}
-
-// Update your existing sendAvailabilityForm function to use the modal
-function sendAvailabilityForm(matchId) {
-  showPlayerSelectionModal(matchId);
-}
-</script>
-
-<style>
-/* Add these styles to your matches.html CSS */
-.player-item.inactive {
-  background-color: #f8f9fa;
-}
-
-.player-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.player-checkbox:disabled {
-  cursor: not-allowed;
-}
-
-.modal-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.1);
-  color: white;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.modal-btn:hover {
-  background: rgba(255,255,255,0.2);
-}
-</style>
-    
-</body>
-</html>
+                console.log('Fetching from:', WEB_APP_URL);
+                const response = await fetch(WEB_APP_URL + '
