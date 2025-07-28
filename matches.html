@@ -1478,6 +1478,12 @@
             
             // Generate player list HTML
             const players = data.players || [];
+            
+            if (players.length === 0) {
+                showPlayersError('No players found');
+                return;
+            }
+            
             const playerListHtml = players.map(player => {
                 const isDisabled = !player.canSend;
                 const statusClass = player.isActive ? 'active' : 'inactive';
@@ -1516,6 +1522,10 @@
             // Show player selection interface
             document.getElementById('playersLoading').style.display = 'none';
             document.getElementById('playerSelection').style.display = 'block';
+            document.getElementById('playersError').style.display = 'none';
+            
+            // Reset position filter to "All"
+            filterByPosition('all');
             
             // Update initial summary
             updateSelectionSummary();
