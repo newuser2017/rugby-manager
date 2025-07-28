@@ -909,28 +909,124 @@
         // ACTION FUNCTIONS
         // ============================================================================
 
+        // Test configuration for safe availability requests
+        const TEST_CONFIG = {
+            testMode: true,                           // Set to false when ready for production
+            testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
+            testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
+        };
+
+        // Safe test override for sending availability requests
+        async function sendAvailabilityRequestSafe(matchId) {
+            console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
+            
+            if (!TEST_CONFIG.testMode) {
+                // Production mode - call normal function
+                return await sendAvailabilityRequest(matchId);
+            }
+            
+            // TEST MODE - Override to send only to your email
+            console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
+            
+            try {
+                // Use the same pattern as match-detail.html - GET request with URL parameters
+                const url = new URL(WEB_APP_URL);
+                url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
+                url.searchParams.append('matchId', matchId);
+                url.searchParams.append('testMode', 'true');
+                url.searchParams.append('testEmail', TEST_CONFIG.testEmail);
+                url.searchParams.append('testPlayerName', TEST_CONFIG.testPlayerName);
+                
+                console.log('🔄 Making API call to:', url.toString());
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ API Response:', result);
+                
+                if (result.success) {
+                    showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
+                    console.log('✅ Test successful:', result);
+                    
+                    // Show test info
+                    alert(`🧪 TEST MODE SUCCESS!\n\n✅ Availability request sent to: ${TEST_CONFIG.testEmail}\n✅ Form created: ${result.formUrl}\n✅ Match: ${result.opponent}\n\nCheck your email!`);
+                    
+                } else {
+                    showNotification(`❌ Test failed: ${result.error}`, 'error');
+                    console.error('❌ Test failed:', result);
+                    alert(`❌ Test failed: ${result.error}`);
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Error in test availability request:', error);
+                showNotification(`❌ Error: ${error.message}`, 'error');
+                alert(`❌ Error: ${error.message}`);
+                
+                return { success: false, error: error.message };
+            }
+        }
+
         function sendAvailability(matchId, team) {
             console.log('📱 Send availability called:', matchId, team);
-            alert(`Send availability request for ${team} match ${matchId}\n\n(This will be connected to your Google Apps Script)`);
+            // Use the safe test function
+            return sendAvailabilityRequestSafe(matchId);
+        }
+
+        // Helper function to show notifications
+        function showNotification(message, type = 'info') {
+            // Simple notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                max-width: 400px;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
         }
 
         function sendReminder(matchId, team) {
             console.log('🔔 Send reminder called:', matchId, team);
-            if (confirm(`Send reminder to players who haven't responded yet?`)) {
-                alert(`Reminder sent for match ${matchId}`);
+            if (confirm(`Send reminder to players who haven't responded yet for ${team} match?`)) {
+                // This should connect to your Google Apps Script reminder function
+                alert(`Reminder functionality needs to be connected to Google Apps Script.\n\nMatch: ${matchId}\nTeam: ${team}`);
             }
         }
 
         function sendWeeklyAvailability() {
             console.log('📅 Send weekly availability called');
             if (confirm('Send availability requests for all matches this week?')) {
-                alert('Weekly availability requests sent!');
+                // This should connect to your Google Apps Script bulk sending function
+                alert('Weekly availability request functionality needs to be connected to Google Apps Script.');
             }
         }
 
         function exportMatches() {
             console.log('📊 Export matches called');
-            alert('Export functionality will be added here');
+            // This should export to Excel/CSV format
+            alert('Export functionality needs to be implemented.\n\nThis will export your matches to Excel format.');
         }
 
         function refreshMatches() {
