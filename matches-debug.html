@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches DEBUG - Clontarf Rugby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-panel h3 {
+            color: #1e3c72;
+            margin-top: 0;
+        }
+        .test-btn {
+            background: #1e3c72;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-btn:hover {
+            background: #2a5298;
+        }
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+    <script src="config.js"></script>
+</head>
+<body>
+    <h1>🐛 Clontarf Rugby - Matches Debug Panel</h1>
+    
+    <div class="debug-panel">
+        <h3>🔧 Configuration Test</h3>
+        <div id="configStatus"></div>
+        <button class="test-btn" onclick="testConfig()">Test Configuration</button>
+    </div>
+
+    <div class="debug-panel">
+        <h3>🌐 Connection Tests</h3>
+        <button class="test-btn" onclick="testBasicConnection()">Test Basic Connection</button>
+        <button class="test-btn" onclick="testGetMatches()">Test Get Matches API</button>
+        <button class="test-btn" onclick="testCORS()">Test CORS Headers</button>
+        <button class="test-btn" onclick="testWithDifferentMethod()">Test POST Method</button>
+        <div id="connectionStatus"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h3>📊 Network Logs</h3>
+        <button class="test-btn" onclick="clearLogs()">Clear Logs</button>
+        <div id="networkLogs" class="log-output"></div>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            console.log(logEntry);
+            
+            const logsElement = document.getElementById('networkLogs');
+            if (logsElement) {
+                logsElement.textContent = logs.join('\n');
+                logsElement.scrollTop = logsElement.scrollHeight;
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+        }
+
+        function clearLogs() {
+            logs = [];
+            document.getElementById('networkLogs').textContent = '';
+        }
+
+        function testConfig() {
+            addLog('🔧 Testing configuration...');
+            
+            try {
+                if (typeof CONFIG === 'undefined') {
+                    throw new Error('CONFIG object not loaded');
+                }
+                
+                addLog(`✅ CONFIG object loaded: ${JSON.stringify(CONFIG, null, 2)}`);
+                
+                if (!CONFIG.WEB_APP_URL) {
+                    throw new Error('WEB_APP_URL not defined in CONFIG');
+                }
+                
+                if (CONFIG.WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                    throw new Error('WEB_APP_URL not configured (still placeholder)');
+                }
+                
+                addLog(`✅ WEB_APP_URL: ${CONFIG.WEB_APP_URL}`);
+                
+                showStatus('configStatus', '✅ Configuration looks good!', 'success');
+                
+            } catch (error) {
+                addLog(`❌ Configuration error: ${error.message}`);
+                showStatus('configStatus', `❌ Configuration Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBasicConnection() {
+            addLog('🌐 Testing basic connection...');
+            
+            try {
+                const url = CONFIG.WEB_APP_URL;
+                addLog(`📡 Fetching: ${url}`);
+                
+                const response = await fetch(url);
+                addLog(`📊 Response status: ${response.status} ${response.statusText}`);
+                addLog(`📊 Response headers: ${JSON.stringify([...response.headers.entries()])}`);
+                
+                const text = await response.text();
+                addLog(`📄 Response body (first 500 chars): ${text.substring(0, 500)}`);
+                
+                if (response.ok) {
+                    showStatus('connectionStatus', '✅ Basic connection successful!', 'success');
+                } else {
+                    showStatus('connectionStatus', `⚠️ Response not OK: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Connection error: ${error.message}`);
+                showStatus('connectionStatus', `❌ Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetMatches() {
+            addLog('📋 Testing getMatches API...');
+            
+            try {
+                const url = `${CONFIG.WEB_APP_URL}?action=getMatches`;
+                addLog(`📡 Fetching: ${url}`);
+                
+                const response = await fetch(url);
+                addLog(`📊 Response status: ${response.status} ${response.statusText}`);
+                
+                const text = await response.text();
+                addLog(`📄 Raw response: ${text}`);
+                
+                try {
+                    const data = JSON.parse(text);
+                    addLog(`✅ JSON parsed successfully: ${JSON.stringify(data, null, 2)}`);
+                    
+                    if (data.success) {
+                        addLog(`✅ API returned success: ${data.matches ? data.matches.length : 0} matches`);
+                        showStatus('connectionStatus', '✅ getMatches API working!', 'success');
+                    } else {
+                        addLog(`⚠️ API returned error: ${data.error}`);
+                        showStatus('connectionStatus', `⚠️ API Error: ${data.error}`, 'error');
+                    }
+                } catch (parseError) {
+                    addLog(`❌ JSON parse error: ${parseError.message}`);
+                    addLog(`📄 Trying to parse: ${text.substring(0, 200)}...`);
+                    showStatus('connectionStatus', '❌ Invalid JSON response', 'error');
+                }
+                
+            } catch (error) {
+                addLog(`❌ getMatches error: ${error.message}`);
+                showStatus('connectionStatus', `❌ getMatches failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            addLog('🔒 Testing CORS...');
+            
+            try {
+                // Test with explicit CORS headers
+                const response = await fetch(CONFIG.WEB_APP_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                });
+                
+                addLog(`📊 CORS test response: ${response.status}`);
+                addLog(`📊 Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}`);
+                addLog(`📊 All headers: ${JSON.stringify([...response.headers.entries()])}`);
+                
+                showStatus('connectionStatus', '✅ CORS test completed - check logs', 'info');
+                
+            } catch (error) {
+                addLog(`❌ CORS error: ${error.message}`);
+                showStatus('connectionStatus', `❌ CORS failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWithDifferentMethod() {
+            addLog('📡 Testing with POST method (text/plain)...');
+            
+            try {
+                const response = await fetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'getMatches'
+                    })
+                });
+                
+                addLog(`📊 POST response status: ${response.status}`);
+                const text = await response.text();
+                addLog(`📄 POST response: ${text.substring(0, 300)}...`);
+                
+                showStatus('connectionStatus', '✅ POST test completed - check logs', 'info');
+                
+            } catch (error) {
+                addLog(`❌ POST method error: ${error.message}`);
+                showStatus('connectionStatus', `❌ POST failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run configuration test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('🚀 Debug panel loaded');
+            addLog(`🌍 Page origin: ${window.location.origin}`);
+            addLog(`📍 Page URL: ${window.location.href}`);
+            
+            // Auto-test config
+            setTimeout(() => {
+                testConfig();
+            }, 500);
+        });
+    </script>
+
+    <div class="debug-panel">
+        <h3>📋 Quick Diagnosis</h3>
+        <div id="quickDiagnosis">
+            <p><strong>Common Issues & Solutions:</strong></p>
+            <ul>
+                <li><strong>CORS Error:</strong> Your Google Apps Script needs proper CORS headers</li>
+                <li><strong>404 Error:</strong> Web app URL might be wrong or not deployed</li>
+                <li><strong>403 Error:</strong> Web app permissions not set to "Anyone"</li>
+                <li><strong>HTML Response:</strong> Script error - check Apps Script logs</li>
+                <li><strong>No Response:</strong> Network/firewall blocking requests</li>
+            </ul>
+            
+            <p><strong>Next Steps if Issues Found:</strong></p>
+            <ol>
+                <li>Check your Google Apps Script is deployed as Web App</li>
+                <li>Ensure permissions are set to "Execute as: Me" and "Access: Anyone"</li>
+                <li>Verify your doGet() function exists and returns proper JSON</li>
+                <li>Check for CORS headers in your Apps Script response</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
