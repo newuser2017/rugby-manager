@@ -1276,34 +1276,43 @@
     <script>
         console.log('🧪 JavaScript is running - syntax OK');
 
-        // ============================================================================
-        // WAIT FOR CONFIG TO LOAD BEFORE INITIALIZING (COPY FROM ROSTER-V2.HTML)
-        // ============================================================================
-        
-        let WEB_APP_URL;
-        let DEBUG_MODE = false;
-        
-        // Function to initialize when CONFIG is ready
-        function initializeApp() {
-            if (typeof CONFIG === 'undefined') {
-                console.error('❌ CONFIG still not available, retrying...');
-                setTimeout(initializeApp, 100); // Retry in 100ms
-                return;
-            }
-            
-            // ✅ Now CONFIG is available - set all variables
-            WEB_APP_URL = CONFIG.WEB_APP_URL;
-            DEBUG_MODE = CONFIG.DEBUG_MODE || false;
-            
-            console.log('✅ Matches app initialized with CONFIG:', {
-                webAppUrl: WEB_APP_URL,
-                debug: DEBUG_MODE
-            });
-            
-            // Now it's safe to load matches
-            loadMatches();
-        }
-        
+// ============================================================================
+// INITIALIZATION (FIXED)
+// ============================================================================
+
+// Function to initialize when CONFIG is ready
+function initializeApp() {
+    if (typeof CONFIG === 'undefined') {
+        console.error('❌ CONFIG still not available, retrying...');
+        setTimeout(initializeApp, 100); // Retry in 100ms
+        return;
+    }
+    
+    // ✅ Now CONFIG is available - set all variables
+    WEB_APP_URL = CONFIG.WEB_APP_URL;
+    DEBUG_MODE = CONFIG.DEBUG_MODE || false;
+    
+    console.log('✅ Matches app initialized with CONFIG:', {
+        webAppUrl: WEB_APP_URL,
+        debug: DEBUG_MODE
+    });
+    
+    // Now it's safe to load matches
+    loadMatches();
+}
+
+// Wait for page load, then initialize
+window.addEventListener('load', function() {
+    initializeApp();
+});
+
+// Also try to initialize immediately if DOM is already ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
+     
         // ============================================================================
         // CONFIGURATION AND GLOBAL VARIABLES
         // ============================================================================
@@ -1330,6 +1339,67 @@ let DEBUG_MODE = false;
             testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
             testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
         };
+
+        // ============================================================================
+// CORS-FRIENDLY API FUNCTIONS (MISSING FROM ORIGINAL)
+// ============================================================================
+
+async function fetchData(action, params = {}) {
+    // Safety check
+    if (!WEB_APP_URL) {
+        throw new Error('WEB_APP_URL not initialized. Please wait for config to load.');
+    }
+    
+    const url = new URL(WEB_APP_URL);
+    url.searchParams.append('action', action);
+    
+    // Add any additional parameters
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
+        }
+    });
+
+    try {
+        console.log('🔄 API Request:', action, params);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ API Response:', action, result);
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Fetch error:', error);
+        throw error;
+    }
+}
+
+// Use GET requests for all operations to avoid CORS issues
+async function postData(action, data) {
+    console.log('Converting POST to GET for CORS compatibility');
+    
+    const params = {
+        action: action,
+        ...data,
+        coachName: 'Luke Teeling',
+        coachEmail: 'luketeeling@gmail.com'
+    };
+
+    try {
+        const result = await fetchData(action, params);
+        console.log('GET request result:', result);
+        return result;
+    } catch (error) {
+        console.error('GET request error:', error);
+        throw error;
+    }
+}
         
         // ============================================================================
         // MAIN INITIALIZATION (REPLACE YOUR CURRENT EVENT LISTENERS)
@@ -1350,49 +1420,43 @@ let DEBUG_MODE = false;
         // ============================================================================
         // MATCH LOADING AND DISPLAY
         // ============================================================================
-        
         // Load matches from Google Sheets
-        async function loadMatches() {
-            console.log('📋 loadMatches function called');
-            showLoadingState();
-            
-            try {
-                // Check if configuration is set up
-                if (!WEB_APP_URL || WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-                    console.log('❌ No Google Apps Script URL configured');
-                    setTimeout(showEmptyState, 1000);
-                    return;
-                }
-
-                console.log('📡 Fetching matches from:', WEB_APP_URL);
-                const response = await fetch(WEB_APP_URL + '?action=getMatches');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log('📊 API Response:', data);
-                
-                if (data.success) {
-                    allMatches = data.matches || [];
-                    console.log(`✅ Loaded ${allMatches.length} matches`);
-                    
-                    if (allMatches.length === 0) {
-                        showEmptyState();
-                    } else {
-                        displayMatches(allMatches);
-                    }
-                } else {
-                    throw new Error(data.error || 'API returned unsuccessful response');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error loading matches:', error);
-                showErrorState();
-            }
+async function loadMatches() {
+    console.log('📋 loadMatches function called');
+    showLoadingState();
+    
+    try {
+        // Check if configuration is set up
+        if (!WEB_APP_URL || WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+            console.log('❌ No Google Apps Script URL configured');
+            setTimeout(showEmptyState, 1000);
+            return;
         }
 
+        console.log('📡 Fetching matches from:', WEB_APP_URL);
+        
+        // ✅ Use fetchData function (now defined)
+        const data = await fetchData('getMatches');
+        console.log('📊 API Response:', data);
+        
+        if (data.success) {
+            allMatches = data.matches || [];
+            console.log(`✅ Loaded ${allMatches.length} matches`);
+            
+            if (allMatches.length === 0) {
+                showEmptyState();
+            } else {
+                displayMatches(allMatches);
+            }
+        } else {
+            throw new Error(data.error || 'API returned unsuccessful response');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading matches:', error);
+        showErrorState();
+    }
+}
         // Display matches on the page
         async function displayMatches(matches) {
             console.log('🎨 Displaying', matches.length, 'matches');
@@ -1422,28 +1486,35 @@ let DEBUG_MODE = false;
             }
         }
 
-        // Load availability data for a specific match
-        async function loadMatchAvailability(matchId) {
-            try {
-                console.log(`📊 Loading availability for match ${matchId}`);
-                const response = await fetch(`${WEB_APP_URL}?action=getMatchAvailability&matchId=${matchId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    console.log(`✅ Availability data for ${matchId}:`, data);
-                    matchAvailabilityData[matchId] = data;
-                    updateMatchAvailabilityDisplay(matchId, data);
-                } else {
-                    console.log(`⚠️ No availability data for ${matchId}:`, data.error);
-                    matchAvailabilityData[matchId] = { summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, availability: [] };
-                    updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
-                }
-            } catch (error) {
-                console.error(`❌ Error loading availability for ${matchId}:`, error);
-                matchAvailabilityData[matchId] = { summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, availability: [] };
-                updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
-            }
+       // Load availability data for a specific match
+async function loadMatchAvailability(matchId) {
+    try {
+        console.log(`📊 Loading availability for match ${matchId}`);
+        
+        // ✅ Use fetchData function
+        const data = await fetchData('getMatchAvailability', { matchId: matchId });
+        
+        if (data.success) {
+            console.log(`✅ Availability data for ${matchId}:`, data);
+            matchAvailabilityData[matchId] = data;
+            updateMatchAvailabilityDisplay(matchId, data);
+        } else {
+            console.log(`⚠️ No availability data for ${matchId}:`, data.error);
+            matchAvailabilityData[matchId] = { 
+                summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, 
+                availability: [] 
+            };
+            updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
         }
+    } catch (error) {
+        console.error(`❌ Error loading availability for ${matchId}:`, error);
+        matchAvailabilityData[matchId] = { 
+            summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, 
+            availability: [] 
+        };
+        updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
+    }
+}
 
         // Update the match display with availability data
         function updateMatchAvailabilityDisplay(matchId, availabilityData) {
@@ -2675,3 +2746,116 @@ Please confirm your availability:
             if (confirm(`Send reminder to players who haven't responded yet for ${team} match?`)) {
                 // This should connect to your Google Apps Script reminder function
                 alert(`Reminder functionality needs to be connected to Google Apps Script.\n\nMatch: ${matchId}\nTeam: ${team}`);
+
+                // ============================================================================
+// ADDITIONAL HELPER FUNCTIONS (MISSING FROM ORIGINAL)
+// ============================================================================
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 400px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Filter functions
+function filterMatches() {
+    console.log('🔍 Filter matches called');
+    const teamFilter = document.getElementById('teamFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    let filtered = allMatches;
+    
+    if (teamFilter) {
+        filtered = filtered.filter(match => match.squad === teamFilter);
+    }
+    
+    if (statusFilter) {
+        filtered = filtered.filter(match => {
+            switch(statusFilter) {
+                case 'upcoming': return match.status !== 'Completed';
+                case 'team-selected': return match.status === 'Team Selected';
+                case 'completed': return match.status === 'Completed';
+                case 'availability-pending': return match.status === 'Availability Sent';
+                default: return true;
+            }
+        });
+    }
+    
+    if (dateFilter) {
+        const now = new Date();
+        filtered = filtered.filter(match => {
+            const matchDate = new Date(match.date);
+            switch(dateFilter) {
+                case 'this-week':
+                    const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+                    return matchDate >= weekStart && matchDate <= weekEnd;
+                case 'next-week':
+                    const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
+                    const nextWeekEnd = new Date(nextWeekStart);
+                    nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
+                    return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
+                case 'this-month':
+                    return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
+                case 'next-month':
+                    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                    return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
+                default: return true;
+            }
+        });
+    }
+    
+    displayMatches(filtered);
+}
+
+// Additional action functions
+function sendWeeklyAvailability() {
+    console.log('📅 Send weekly availability called');
+    if (confirm('Send availability requests for all matches this week?')) {
+        alert('Weekly availability request functionality needs to be connected to Google Apps Script.');
+    }
+}
+
+function exportMatches() {
+    console.log('📊 Export matches called');
+    alert('Export functionality needs to be implemented.\n\nThis will export your matches to Excel format.');
+}
+
+function refreshMatches() {
+    console.log('🔄 Refresh matches called');
+    loadMatches();
+}
+
+function sendReminder(matchId, team) {
+    console.log('🔔 Send reminder called:', matchId, team);
+    if (confirm(`Send reminder to players who haven't responded yet for ${team} match?`)) {
+        alert(`Reminder functionality needs to be connected to Google Apps Script.\n\nMatch: ${matchId}\nTeam: ${team}`);
+    }
+}
+            </script>
+</body>
+</html>
