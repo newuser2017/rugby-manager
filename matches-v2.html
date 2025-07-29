@@ -311,6 +311,13 @@
             border-radius: 6px;
             font-size: 0.875rem;
             font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-indicator:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .status-indicator.availability {
@@ -415,6 +422,17 @@
             padding: 0.5rem;
             background: #f8f9fa;
             border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stat-item:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .stat-item.clickable {
+            cursor: pointer;
         }
 
         .stat-value {
@@ -464,6 +482,472 @@
             margin-bottom: 2rem;
         }
 
+        /* Modal Base Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .match-summary {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .match-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 0;
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* Modal Tabs */
+        .modal-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .modal-tab {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .modal-tab.active {
+            background: white;
+            color: #1e3c72;
+            border-bottom: 2px solid #1e3c72;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .character-count {
+            font-size: 0.75rem;
+            color: #666;
+            text-align: right;
+        }
+
+        /* Message Preview */
+        .message-preview {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Recipients */
+        .recipient-summary {
+            display: flex;
+            gap: 2rem;
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .recipient-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .recipients-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+        }
+
+        .recipient-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f5f5f5;
+            transition: background 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .recipient-item:hover {
+            background: #f8f9fa;
+        }
+
+        .recipient-item:last-child {
+            border-bottom: none;
+        }
+
+        .recipient-item.responded {
+            opacity: 0.7;
+            background: #f8f9fa;
+            border-left-color: #28a745;
+        }
+
+        .recipient-checkbox {
+            margin-right: 1rem;
+        }
+
+        .recipient-info {
+            flex: 1;
+        }
+
+        .recipient-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .recipient-details {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .recipient-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-squad {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-additional {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-maybe {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .loading-recipients {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+        }
+
+        /* Radio Groups */
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .radio-option:hover {
+            background: #f8f9fa;
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+
+        /* Send Options */
+        .send-options {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .send-summary {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #bbdefb;
+        }
+
+        .send-actions {
+            text-align: center;
+        }
+
+        /* Response Details Styles */
+        .response-summary {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .response-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .response-stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e5e5;
+        }
+
+        .response-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .response-stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        .response-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .response-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e5e5;
+        }
+
+        .response-section-header {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e5e5;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .response-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .response-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .response-item:last-child {
+            border-bottom: none;
+        }
+
+        .response-player-info {
+            flex: 1;
+        }
+
+        .response-player-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .response-player-details {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .response-status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .response-status-badge.available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .response-status-badge.unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .response-status-badge.maybe {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .response-status-badge.pending {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
         /* Responsive */
         @media (max-width: 968px) {
             .filter-row {
@@ -491,10 +975,49 @@
             .match-stats {
                 grid-template-columns: 1fr 1fr;
             }
+
+            .modal {
+                padding: 0.5rem;
+            }
+            
+            .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+                width: 95vw;
+            }
+            
+            .modal-header {
+                padding: 1.5rem;
+            }
+            
+            .tab-content {
+                padding: 1.5rem;
+            }
+            
+            .recipient-summary {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .recipient-controls {
+                flex-direction: column;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+            }
+
+            .response-stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 480px) {
             .match-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .response-stats-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -611,6 +1134,145 @@
         </div>
     </div>
 
+    <!-- Enhanced Availability Modal -->
+    <div class="modal" id="availabilityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeAvailabilityModal()">&times;</button>
+                <h2 id="modalMatchTitle">Match Management</h2>
+                <div class="match-summary" id="matchSummary">
+                    <!-- Will be populated with match data -->
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Tabs -->
+                <div class="modal-tabs">
+                    <button class="modal-tab active" onclick="showAvailabilityTab('message')" data-tab="message">Message</button>
+                    <button class="modal-tab" onclick="showAvailabilityTab('recipients')" data-tab="recipients">Recipients</button>
+                    <button class="modal-tab" onclick="showAvailabilityTab('responses')" data-tab="responses">Responses</button>
+                    <button class="modal-tab" onclick="showAvailabilityTab('send')" data-tab="send">Send</button>
+                </div>
+
+                <!-- Message Tab -->
+                <div class="tab-content active" id="messageTab">
+                    <h3>Message Content</h3>
+                    <div class="message-preview">
+                        <div class="form-group">
+                            <label class="form-label">Email Subject</label>
+                            <input type="text" id="emailSubject" class="form-input" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Message Preview</label>
+                            <textarea id="messagePreview" class="form-textarea" rows="8" readonly></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Character Count</label>
+                            <div class="character-count" id="characterCount">0 characters</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipients Tab -->
+                <div class="tab-content" id="recipientsTab">
+                    <h3>Select Recipients</h3>
+                    
+                    <div class="recipient-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Selected:</span>
+                            <span class="summary-value" id="selectedCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Squad Players:</span>
+                            <span class="summary-value" id="squadCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Already Responded:</span>
+                            <span class="summary-value" id="respondedCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="recipient-controls">
+                        <button class="btn btn-secondary" onclick="selectAllPlayers()">Select All</button>
+                        <button class="btn btn-secondary" onclick="deselectAllPlayers()">Deselect All</button>
+                        <button class="btn btn-secondary" onclick="selectSquadOnly()">Squad Only</button>
+                        <button class="btn btn-secondary" onclick="selectUnrespondedOnly()">Unresponded Only</button>
+                    </div>
+                    
+                    <div class="recipients-list" id="recipientsList">
+                        <div class="loading-recipients">
+                            <div class="loading-spinner"></div>
+                            <div>Loading players...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responses Tab -->
+                <div class="tab-content" id="responsesTab">
+                    <h3>Match Responses</h3>
+                    
+                    <div class="response-summary">
+                        <div class="response-stats-grid" id="responseStatsGrid">
+                            <!-- Will be populated with response statistics -->
+                        </div>
+                    </div>
+                    
+                    <div class="response-sections" id="responseSections">
+                        <!-- Will be populated with response data -->
+                    </div>
+                </div>
+
+                <!-- Send Tab -->
+                <div class="tab-content" id="sendTab">
+                    <h3>Delivery Options</h3>
+                    
+                    <div class="send-options">
+                        <div class="form-group">
+                            <label class="form-label">Delivery Method</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="deliveryMethod" value="email" checked>
+                                    <span>Email Only</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="deliveryMethod" value="both">
+                                    <span>Email + WhatsApp</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Send Mode</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="sendMode" value="live" checked>
+                                    <span>Live Send</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="sendMode" value="test">
+                                    <span>Test Mode (your email only)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="send-summary" id="sendSummary">
+                        <!-- Will be populated based on selections -->
+                    </div>
+                    
+                    <div class="send-actions">
+                        <button class="btn btn-primary" id="sendAvailabilityBtn" onclick="sendAvailabilityRequest()">
+                            <span id="sendBtnText">Send Availability Request</span>
+                            <span id="sendBtnSpinner" style="display: none;">Sending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================================
         // CONFIGURATION AND GLOBAL VARIABLES
@@ -622,9 +1284,21 @@
         // Global variables
         let allMatches = [];
         let filteredMatches = [];
+        let matchAvailabilityData = {};
+        let currentMatchData = null;
+        let allPlayersForAvailability = [];
+        let selectedPlayers = [];
+        let matchResponseData = {};
 
         // Use WEB_APP_URL from config.js consistently
         const WEB_APP_URL = CONFIG.WEB_APP_URL;
+        
+        // Test configuration for safe availability requests
+        const TEST_CONFIG = {
+            testMode: true,                           // Set to false when ready for production
+            testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
+            testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
+        };
         
         // ============================================================================
         // INITIALIZATION
@@ -721,12 +1395,17 @@
                 
                 if (data.success) {
                     console.log(`✅ Availability data for ${matchId}:`, data);
+                    matchAvailabilityData[matchId] = data;
                     updateMatchAvailabilityDisplay(matchId, data);
                 } else {
                     console.log(`⚠️ No availability data for ${matchId}:`, data.error);
+                    matchAvailabilityData[matchId] = { summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, availability: [] };
+                    updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
                 }
             } catch (error) {
                 console.error(`❌ Error loading availability for ${matchId}:`, error);
+                matchAvailabilityData[matchId] = { summary: { total: 0, available: 0, unavailable: 0, pending: 0 }, availability: [] };
+                updateMatchAvailabilityDisplay(matchId, matchAvailabilityData[matchId]);
             }
         }
 
@@ -748,29 +1427,34 @@
                 const { available, unavailable, total, pending } = availabilityData.summary;
                 
                 if (total > 0) {
-                    // Update the availability status
+                    // Update the availability status - make it clickable
                     statusIndicator.innerHTML = `
                         <span>📱</span>
-                        <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable${pending > 0 ? `, ${pending} pending` : ''})</span>
+                        <span>${total} responses (${available} available, ${unavailable} unavailable)</span>
                     `;
                     statusIndicator.className = 'status-indicator availability pending';
+                    statusIndicator.onclick = () => openResponseDetailsModal(matchId);
                     
-                    // Add stats section if it doesn't exist
+                    // Update stats section
                     let statsSection = matchCard.querySelector('.match-stats');
                     if (!statsSection) {
                         const statsHTML = `
                             <div class="match-stats">
-                                <div class="stat-item">
+                                <div class="stat-item clickable" onclick="openResponseDetailsModal('${matchId}')">
                                     <div class="stat-value">${available}</div>
                                     <div class="stat-label">Available</div>
                                 </div>
-                                <div class="stat-item">
+                                <div class="stat-item clickable" onclick="openResponseDetailsModal('${matchId}')">
                                     <div class="stat-value">${unavailable}</div>
                                     <div class="stat-label">Unavailable</div>
                                 </div>
-                                <div class="stat-item">
+                                <div class="stat-item clickable" onclick="openResponseDetailsModal('${matchId}')">
                                     <div class="stat-value">${pending}</div>
                                     <div class="stat-label">No Response</div>
+                                </div>
+                                <div class="stat-item clickable" onclick="openResponseDetailsModal('${matchId}')">
+                                    <div class="stat-value">👁️</div>
+                                    <div class="stat-label">View Details</div>
                                 </div>
                             </div>
                         `;
@@ -785,6 +1469,11 @@
                         if (statItems[0]) statItems[0].querySelector('.stat-value').textContent = available;
                         if (statItems[1]) statItems[1].querySelector('.stat-value').textContent = unavailable;
                         if (statItems[2]) statItems[2].querySelector('.stat-value').textContent = pending;
+                        
+                        // Update onclick handlers
+                        statItems.forEach(item => {
+                            item.onclick = () => openResponseDetailsModal(matchId);
+                        });
                     }
                     
                     console.log(`✅ Updated availability display for ${matchId}: ${available} available, ${unavailable} unavailable, ${pending} pending`);
@@ -795,6 +1484,7 @@
                         <span>Availability: Form sent, awaiting responses</span>
                     `;
                     statusIndicator.className = 'status-indicator availability pending';
+                    statusIndicator.onclick = () => openAvailabilityModal(matchId);
                 }
             } else {
                 // No availability data - form not sent yet
@@ -803,39 +1493,10 @@
                     <span>Availability: Not sent</span>
                 `;
                 statusIndicator.className = 'status-indicator availability none';
+                statusIndicator.onclick = () => openAvailabilityModal(matchId);
             }
         }
-// Helper function for GET requests (add this if not already present)
-async function fetchData(action, params = {}) {
-    if (!WEB_APP_URL) {
-        throw new Error('WEB_APP_URL not configured');
-    }
-    
-    const url = new URL(WEB_APP_URL);
-    url.searchParams.append('action', action);
-    
-    // Add any additional parameters
-    Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined) {
-            url.searchParams.append(key, params[key]);
-        }
-    });
 
-    try {
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        return result;
-        
-    } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-    }
-}
         // Create HTML for a single match card
         function createMatchCard(match) {
             const teamBadgeClass = match.squad === '4ths' ? 'j4' : 'j5';
@@ -995,6 +1656,942 @@ async function fetchData(action, params = {}) {
         }
 
         // ============================================================================
+        // HELPER FUNCTIONS FOR DATA REQUESTS
+        // ============================================================================
+
+        // Helper function for GET requests
+        async function fetchData(action, params = {}) {
+            if (!WEB_APP_URL) {
+                throw new Error('WEB_APP_URL not configured');
+            }
+            
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', action);
+            
+            // Add any additional parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                return result;
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // Helper function for POST requests
+        async function postData(action, data) {
+            if (!WEB_APP_URL) {
+                throw new Error('WEB_APP_URL not configured');
+            }
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...data
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('POST response:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('POST error:', error);
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // RESPONSE DETAILS MODAL FUNCTIONS
+        // ============================================================================
+
+        // Open response details modal
+        async function openResponseDetailsModal(matchId) {
+            console.log('Opening response details modal for match:', matchId);
+            
+            try {
+                // Find the match data
+                const match = allMatches.find(m => m.matchId === matchId);
+                if (!match) {
+                    throw new Error('Match not found');
+                }
+
+                currentMatchData = match;
+                
+                // Open modal and show responses tab
+                document.getElementById('availabilityModal').classList.add('active');
+                populateMatchSummary(match);
+                
+                // Load response data
+                await loadResponseDetails(matchId);
+                
+                // Show responses tab
+                showAvailabilityTab('responses');
+                
+            } catch (error) {
+                console.error('Error opening response details modal:', error);
+                alert('Error loading response details: ' + error.message);
+            }
+        }
+
+        // Load detailed response data for a match
+        async function loadResponseDetails(matchId) {
+            try {
+                console.log('Loading detailed response data for match:', matchId);
+                
+                // Get availability data (we may already have this cached)
+                let availabilityData = matchAvailabilityData[matchId];
+                if (!availabilityData) {
+                    await loadMatchAvailability(matchId);
+                    availabilityData = matchAvailabilityData[matchId];
+                }
+                
+                // Get sent recipients data (we'll need a new API endpoint for this)
+                const sentRecipientsData = await fetchData('getAvailabilitySentRecipients', { matchId: matchId });
+                
+                // Process and display the response data
+                displayResponseDetails(matchId, availabilityData, sentRecipientsData);
+                
+            } catch (error) {
+                console.error('Error loading response details:', error);
+                document.getElementById('responseSections').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #dc3545;">
+                        <h4>Error Loading Response Details</h4>
+                        <p>Unable to load response data: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display response details in the modal
+        function displayResponseDetails(matchId, availabilityData, sentRecipientsData) {
+            const { summary, availability } = availabilityData;
+            const { available = 0, unavailable = 0, total = 0 } = summary;
+            
+            // Calculate pending responses
+            const sentTo = sentRecipientsData.success ? sentRecipientsData.sentTo || [] : [];
+            const pending = sentTo.length - total;
+            
+            // Update stats grid
+            document.getElementById('responseStatsGrid').innerHTML = `
+                <div class="response-stat-item">
+                    <div class="response-stat-value">${total}</div>
+                    <div class="response-stat-label">Total Responses</div>
+                </div>
+                <div class="response-stat-item">
+                    <div class="response-stat-value">${available}</div>
+                    <div class="response-stat-label">Available</div>
+                </div>
+                <div class="response-stat-item">
+                    <div class="response-stat-value">${unavailable}</div>
+                    <div class="response-stat-label">Unavailable</div>
+                </div>
+                <div class="response-stat-item">
+                    <div class="response-stat-value">${pending}</div>
+                    <div class="response-stat-label">Pending</div>
+                </div>
+            `;
+            
+            // Create response sections
+            const respondedPlayers = availability || [];
+            const pendingPlayers = sentTo.filter(sent => 
+                !respondedPlayers.some(responded => responded.playerName === sent.playerName)
+            );
+            
+            let sectionsHTML = '';
+            
+            // Available players section
+            const availablePlayers = respondedPlayers.filter(p => 
+                p.availabilityStatus && p.availabilityStatus.toLowerCase().includes('available')
+            );
+            
+            if (availablePlayers.length > 0) {
+                sectionsHTML += `
+                    <div class="response-section">
+                        <div class="response-section-header">
+                            <span>✅</span>
+                            <span>Available Players (${availablePlayers.length})</span>
+                        </div>
+                        <div class="response-list">
+                            ${availablePlayers.map(player => `
+                                <div class="response-item">
+                                    <div class="response-player-info">
+                                        <div class="response-player-name">${player.playerName}</div>
+                                        <div class="response-player-details">
+                                            Responded: ${formatResponseDate(player.responseDate)}
+                                            ${player.notes ? ` • ${player.notes}` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="response-status-badge available">Available</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Unavailable players section
+            const unavailablePlayers = respondedPlayers.filter(p => 
+                p.availabilityStatus && p.availabilityStatus.toLowerCase().includes('unavailable')
+            );
+            
+            if (unavailablePlayers.length > 0) {
+                sectionsHTML += `
+                    <div class="response-section">
+                        <div class="response-section-header">
+                            <span>❌</span>
+                            <span>Unavailable Players (${unavailablePlayers.length})</span>
+                        </div>
+                        <div class="response-list">
+                            ${unavailablePlayers.map(player => `
+                                <div class="response-item">
+                                    <div class="response-player-info">
+                                        <div class="response-player-name">${player.playerName}</div>
+                                        <div class="response-player-details">
+                                            Responded: ${formatResponseDate(player.responseDate)}
+                                            ${player.notes ? ` • ${player.notes}` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="response-status-badge unavailable">Unavailable</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Maybe/Other responses section
+            const maybeOtherPlayers = respondedPlayers.filter(p => 
+                p.availabilityStatus && 
+                !p.availabilityStatus.toLowerCase().includes('available') &&
+                !p.availabilityStatus.toLowerCase().includes('unavailable')
+            );
+            
+            if (maybeOtherPlayers.length > 0) {
+                sectionsHTML += `
+                    <div class="response-section">
+                        <div class="response-section-header">
+                            <span>❓</span>
+                            <span>Other Responses (${maybeOtherPlayers.length})</span>
+                        </div>
+                        <div class="response-list">
+                            ${maybeOtherPlayers.map(player => `
+                                <div class="response-item">
+                                    <div class="response-player-info">
+                                        <div class="response-player-name">${player.playerName}</div>
+                                        <div class="response-player-details">
+                                            Status: ${player.availabilityStatus} • ${formatResponseDate(player.responseDate)}
+                                            ${player.notes ? ` • ${player.notes}` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="response-status-badge maybe">${player.availabilityStatus}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Pending responses section
+            if (pendingPlayers.length > 0) {
+                sectionsHTML += `
+                    <div class="response-section">
+                        <div class="response-section-header">
+                            <span>⏳</span>
+                            <span>Pending Responses (${pendingPlayers.length})</span>
+                        </div>
+                        <div class="response-list">
+                            ${pendingPlayers.map(player => `
+                                <div class="response-item">
+                                    <div class="response-player-info">
+                                        <div class="response-player-name">${player.playerName}</div>
+                                        <div class="response-player-details">
+                                            Email: ${player.playerEmail} • Sent: ${formatResponseDate(player.sentDate)}
+                                        </div>
+                                    </div>
+                                    <div class="response-status-badge pending">No Response</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Handle empty state
+            if (!sectionsHTML) {
+                sectionsHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #666;">
+                        <h4>No Response Data</h4>
+                        <p>No availability requests have been sent for this match yet.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('responseSections').innerHTML = sectionsHTML;
+        }
+
+        // Format response date for display
+        function formatResponseDate(dateValue) {
+            if (!dateValue) return 'Unknown';
+            
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return 'Unknown';
+                
+                const now = new Date();
+                const diffMs = now - date;
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffHours / 24);
+                
+                if (diffHours < 1) {
+                    return 'Just now';
+                } else if (diffHours < 24) {
+                    return `${diffHours}h ago`;
+                } else if (diffDays < 7) {
+                    return `${diffDays}d ago`;
+                } else {
+                    return date.toLocaleDateString();
+                }
+            } catch (error) {
+                return 'Unknown';
+            }
+        }
+
+        // ============================================================================
+        // AVAILABILITY MODAL FUNCTIONS
+        // ============================================================================
+
+        // Open availability modal for sending new requests
+        async function openAvailabilityModal(matchId) {
+            console.log('Opening availability modal for match:', matchId);
+            
+            try {
+                // Show modal immediately
+                document.getElementById('availabilityModal').classList.add('active');
+                
+                // Load match data
+                const matchData = await fetchData('getMatch', { matchId: matchId });
+                if (!matchData.success) {
+                    throw new Error('Could not load match details');
+                }
+                
+                currentMatchData = matchData;
+                console.log('Match data loaded:', currentMatchData);
+                
+                // Populate match summary
+                populateMatchSummary(currentMatchData);
+                
+                // Generate message content
+                generateMessageContent(currentMatchData);
+                
+                // Load players for selection
+                await loadPlayersForSelection(matchId);
+                
+                // Show message tab by default
+                showAvailabilityTab('message');
+                
+            } catch (error) {
+                console.error('Error opening availability modal:', error);
+                alert('Error loading match details: ' + error.message);
+                closeAvailabilityModal();
+            }
+        }
+
+        // Close availability modal
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').classList.remove('active');
+            currentMatchData = null;
+            allPlayersForAvailability = [];
+            selectedPlayers = [];
+            matchResponseData = {};
+        }
+
+        // Show specific tab in the modal
+        function showAvailabilityTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Hide all tabs and remove active class from buttons
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected tab button
+            const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            
+            // Show selected tab content
+            const tabContent = document.getElementById(tabName + 'Tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            // Update send summary when switching to send tab
+            if (tabName === 'send') {
+                updateSendSummary();
+            }
+            
+            // Load response details when switching to responses tab
+            if (tabName === 'responses' && currentMatchData) {
+                loadResponseDetails(currentMatchData.matchId);
+            }
+        }
+
+        // Populate match summary in modal header
+        function populateMatchSummary(matchData) {
+            const modalTitle = document.getElementById('modalMatchTitle');
+            const matchSummary = document.getElementById('matchSummary');
+            
+            modalTitle.textContent = `Match Management`;
+            
+            matchSummary.innerHTML = `
+                <span class="match-badge">${matchData.squad}</span>
+                <span style="opacity: 0.9;">${matchData.squad} vs ${matchData.opponent}</span>
+                <span style="opacity: 0.8;">${matchData.date} at ${matchData.time || 'TBC'}</span>
+                <span class="match-badge">${matchData.homeAway}</span>
+            `;
+        }
+
+        // Generate message content based on match data
+        function generateMessageContent(matchData) {
+            const subject = `Availability Request: ${matchData.squad} vs ${matchData.opponent}`;
+            
+            const message = `Clontarf Rugby - Match Availability Request
+
+Match: ${matchData.squad} vs ${matchData.opponent}
+Date: ${matchData.date} at ${matchData.time || 'TBC'}
+Venue: ${matchData.homeAway} - ${matchData.location}
+
+Please confirm your availability:
+[Google Form Link will be generated automatically]`;
+
+            document.getElementById('emailSubject').value = subject;
+            document.getElementById('messagePreview').value = message;
+            
+            // Update character count
+            updateCharacterCount();
+        }
+
+        // Update character count for message
+        function updateCharacterCount() {
+            const message = document.getElementById('messagePreview').value;
+            const count = message.length;
+            document.getElementById('characterCount').textContent = `${count} characters`;
+        }
+
+        // Load players for selection modal with response status
+        async function loadPlayersForSelection(matchId) {
+            try {
+                console.log('Loading players for selection modal...');
+                
+                // Show loading state
+                document.getElementById('recipientsList').innerHTML = `
+                    <div class="loading-recipients">
+                        <div class="loading-spinner"></div>
+                        <div>Loading players...</div>
+                    </div>
+                `;
+                
+                // Get players from backend
+                const result = await fetchData('getPlayersForSelectionModal', { matchId: matchId });
+                
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+                
+                allPlayersForAvailability = result.players;
+                console.log(`Loaded ${allPlayersForAvailability.length} players for selection`);
+                
+                // Get response data for this match to mark who has already responded
+                const availabilityData = matchAvailabilityData[matchId] || { availability: [] };
+                const responses = availabilityData.availability || [];
+                
+                // Mark players who have already responded
+                allPlayersForAvailability.forEach(player => {
+                    const response = responses.find(r => r.playerName === player.name);
+                    if (response) {
+                        player.hasResponded = true;
+                        player.responseStatus = response.availabilityStatus;
+                        player.responseDate = response.responseDate;
+                    } else {
+                        player.hasResponded = false;
+                    }
+                });
+                
+                // Auto-select squad players who haven't responded yet
+                selectedPlayers = allPlayersForAvailability
+                    .filter(player => player.autoSelected && !player.hasResponded)
+                    .map(player => player.email);
+                
+                console.log(`Auto-selected ${selectedPlayers.length} unresponded squad players`);
+                
+                // Display players
+                displayPlayersForSelection();
+                
+                // Update counts
+                updateRecipientCounts();
+                
+            } catch (error) {
+                console.error('Error loading players:', error);
+                document.getElementById('recipientsList').innerHTML = `
+                    <div class="loading-recipients" style="color: #dc3545;">
+                        <div>❌</div>
+                        <div>Error loading players: ${error.message}</div>
+                        <button class="btn btn-primary" onclick="loadPlayersForSelection('${matchId}')" style="margin-top: 1rem;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Display players for selection with response status
+        function displayPlayersForSelection() {
+            const container = document.getElementById('recipientsList');
+            
+            if (allPlayersForAvailability.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-recipients">
+                        <div>📭</div>
+                        <div>No players found for this match</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const playersHTML = allPlayersForAvailability.map(player => {
+                const isSelected = selectedPlayers.includes(player.email);
+                const isDisabled = player.hasResponded || !player.isActive;
+                
+                // Determine status badge
+                let statusBadge = '';
+                let statusClass = '';
+                
+                if (player.hasResponded) {
+                    const status = player.responseStatus || 'Unknown';
+                    if (status.toLowerCase().includes('available') && !status.toLowerCase().includes('unavailable')) {
+                        statusBadge = `✅ Available (${formatResponseDate(player.responseDate)})`;
+                        statusClass = 'status-available';
+                    } else if (status.toLowerCase().includes('unavailable')) {
+                        statusBadge = `❌ Unavailable (${formatResponseDate(player.responseDate)})`;
+                        statusClass = 'status-unavailable';
+                    } else {
+                        statusBadge = `❓ ${status} (${formatResponseDate(player.responseDate)})`;
+                        statusClass = 'status-maybe';
+                    }
+                } else if (!player.isActive) {
+                    statusBadge = player.status;
+                    statusClass = 'status-unavailable';
+                } else if (player.isInMatchSquad) {
+                    statusBadge = 'Squad Player';
+                    statusClass = 'status-squad';
+                } else {
+                    statusBadge = 'Additional';
+                    statusClass = 'status-additional';
+                }
+                
+                const itemClass = player.hasResponded ? 'recipient-item responded' : 'recipient-item';
+                
+                return `
+                    <div class="${itemClass}">
+                        <input type="checkbox" 
+                               class="recipient-checkbox" 
+                               value="${player.email}"
+                               ${isSelected ? 'checked' : ''}
+                               ${isDisabled ? 'disabled' : ''}
+                               onchange="togglePlayerSelection('${player.email}')">
+                        <div class="recipient-info">
+                            <div class="recipient-name">${player.name}</div>
+                            <div class="recipient-details">
+                                ${player.positions} • ${player.email}
+                            </div>
+                        </div>
+                        <div class="recipient-status ${statusClass}">
+                            ${statusBadge}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = playersHTML;
+        }
+
+        // Toggle player selection
+        function togglePlayerSelection(email) {
+            const index = selectedPlayers.indexOf(email);
+            
+            if (index === -1) {
+                selectedPlayers.push(email);
+            } else {
+                selectedPlayers.splice(index, 1);
+            }
+            
+            updateRecipientCounts();
+            console.log('Selected players:', selectedPlayers.length);
+        }
+
+        // Update recipient counts
+        function updateRecipientCounts() {
+            const selectedCount = selectedPlayers.length;
+            const squadCount = allPlayersForAvailability.filter(p => p.isInMatchSquad && p.isActive).length;
+            const respondedCount = allPlayersForAvailability.filter(p => p.hasResponded).length;
+            
+            document.getElementById('selectedCount').textContent = selectedCount;
+            document.getElementById('squadCount').textContent = squadCount;
+            document.getElementById('respondedCount').textContent = respondedCount;
+        }
+
+        // Select all players
+        function selectAllPlayers() {
+            selectedPlayers = allPlayersForAvailability
+                .filter(player => player.canSend && !player.hasResponded)
+                .map(player => player.email);
+            
+            // Update checkboxes
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = selectedPlayers.includes(checkbox.value);
+                }
+            });
+            
+            updateRecipientCounts();
+        }
+
+        // Deselect all players
+        function deselectAllPlayers() {
+            selectedPlayers = [];
+            
+            // Update checkboxes
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            updateRecipientCounts();
+        }
+
+        // Select squad only
+        function selectSquadOnly() {
+            selectedPlayers = allPlayersForAvailability
+                .filter(player => player.isInMatchSquad && player.canSend && !player.hasResponded)
+                .map(player => player.email);
+            
+            // Update checkboxes
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    const player = allPlayersForAvailability.find(p => p.email === checkbox.value);
+                    checkbox.checked = player && player.isInMatchSquad && !player.hasResponded;
+                }
+            });
+            
+            updateRecipientCounts();
+        }
+
+        // Select unresponded only
+        function selectUnrespondedOnly() {
+            selectedPlayers = allPlayersForAvailability
+                .filter(player => !player.hasResponded && player.canSend)
+                .map(player => player.email);
+            
+            // Update checkboxes
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    const player = allPlayersForAvailability.find(p => p.email === checkbox.value);
+                    checkbox.checked = player && !player.hasResponded;
+                }
+            });
+            
+            updateRecipientCounts();
+        }
+
+        // Update send summary
+        function updateSendSummary() {
+            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
+            const selectedCount = selectedPlayers.length;
+            
+            const deliveryText = deliveryMethod === 'email' ? 'Email' : 'Email + WhatsApp';
+            const modeText = sendMode === 'test' ? 'Test Mode (your email only)' : 'Live Send';
+            
+            document.getElementById('sendSummary').innerHTML = `
+                <h4>Send Summary</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <strong>Recipients:</strong><br>
+                        ${sendMode === 'test' ? '1 (test email)' : selectedCount + ' players'}
+                    </div>
+                    <div>
+                        <strong>Delivery:</strong><br>
+                        ${deliveryText}
+                    </div>
+                    <div>
+                        <strong>Mode:</strong><br>
+                        ${modeText}
+                    </div>
+                    <div>
+                        <strong>Match:</strong><br>
+                        ${currentMatchData.squad} vs ${currentMatchData.opponent}
+                    </div>
+                </div>
+                
+                ${sendMode === 'test' ? `
+                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
+                        <strong>🧪 Test Mode Active</strong><br>
+                        Email will only be sent to your email address for testing purposes.
+                    </div>
+                ` : ''}
+                
+                ${selectedCount === 0 && sendMode === 'live' ? `
+                    <div style="background: #f8d7da; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #f5c6cb;">
+                        <strong>⚠️ No Recipients Selected</strong><br>
+                        Please go back to the Recipients tab and select players to send to.
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Send availability request using safe test logic
+        async function sendAvailabilityRequest() {
+            console.log('=== SENDING AVAILABILITY REQUEST ===');
+            
+            if (!currentMatchData) {
+                alert('No match selected');
+                return;
+            }
+            
+            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
+            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+            
+            // Validate selections
+            if (sendMode === 'live' && selectedPlayers.length === 0) {
+                alert('Please select at least one player to send to, or switch to Test Mode.');
+                showAvailabilityTab('recipients');
+                return;
+            }
+            
+            // Update button state
+            const sendBtn = document.getElementById('sendAvailabilityBtn');
+            const sendText = document.getElementById('sendBtnText');
+            const sendSpinner = document.getElementById('sendBtnSpinner');
+            
+            sendBtn.disabled = true;
+            sendText.style.display = 'none';
+            sendSpinner.style.display = 'inline';
+            
+            try {
+                let result;
+                
+                if (sendMode === 'test') {
+                    console.log('🧪 Sending in TEST mode');
+                    result = await sendAvailabilityRequestSafe(currentMatchData.matchId);
+                } else {
+                    console.log('📧 Sending in LIVE mode to', selectedPlayers.length, 'players');
+                    // For live mode, we'll use the existing endpoint but it sends to all squad players
+                    // In a real implementation, you'd want to modify the backend to accept specific email lists
+                    result = await sendAvailabilityRequestSafe(currentMatchData.matchId);
+                }
+                
+                console.log('Send result:', result);
+                
+                if (result.success) {
+                    // Show success message
+                    showSuccessModal(result, sendMode);
+                    
+                    // Close availability modal
+                    closeAvailabilityModal();
+                    
+                    // Refresh the match data to show updated availability status
+                    await loadMatchAvailability(currentMatchData.matchId);
+                    
+                } else {
+                    throw new Error(result.error || 'Unknown error occurred');
+                }
+                
+            } catch (error) {
+                console.error('Error sending availability request:', error);
+                alert('Error sending availability request: ' + error.message);
+                
+            } finally {
+                // Reset button state
+                sendBtn.disabled = false;
+                sendText.style.display = 'inline';
+                sendSpinner.style.display = 'none';
+            }
+        }
+
+        // Safe test override for sending availability requests (same as before)
+        async function sendAvailabilityRequestSafe(matchId) {
+            console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
+            
+            if (!TEST_CONFIG.testMode) {
+                // Production mode - call normal function
+                return await sendAvailabilityRequestProduction(matchId);
+            }
+            
+            // TEST MODE - Override to send only to your email
+            console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
+            
+            try {
+                // Use the same pattern as match-detail.html - GET request with URL parameters
+                const url = new URL(WEB_APP_URL);
+                url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
+                url.searchParams.append('matchId', matchId);
+                url.searchParams.append('testMode', 'true');
+                url.searchParams.append('testEmail', TEST_CONFIG.testEmail);
+                url.searchParams.append('testPlayerName', TEST_CONFIG.testPlayerName);
+                
+                console.log('🔄 Making API call to:', url.toString());
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ API Response:', result);
+                
+                if (result.success) {
+                    showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
+                    console.log('✅ Test successful:', result);
+                } else {
+                    showNotification(`❌ Test failed: ${result.error}`, 'error');
+                    console.error('❌ Test failed:', result);
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Error in test availability request:', error);
+                showNotification(`❌ Error: ${error.message}`, 'error');
+                
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Production availability request function
+        async function sendAvailabilityRequestProduction(matchId) {
+            // This would be implemented when ready for production
+            // For now, we'll use the same test logic
+            return await sendAvailabilityRequestSafe(matchId);
+        }
+
+        // Show success modal
+        function showSuccessModal(result, sendMode) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.zIndex = '3000';
+            
+            const successContent = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        <h2>✅ Availability Request Sent!</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div style="padding: 2rem;">
+                        <h3>Send Summary</h3>
+                        <div style="background: #d4edda; padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid #c3e6cb;">
+                            ${sendMode === 'test' ? `
+                                <strong>🧪 Test Mode:</strong><br>
+                                Test email sent to: ${result.testEmail || 'your email'}<br>
+                                Match: ${result.squad} vs ${result.opponent}
+                            ` : `
+                                <strong>📧 Live Send Complete:</strong><br>
+                                Sent to: ${result.sentTo} players<br>
+                                Match: ${result.squad} vs ${result.opponent}<br>
+                                ${result.errors > 0 ? `<br><span style="color: #dc3545;">Failed: ${result.errors} emails</span>` : ''}
+                            `}
+                        </div>
+                        
+                        ${result.formIsNew ? `
+                            <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                                <strong>📝 New Form Created:</strong><br>
+                                A new availability form was created for this match.<br>
+                                <a href="${result.formUrl}" target="_blank" style="color: #1e3c72;">View Form</a>
+                            </div>
+                        ` : `
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                                <strong>📋 Using Existing Form:</strong><br>
+                                Reused the existing form for this match.
+                            </div>
+                        `}
+                        
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.innerHTML = successContent;
+            document.body.appendChild(modal);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (modal.parentNode) {
+                    modal.remove();
+                }
+            }, 10000);
+        }
+
+        // Helper function to show notifications
+        function showNotification(message, type = 'info') {
+            // Simple notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                max-width: 400px;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // ============================================================================
         // STATE MANAGEMENT FUNCTIONS
         // ============================================================================
 
@@ -1039,102 +2636,9 @@ async function fetchData(action, params = {}) {
         // ACTION FUNCTIONS
         // ============================================================================
 
-        // Test configuration for safe availability requests
-        const TEST_CONFIG = {
-            testMode: true,                           // Set to false when ready for production
-            testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
-            testPlayerName: 'Luke Teeling (TEST)'     // Your name for testing
-        };
-
-        // Safe test override for sending availability requests
-        async function sendAvailabilityRequestSafe(matchId) {
-            console.log(`=== SAFE TEST: Sending availability request for match ${matchId} ===`);
-            
-            if (!TEST_CONFIG.testMode) {
-                // Production mode - call normal function
-                return await sendAvailabilityRequest(matchId);
-            }
-            
-            // TEST MODE - Override to send only to your email
-            console.log('🧪 TEST MODE: Will only send to', TEST_CONFIG.testEmail);
-            
-            try {
-                // Use the same pattern as match-detail.html - GET request with URL parameters
-                const url = new URL(WEB_APP_URL);
-                url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
-                url.searchParams.append('matchId', matchId);
-                url.searchParams.append('testMode', 'true');
-                url.searchParams.append('testEmail', TEST_CONFIG.testEmail);
-                url.searchParams.append('testPlayerName', TEST_CONFIG.testPlayerName);
-                
-                console.log('🔄 Making API call to:', url.toString());
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('✅ API Response:', result);
-                
-                if (result.success) {
-                    showNotification(`✅ Test availability request sent to ${TEST_CONFIG.testEmail}`, 'success');
-                    console.log('✅ Test successful:', result);
-                    
-                    // Show test info
-                    alert(`🧪 TEST MODE SUCCESS!\n\n✅ Availability request sent to: ${TEST_CONFIG.testEmail}\n✅ Form created: ${result.formUrl}\n✅ Match: ${result.opponent}\n\nCheck your email!`);
-                    
-                } else {
-                    showNotification(`❌ Test failed: ${result.error}`, 'error');
-                    console.error('❌ Test failed:', result);
-                    alert(`❌ Test failed: ${result.error}`);
-                }
-                
-                return result;
-                
-            } catch (error) {
-                console.error('Error in test availability request:', error);
-                showNotification(`❌ Error: ${error.message}`, 'error');
-                alert(`❌ Error: ${error.message}`);
-                
-                return { success: false, error: error.message };
-            }
-        }
-
         function sendAvailability(matchId, team) {
             console.log('📱 Send availability called:', matchId, team);
-            // Use the safe test function
-            return sendAvailabilityRequestSafe(matchId);
-        }
-
-        // Helper function to show notifications
-        function showNotification(message, type = 'info') {
-            // Simple notification
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 6px;
-                color: white;
-                font-weight: 500;
-                z-index: 10000;
-                max-width: 400px;
-                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#1e3c72'};
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 5000);
+            return openAvailabilityModal(matchId);
         }
 
         function sendReminder(matchId, team) {
@@ -1142,1448 +2646,3 @@ async function fetchData(action, params = {}) {
             if (confirm(`Send reminder to players who haven't responded yet for ${team} match?`)) {
                 // This should connect to your Google Apps Script reminder function
                 alert(`Reminder functionality needs to be connected to Google Apps Script.\n\nMatch: ${matchId}\nTeam: ${team}`);
-            }
-        }
-
-        function sendWeeklyAvailability() {
-            console.log('📅 Send weekly availability called');
-            if (confirm('Send availability requests for all matches this week?')) {
-                // This should connect to your Google Apps Script bulk sending function
-                alert('Weekly availability request functionality needs to be connected to Google Apps Script.');
-            }
-        }
-
-        function exportMatches() {
-            console.log('📊 Export matches called');
-            // This should export to Excel/CSV format
-            alert('Export functionality needs to be implemented.\n\nThis will export your matches to Excel format.');
-        }
-
-        function refreshMatches() {
-            console.log('🔄 Refresh matches called');
-            loadMatches();
-        }
-
-        // ============================================================================
-        // FILTER FUNCTIONS
-        // ============================================================================
-
-        function filterMatches() {
-            console.log('🔍 Filter matches called');
-            const teamFilter = document.getElementById('teamFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-            
-            let filtered = allMatches;
-            
-            if (teamFilter) {
-                filtered = filtered.filter(match => match.squad === teamFilter);
-            }
-            
-            if (statusFilter) {
-                filtered = filtered.filter(match => {
-                    switch(statusFilter) {
-                        case 'upcoming': return match.status !== 'Completed';
-                        case 'team-selected': return match.status === 'Team Selected';
-                        case 'completed': return match.status === 'Completed';
-                        case 'availability-pending': return match.status === 'Availability Sent';
-                        default: return true;
-                    }
-                });
-            }
-            
-            if (dateFilter) {
-                const now = new Date();
-                filtered = filtered.filter(match => {
-                    const matchDate = new Date(match.date);
-                    switch(dateFilter) {
-                        case 'this-week':
-                            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-                            const weekEnd = new Date(weekStart);
-                            weekEnd.setDate(weekEnd.getDate() + 6);
-                            return matchDate >= weekStart && matchDate <= weekEnd;
-                        case 'next-week':
-                            const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
-                            const nextWeekEnd = new Date(nextWeekStart);
-                            nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
-                            return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
-                        case 'this-month':
-                            return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
-                        case 'next-month':
-                            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                            return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
-                        default: return true;
-                    }
-                });
-            }
-            
-            displayMatches(filtered);
-        }
-
-        // ============================================================================
-        // DEBUGGING AND TESTING
-        // ============================================================================
-
-        // Test function for console debugging
-        window.testMatches = function() {
-            console.log('🧪 Testing matches functionality...');
-            console.log('📊 All matches:', allMatches);
-            console.log('🔗 WEB_APP_URL:', WEB_APP_URL);
-            console.log('⚙️ CONFIG:', CONFIG);
-            
-            if (allMatches.length > 0) {
-                console.log('✅ Matches loaded successfully');
-                displayMatches(allMatches);
-            } else {
-                console.log('❌ No matches found - calling loadMatches()');
-                loadMatches();
-            }
-        };
-
-        // Debug information
-        console.log('✅ All JavaScript functions loaded successfully');
-        console.log('🏉 Clontarf Rugby Matches Page Ready');
-        console.log('🔧 Debug: Type testMatches() in console to test functionality');
-    </script>
-    <!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
-<!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
-
-<!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
-
-<!-- Send Availability Request Modal -->
-<div class="modal" id="availabilityModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <button class="close-btn" onclick="closeAvailabilityModal()">&times;</button>
-            <h2 id="modalMatchTitle">Send Availability Request</h2>
-            <div class="match-summary" id="matchSummary">
-                <!-- Will be populated with match data -->
-            </div>
-        </div>
-        
-        <div class="modal-body">
-            <!-- Tabs -->
-            <div class="modal-tabs">
-                <button class="modal-tab active" onclick="showAvailabilityTab('message')" data-tab="message">Message</button>
-                <button class="modal-tab" onclick="showAvailabilityTab('recipients')" data-tab="recipients">Recipients</button>
-                <button class="modal-tab" onclick="showAvailabilityTab('send')" data-tab="send">Send</button>
-            </div>
-
-            <!-- Message Tab -->
-            <div class="tab-content active" id="messageTab">
-                <h3>Message Content</h3>
-                <div class="message-preview">
-                    <div class="form-group">
-                        <label class="form-label">Email Subject</label>
-                        <input type="text" id="emailSubject" class="form-input" readonly>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Message Preview</label>
-                        <textarea id="messagePreview" class="form-textarea" rows="8" readonly></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Character Count</label>
-                        <div class="character-count" id="characterCount">0 characters</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recipients Tab -->
-            <div class="tab-content" id="recipientsTab">
-                <h3>Select Recipients</h3>
-                
-                <div class="recipient-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">Selected:</span>
-                        <span class="summary-value" id="selectedCount">0</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Squad Players:</span>
-                        <span class="summary-value" id="squadCount">0</span>
-                    </div>
-                </div>
-                
-                <div class="recipient-controls">
-                    <button class="btn btn-secondary" onclick="selectAllPlayers()">Select All</button>
-                    <button class="btn btn-secondary" onclick="deselectAllPlayers()">Deselect All</button>
-                    <button class="btn btn-secondary" onclick="selectSquadOnly()">Squad Only</button>
-                </div>
-                
-                <div class="recipients-list" id="recipientsList">
-                    <div class="loading-recipients">
-                        <div class="loading-spinner"></div>
-                        <div>Loading players...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Send Tab -->
-            <div class="tab-content" id="sendTab">
-                <h3>Delivery Options</h3>
-                
-                <div class="send-options">
-                    <div class="form-group">
-                        <label class="form-label">Delivery Method</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="deliveryMethod" value="email" checked>
-                                <span>Email Only</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="deliveryMethod" value="both">
-                                <span>Email + WhatsApp</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Send Mode</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="sendMode" value="live" checked>
-                                <span>Live Send</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="sendMode" value="test">
-                                <span>Test Mode (your email only)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="send-summary" id="sendSummary">
-                    <!-- Will be populated based on selections -->
-                </div>
-                
-                <div class="send-actions">
-                    <button class="btn btn-primary" id="sendAvailabilityBtn" onclick="sendAvailabilityRequest()">
-                        <span id="sendBtnText">Send Availability Request</span>
-                        <span id="sendBtnSpinner" style="display: none;">Sending...</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-/* Add these styles to your matches.html <style> section */
-
-/* Modal Base Styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.modal-header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
-    padding: 2rem;
-    position: relative;
-}
-
-.modal-header h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.match-summary {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-top: 0.5rem;
-}
-
-.match-badge {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.close-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 32px;
-    height: 32px;
-    background: rgba(255,255,255,0.2);
-    border: none;
-    border-radius: 50%;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.close-btn:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.modal-body {
-    padding: 0;
-    max-height: calc(90vh - 120px);
-    overflow-y: auto;
-}
-
-/* Modal Tabs */
-.modal-tabs {
-    display: flex;
-    background: #f8f9fa;
-    border-bottom: 2px solid #e5e5e5;
-}
-
-.modal-tab {
-    flex: 1;
-    padding: 1rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: #666;
-    transition: all 0.3s;
-}
-
-.modal-tab.active {
-    background: white;
-    color: #1e3c72;
-    border-bottom: 2px solid #1e3c72;
-    margin-bottom: -2px;
-}
-
-.tab-content {
-    display: none;
-    padding: 2rem;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* Form Elements */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    font-size: 0.875rem;
-    color: #666;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-
-.form-input, .form-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.875rem;
-    transition: border-color 0.2s;
-}
-
-.form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: #1e3c72;
-    box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
-}
-
-.form-textarea {
-    resize: vertical;
-    min-height: 120px;
-}
-
-.character-count {
-    font-size: 0.75rem;
-    color: #666;
-    text-align: right;
-}
-
-/* Message Preview */
-.message-preview {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-}
-
-/* Recipients */
-.recipient-summary {
-    display: flex;
-    gap: 2rem;
-    background: #e3f2fd;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-}
-
-.summary-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.summary-label {
-    font-size: 0.75rem;
-    color: #666;
-    text-transform: uppercase;
-}
-
-.summary-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e3c72;
-}
-
-.recipient-controls {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.recipients-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-}
-
-.recipient-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f5f5f5;
-    transition: background 0.2s;
-}
-
-.recipient-item:hover {
-    background: #f8f9fa;
-}
-
-.recipient-item:last-child {
-    border-bottom: none;
-}
-
-.recipient-checkbox {
-    margin-right: 1rem;
-}
-
-.recipient-info {
-    flex: 1;
-}
-
-.recipient-name {
-    font-weight: 500;
-    color: #333;
-}
-
-.recipient-details {
-    font-size: 0.75rem;
-    color: #666;
-    margin-top: 0.25rem;
-}
-
-.recipient-status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status-squad {
-    background: #e3f2fd;
-    color: #1565c0;
-}
-
-.status-additional {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-unavailable {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.loading-recipients {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #666;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #1e3c72;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Radio Groups */
-.radio-group {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background 0.2s;
-}
-
-.radio-option:hover {
-    background: #f8f9fa;
-}
-
-.radio-option input[type="radio"] {
-    margin: 0;
-}
-
-/* Send Options */
-.send-options {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-}
-
-.send-summary {
-    background: #e3f2fd;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #bbdefb;
-}
-
-.send-actions {
-    text-align: center;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-primary {
-    background: #1e3c72;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #2a5298;
-    transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-secondary {
-    background: #e5e5e5;
-    color: #333;
-}
-
-.btn-secondary:hover {
-    background: #d4d4d4;
-}
-
-/* Response Status Styles */
-.status-responded-available {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.status-responded-unavailable {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.status-responded-maybe {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.recipient-item.responded {
-    background: #f8f9fa;
-    border-left: 3px solid #28a745;
-}
-
-.recipient-item.responded .recipient-checkbox {
-    opacity: 0.5;
-}
-
-/* Availability Details Modal */
-.availability-details-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 3000;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-}
-
-.availability-details-modal.active {
-    display: flex;
-}
-
-.availability-details-content {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-}
-
-.availability-details-header {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
-    padding: 1.5rem;
-    position: relative;
-}
-
-.availability-details-body {
-    padding: 1.5rem;
-    max-height: calc(80vh - 120px);
-    overflow-y: auto;
-}
-
-.response-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    margin-bottom: 0.75rem;
-}
-
-.response-item:last-child {
-    margin-bottom: 0;
-}
-
-.response-player {
-    flex: 1;
-}
-
-.response-player-name {
-    font-weight: 500;
-    color: #333;
-}
-
-.response-player-details {
-    font-size: 0.875rem;
-    color: #666;
-    margin-top: 0.25rem;
-}
-
-.response-status {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 0.875rem;
-}
-
-.response-status.available {
-    background: #d4edda;
-    color: #155724;
-}
-
-.response-status.unavailable {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.response-status.maybe {
-    background: #fff3cd;
-    color: #856404;
-}
-</style>
-
-<script>
-// Add this JavaScript to your matches.html file
-
-// Global variables for the availability modal
-let currentMatchData = null;
-let allPlayersForAvailability = [];
-let selectedPlayers = [];
-
-// Open availability modal for a specific match
-async function openAvailabilityModal(matchId) {
-    console.log('Opening availability modal for match:', matchId);
-    
-    try {
-        // Show modal immediately
-        document.getElementById('availabilityModal').classList.add('active');
-        
-        // Load match data
-        const matchData = await fetchData('getMatch', { matchId: matchId });
-        if (!matchData.success) {
-            throw new Error('Could not load match details');
-        }
-        
-        currentMatchData = matchData;
-        console.log('Match data loaded:', currentMatchData);
-        
-        // Populate match summary
-        populateMatchSummary(currentMatchData);
-        
-        // Generate message content
-        generateMessageContent(currentMatchData);
-        
-        // Load players for selection
-        await loadPlayersForSelection(matchId);
-        
-        // Show message tab by default
-        showAvailabilityTab('message');
-        
-    } catch (error) {
-        console.error('Error opening availability modal:', error);
-        alert('Error loading match details: ' + error.message);
-        closeAvailabilityModal();
-    }
-}
-
-// Close availability modal
-function closeAvailabilityModal() {
-    document.getElementById('availabilityModal').classList.remove('active');
-    currentMatchData = null;
-    allPlayersForAvailability = [];
-    selectedPlayers = [];
-}
-
-// Show specific tab in the modal
-function showAvailabilityTab(tabName) {
-    console.log('Switching to tab:', tabName);
-    
-    // Hide all tabs and remove active class from buttons
-    document.querySelectorAll('.modal-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // Show selected tab button
-    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
-    if (tabButton) {
-        tabButton.classList.add('active');
-    }
-    
-    // Show selected tab content
-    const tabContent = document.getElementById(tabName + 'Tab');
-    if (tabContent) {
-        tabContent.classList.add('active');
-    }
-    
-    // Update send summary when switching to send tab
-    if (tabName === 'send') {
-        updateSendSummary();
-    }
-}
-
-// Populate match summary in modal header
-function populateMatchSummary(matchData) {
-    const modalTitle = document.getElementById('modalMatchTitle');
-    const matchSummary = document.getElementById('matchSummary');
-    
-    modalTitle.textContent = `Send Availability Request`;
-    
-    matchSummary.innerHTML = `
-        <span class="match-badge">${matchData.squad}</span>
-        <span style="opacity: 0.9;">${matchData.squad} vs ${matchData.opponent}</span>
-        <span style="opacity: 0.8;">${matchData.date} at ${matchData.time || 'TBC'}</span>
-        <span class="match-badge">${matchData.homeAway}</span>
-    `;
-}
-
-// Generate message content based on match data
-function generateMessageContent(matchData) {
-    const subject = `Availability Request: ${matchData.squad} vs ${matchData.opponent}`;
-    
-    const message = `Clontarf Rugby - Match Availability Request
-
-Match: ${matchData.squad} vs ${matchData.opponent}
-Date: ${matchData.date} at ${matchData.time || 'TBC'}
-Venue: ${matchData.homeAway} - ${matchData.location}
-
-Please confirm your availability:
-[Google Form Link will be generated automatically]`;
-
-    document.getElementById('emailSubject').value = subject;
-    document.getElementById('messagePreview').value = message;
-    
-    // Update character count
-    updateCharacterCount();
-}
-
-// Update character count for message
-function updateCharacterCount() {
-    const message = document.getElementById('messagePreview').value;
-    const count = message.length;
-    document.getElementById('characterCount').textContent = `${count} characters`;
-}
-
-// Load players for selection modal
-async function loadPlayersForSelection(matchId) {
-    try {
-        console.log('Loading players for selection modal...');
-        
-        // Show loading state
-        document.getElementById('recipientsList').innerHTML = `
-            <div class="loading-recipients">
-                <div class="loading-spinner"></div>
-                <div>Loading players...</div>
-            </div>
-        `;
-        
-        // Get players from backend
-        const result = await fetchData('getPlayersForSelectionModal', { matchId: matchId });
-        
-        if (!result.success) {
-            throw new Error(result.error);
-        }
-        
-        allPlayersForAvailability = result.players;
-        console.log(`Loaded ${allPlayersForAvailability.length} players for selection`);
-        
-        // Auto-select squad players
-        selectedPlayers = allPlayersForAvailability
-            .filter(player => player.autoSelected)
-            .map(player => player.email);
-        
-        console.log(`Auto-selected ${selectedPlayers.length} squad players`);
-        
-        // Display players
-        displayPlayersForSelection();
-        
-        // Update counts
-        updateRecipientCounts();
-        
-    } catch (error) {
-        console.error('Error loading players:', error);
-        document.getElementById('recipientsList').innerHTML = `
-            <div class="loading-recipients" style="color: #dc3545;">
-                <div>❌</div>
-                <div>Error loading players: ${error.message}</div>
-                <button class="btn btn-primary" onclick="loadPlayersForSelection('${matchId}')" style="margin-top: 1rem;">
-                    Try Again
-                </button>
-            </div>
-        `;
-    }
-}
-
-// Display players for selection with response status
-function displayPlayersForSelection() {
-    const container = document.getElementById('recipientsList');
-    
-    if (allPlayersForAvailability.length === 0) {
-        container.innerHTML = `
-            <div class="loading-recipients">
-                <div>📭</div>
-                <div>No players found for this match</div>
-            </div>
-        `;
-        return;
-    }
-    
-    // Get availability responses for this match
-    const matchAvailability = window.matchAvailabilityData?.[currentMatchData.matchId];
-    const responses = matchAvailability?.availability || [];
-    
-    const playersHTML = allPlayersForAvailability.map(player => {
-        const isSelected = selectedPlayers.includes(player.email);
-        
-        // Check if this player has already responded
-        const playerResponse = responses.find(r => 
-            r.playerName === player.name || 
-            r.email === player.email ||
-            r.playerName.toLowerCase().includes(player.name.toLowerCase())
-        );
-        
-        let statusClass, statusText, isDisabled = false;
-        
-        if (playerResponse) {
-            // Player has already responded
-            const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
-            const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
-            
-            if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
-                statusClass = 'status-responded-available';
-                statusText = `✅ Available (${responseDate})`;
-            } else if (responseStatus.toLowerCase().includes('unavailable')) {
-                statusClass = 'status-responded-unavailable';
-                statusText = `❌ Unavailable (${responseDate})`;
-            } else {
-                statusClass = 'status-responded-maybe';
-                statusText = `❓ ${responseStatus} (${responseDate})`;
-            }
-            isDisabled = true; // Don't send again to players who responded
-        } else if (!player.isActive) {
-            // Player is inactive (injured/unavailable)
-            statusClass = 'status-unavailable';
-            statusText = player.status;
-            isDisabled = true;
-        } else if (player.isInMatchSquad) {
-            // Active squad player, no response yet
-            statusClass = 'status-squad';
-            statusText = 'Squad Player - No Response';
-        } else {
-            // Additional player, no response yet
-            statusClass = 'status-additional';
-            statusText = 'Additional Player';
-        }
-        
-        return `
-            <div class="recipient-item ${isDisabled ? 'responded' : ''}" ${isDisabled ? 'style="opacity: 0.7;"' : ''}>
-                <input type="checkbox" 
-                       class="recipient-checkbox" 
-                       value="${player.email}"
-                       ${isSelected && !isDisabled ? 'checked' : ''}
-                       ${isDisabled ? 'disabled' : ''}
-                       onchange="togglePlayerSelection('${player.email}')">
-                <div class="recipient-info">
-                    <div class="recipient-name">${player.name}</div>
-                    <div class="recipient-details">
-                        ${player.positions} • ${player.email}
-                    </div>
-                </div>
-                <div class="recipient-status ${statusClass}">
-                    ${statusText}
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    container.innerHTML = playersHTML;
-    
-    // Remove any already-responded players from selected list
-    const respondedEmails = responses.map(r => r.email || r.playerName).filter(Boolean);
-    selectedPlayers = selectedPlayers.filter(email => {
-        const player = allPlayersForAvailability.find(p => p.email === email);
-        const hasResponded = responses.some(r => 
-            r.email === email || 
-            r.playerName === player?.name ||
-            r.playerName.toLowerCase().includes(player?.name.toLowerCase())
-        );
-        return !hasResponded;
-    });
-}
-
-// Toggle player selection
-function togglePlayerSelection(email) {
-    const index = selectedPlayers.indexOf(email);
-    
-    if (index === -1) {
-        selectedPlayers.push(email);
-    } else {
-        selectedPlayers.splice(index, 1);
-    }
-    
-    updateRecipientCounts();
-    console.log('Selected players:', selectedPlayers.length);
-}
-
-// Update recipient counts
-function updateRecipientCounts() {
-    const selectedCount = selectedPlayers.length;
-    const squadCount = allPlayersForAvailability.filter(p => p.isInMatchSquad && p.isActive).length;
-    
-    document.getElementById('selectedCount').textContent = selectedCount;
-    document.getElementById('squadCount').textContent = squadCount;
-}
-
-// Select all players
-function selectAllPlayers() {
-    selectedPlayers = allPlayersForAvailability
-        .filter(player => player.canSend)
-        .map(player => player.email);
-    
-    // Update checkboxes
-    document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
-        if (!checkbox.disabled) {
-            checkbox.checked = selectedPlayers.includes(checkbox.value);
-        }
-    });
-    
-    updateRecipientCounts();
-}
-
-// Deselect all players
-function deselectAllPlayers() {
-    selectedPlayers = [];
-    
-    // Update checkboxes
-    document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-    
-    updateRecipientCounts();
-}
-
-// Select squad only
-function selectSquadOnly() {
-    selectedPlayers = allPlayersForAvailability
-        .filter(player => player.isInMatchSquad && player.canSend)
-        .map(player => player.email);
-    
-    // Update checkboxes
-    document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
-        if (!checkbox.disabled) {
-            const player = allPlayersForAvailability.find(p => p.email === checkbox.value);
-            checkbox.checked = player && player.isInMatchSquad;
-        }
-    });
-    
-    updateRecipientCounts();
-}
-
-// Update send summary
-function updateSendSummary() {
-    const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
-    const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
-    const selectedCount = selectedPlayers.length;
-    
-    const deliveryText = deliveryMethod === 'email' ? 'Email' : 'Email + WhatsApp';
-    const modeText = sendMode === 'test' ? 'Test Mode (your email only)' : 'Live Send';
-    
-    document.getElementById('sendSummary').innerHTML = `
-        <h4>Send Summary</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-            <div>
-                <strong>Recipients:</strong><br>
-                ${sendMode === 'test' ? '1 (test email)' : selectedCount + ' players'}
-            </div>
-            <div>
-                <strong>Delivery:</strong><br>
-                ${deliveryText}
-            </div>
-            <div>
-                <strong>Mode:</strong><br>
-                ${modeText}
-            </div>
-            <div>
-                <strong>Match:</strong><br>
-                ${currentMatchData.squad} vs ${currentMatchData.opponent}
-            </div>
-        </div>
-        
-        ${sendMode === 'test' ? `
-            <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
-                <strong>🧪 Test Mode Active</strong><br>
-                Email will only be sent to your email address for testing purposes.
-            </div>
-        ` : ''}
-        
-        ${selectedCount === 0 && sendMode === 'live' ? `
-            <div style="background: #f8d7da; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #f5c6cb;">
-                <strong>⚠️ No Recipients Selected</strong><br>
-                Please go back to the Recipients tab and select players to send to.
-            </div>
-        ` : ''}
-    `;
-}
-
-// Send availability request (FIXED - using GET requests to avoid CORS issues)
-async function sendAvailabilityRequest() {
-    console.log('=== SENDING AVAILABILITY REQUEST ===');
-    
-    if (!currentMatchData) {
-        alert('No match selected');
-        return;
-    }
-    
-    const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
-    const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
-    
-    // Validate selections
-    if (sendMode === 'live' && selectedPlayers.length === 0) {
-        alert('Please select at least one player to send to, or switch to Test Mode.');
-        showAvailabilityTab('recipients');
-        return;
-    }
-    
-    // Update button state
-    const sendBtn = document.getElementById('sendAvailabilityBtn');
-    const sendText = document.getElementById('sendBtnText');
-    const sendSpinner = document.getElementById('sendBtnSpinner');
-    
-    sendBtn.disabled = true;
-    sendText.style.display = 'none';
-    sendSpinner.style.display = 'inline';
-    
-    try {
-        let result;
-        
-        if (sendMode === 'test') {
-            console.log('🧪 Sending in TEST mode');
-            
-            // Use GET request for test mode (same as your working matches.html)
-            const url = new URL(WEB_APP_URL);
-            url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
-            url.searchParams.append('matchId', currentMatchData.matchId);
-            url.searchParams.append('testMode', 'true');
-            url.searchParams.append('testEmail', 'luketeeling@gmail.com');
-            url.searchParams.append('testPlayerName', 'Luke Teeling (TEST)');
-            
-            console.log('🔄 Making GET request to:', url.toString());
-            
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            result = await response.json();
-            
-        } else {
-            console.log('📧 Sending in LIVE mode to', selectedPlayers.length, 'players');
-            
-            // For live mode, we need to make multiple GET requests since we can't send arrays via GET
-            // Alternative: Use the existing sendMatchSpecificAvailabilityRequest which sends to all squad players
-            const url = new URL(WEB_APP_URL);
-            url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
-            url.searchParams.append('matchId', currentMatchData.matchId);
-            url.searchParams.append('testMode', 'false');
-            
-            console.log('🔄 Making GET request for live send:', url.toString());
-            
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            result = await response.json();
-        }
-        
-        console.log('Send result:', result);
-        
-        if (result.success) {
-            // Show success message
-            showSuccessModal(result, sendMode);
-            
-            // Close availability modal
-            closeAvailabilityModal();
-            
-        } else {
-            throw new Error(result.error || 'Unknown error occurred');
-        }
-        
-    } catch (error) {
-        console.error('Error sending availability request:', error);
-        alert('Error sending availability request: ' + error.message);
-        
-    } finally {
-        // Reset button state
-        sendBtn.disabled = false;
-        sendText.style.display = 'inline';
-        sendSpinner.style.display = 'none';
-    }
-}
-
-// Show success modal
-function showSuccessModal(result, sendMode) {
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.style.zIndex = '3000';
-    
-    const successContent = `
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                <h2>✅ Availability Request Sent!</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div style="padding: 2rem;">
-                <h3>Send Summary</h3>
-                <div style="background: #d4edda; padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid #c3e6cb;">
-                    ${sendMode === 'test' ? `
-                        <strong>🧪 Test Mode:</strong><br>
-                        Test email sent to: ${result.testEmail || 'your email'}<br>
-                        Match: ${result.squad} vs ${result.opponent}
-                    ` : `
-                        <strong>📧 Live Send Complete:</strong><br>
-                        Sent to: ${result.sentTo} players<br>
-                        Match: ${result.squad} vs ${result.opponent}<br>
-                        ${result.errors > 0 ? `<br><span style="color: #dc3545;">Failed: ${result.errors} emails</span>` : ''}
-                    `}
-                </div>
-                
-                ${result.formIsNew ? `
-                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
-                        <strong>📝 New Form Created:</strong><br>
-                        A new availability form was created for this match.<br>
-                        <a href="${result.formUrl}" target="_blank" style="color: #1e3c72;">View Form</a>
-                    </div>
-                ` : `
-                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
-                        <strong>📋 Using Existing Form:</strong><br>
-                        Reused the existing form for this match.
-                    </div>
-                `}
-                
-                <div style="text-align: center; margin-top: 2rem;">
-                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    modal.innerHTML = successContent;
-    document.body.appendChild(modal);
-    
-    // Auto-remove after 10 seconds
-    setTimeout(() => {
-        if (modal.parentNode) {
-            modal.remove();
-        }
-    }, 10000);
-}
-
-// Helper function for POST requests (add this if not already present)
-async function postData(action, data) {
-    if (!WEB_APP_URL) {
-        throw new Error('WEB_APP_URL not configured');
-    }
-    
-    try {
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: action,
-                ...data
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('POST response:', result);
-        return result;
-        
-    } catch (error) {
-        console.error('POST error:', error);
-        throw error;
-    }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('availabilityModal');
-    if (modal && e.target === modal) {
-        closeAvailabilityModal();
-    }
-});
-
-// ESC key to close modal
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const modal = document.getElementById('availabilityModal');
-        if (modal && modal.classList.contains('active')) {
-            closeAvailabilityModal();
-        }
-    }
-});
-
-// Show availability details modal
-function showAvailabilityDetails(matchId) {
-    console.log('Showing availability details for match:', matchId);
-    
-    const matchAvailability = window.matchAvailabilityData?.[matchId];
-    if (!matchAvailability || !matchAvailability.availability) {
-        alert('No availability data found for this match');
-        return;
-    }
-    
-    const responses = matchAvailability.availability;
-    const match = allMatches.find(m => m.matchId === matchId);
-    
-    if (!match) {
-        alert('Match not found');
-        return;
-    }
-    
-    // Create modal
-    const modal = document.createElement('div');
-    modal.className = 'availability-details-modal active';
-    modal.id = 'availabilityDetailsModal';
-    
-    const responsesHTML = responses.map(response => {
-        const status = response.availabilityStatus || response.availability || 'Unknown';
-        const date = response.responseDate ? new Date(response.responseDate).toLocaleDateString() : 'Recently';
-        
-        let statusClass = 'maybe';
-        if (status.toLowerCase().includes('available') && !status.toLowerCase().includes('unavailable')) {
-            statusClass = 'available';
-        } else if (status.toLowerCase().includes('unavailable')) {
-            statusClass = 'unavailable';
-        }
-        
-        return `
-            <div class="response-item">
-                <div class="response-player">
-                    <div class="response-player-name">${response.playerName}</div>
-                    <div class="response-player-details">Responded: ${date}</div>
-                </div>
-                <div class="response-status ${statusClass}">
-                    ${status}
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    modal.innerHTML = `
-        <div class="availability-details-content">
-            <div class="availability-details-header">
-                <button class="close-btn" onclick="closeAvailabilityDetails()">&times;</button>
-                <h2>Availability Responses</h2>
-                <div style="opacity: 0.9; margin-top: 0.5rem;">
-                    ${match.squad} vs ${match.opponent} • ${match.date}
-                </div>
-            </div>
-            <div class="availability-details-body">
-                <div style="margin-bottom: 1rem;">
-                    <strong>Summary:</strong> ${responses.length} response${responses.length !== 1 ? 's' : ''} received
-                </div>
-                ${responsesHTML || '<div style="text-align: center; color: #666; padding: 2rem;">No responses yet</div>'}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// Close availability details modal
-function closeAvailabilityDetails() {
-    const modal = document.getElementById('availabilityDetailsModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .modal {
-        padding: 0.5rem;
-    }
-    
-    .modal-content {
-        max-width: 95vw;
-        max-height: 95vh;
-        width: 95vw;
-    }
-    
-    .modal-header {
-        padding: 1.5rem;
-    }
-    
-    .tab-content {
-        padding: 1.5rem;
-    }
-    
-    .recipient-summary {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .recipient-controls {
-        flex-direction: column;
-    }
-    
-    .radio-group {
-        flex-direction: column;
-    }
-    
-    .availability-details-content {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
-}
-</script>
-
-</body>
-</html>
