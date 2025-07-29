@@ -1655,74 +1655,63 @@
             return buttons.join('');
         }
 
-        // ============================================================================
-        // HELPER FUNCTIONS FOR DATA REQUESTS
-        // ============================================================================
+       // ============================================================================
+// COPY THIS EXACT PATTERN FROM roster-v2.html TO matches-v2.html
+// ============================================================================
 
-        // Helper function for GET requests
-        async function fetchData(action, params = {}) {
-            if (!WEB_APP_URL) {
-                throw new Error('WEB_APP_URL not configured');
-            }
-            
-            const url = new URL(WEB_APP_URL);
-            url.searchParams.append('action', action);
-            
-            // Add any additional parameters
-            Object.keys(params).forEach(key => {
-                if (params[key] !== null && params[key] !== undefined) {
-                    url.searchParams.append(key, params[key]);
-                }
-            });
-
-            try {
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                return result;
-                
-            } catch (error) {
-                console.error('Fetch error:', error);
-                throw error;
-            }
+// Replace your fetchData function in matches-v2.html with this exact one:
+async function fetchData(action, params = {}) {
+    // Add safety check
+    if (!WEB_APP_URL) {
+        throw new Error('WEB_APP_URL not initialized. Please wait for config to load.');
+    }
+    
+    const url = new URL(WEB_APP_URL);
+    url.searchParams.append('action', action);
+    
+    // Add any additional parameters
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
         }
+    });
 
-        // Helper function for POST requests
-        async function postData(action, data) {
-            if (!WEB_APP_URL) {
-                throw new Error('WEB_APP_URL not configured');
-            }
-            
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        ...data
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('POST response:', result);
-                return result;
-                
-            } catch (error) {
-                console.error('POST error:', error);
-                throw error;
-            }
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const result = await response.json();
+        return result;
+        
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
 
+// Replace your postData function with this exact one:
+async function postData(action, data) {
+    console.log('Converting POST to GET for CORS compatibility');
+    
+    const params = {
+        action: action,
+        ...data,
+        coachName: 'Luke Teeling',  // Add default coach info
+        coachEmail: 'luketeeling@gmail.com'
+    };
+
+    try {
+        const result = await fetchData(action, params);
+        console.log('GET request result:', result);
+        return result;
+    } catch (error) {
+        console.error('GET request error:', error);
+        throw error;
+    }
+}
         // ============================================================================
         // RESPONSE DETAILS MODAL FUNCTIONS
         // ============================================================================
