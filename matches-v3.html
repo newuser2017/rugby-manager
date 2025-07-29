@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches - Clontarf Rugby</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .club-name h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .club-name p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 1.5rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #1e3c72;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a5298;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: #999;
+            margin-bottom: 2rem;
+        }
+
+        /* Matches Display */
+        .matches-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .match-card {
+            border-bottom: 1px solid #f5f5f5;
+            padding: 1.5rem;
+            transition: background 0.2s;
+        }
+
+        .match-card:hover {
+            background: #f8f9fa;
+        }
+
+        .match-card:last-child {
+            border-bottom: none;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .match-details {
+            flex: 1;
+        }
+
+        .match-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+        }
+
+        .match-info {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .match-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .team-badge.j4 {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .team-badge.j5 {
+            background: #dc2626;
+            color: white;
+        }
+
+        .venue-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .venue-badge.home {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .venue-badge.away {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* Match Status */
+        .match-status {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.availability {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-indicator.availability.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-indicator.availability.none {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-indicator.team-selection {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-indicator.team-selection.pending {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+
+        .status-indicator.team-selection.none {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Action Buttons */
+        .match-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #333;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .action-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .action-btn.primary:hover {
+            background: #2a5298;
+        }
+
+        .action-btn.success {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+
+        .action-btn.success:hover {
+            background: #16a34a;
+        }
+
+        .action-btn.warning {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        .action-btn.warning:hover {
+            background: #d97706;
+        }
+
+        /* Match Stats */
+        .match-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* Quick Add Section */
+        .quick-add {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .quick-add h3 {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #dc2626;
+        }
+
+        .error-state h3 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+
+        .error-state p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        /* Modal Base Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .match-summary {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .match-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 0;
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* Modal Tabs */
+        .modal-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .modal-tab {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .modal-tab.active {
+            background: white;
+            color: #1e3c72;
+            border-bottom: 2px solid #1e3c72;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .character-count {
+            font-size: 0.75rem;
+            color: #666;
+            text-align: right;
+        }
+
+        /* Message Preview */
+        .message-preview {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Recipients */
+        .recipient-summary {
+            display: flex;
+            gap: 2rem;
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .recipient-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .recipients-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+        }
+
+        .recipient-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f5f5f5;
+            transition: background 0.2s;
+        }
+
+        .recipient-item:hover {
+            background: #f8f9fa;
+        }
+
+        .recipient-item:last-child {
+            border-bottom: none;
+        }
+
+        .recipient-checkbox {
+            margin-right: 1rem;
+        }
+
+        .recipient-info {
+            flex: 1;
+        }
+
+        .recipient-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .recipient-details {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .recipient-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-squad {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-additional {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-responded-available {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-responded-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-responded-maybe {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .recipient-item.responded {
+            background: #f8f9fa;
+            border-left: 3px solid #28a745;
+        }
+
+        .recipient-item.responded .recipient-checkbox {
+            opacity: 0.5;
+        }
+
+        .loading-recipients {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+        }
+
+        /* Radio Groups */
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .radio-option:hover {
+            background: #f8f9fa;
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+
+        /* Send Options */
+        .send-options {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .send-summary {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #bbdefb;
+        }
+
+        .send-actions {
+            text-align: center;
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #1e3c72;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .filter-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .match-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .match-actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                justify-content: center;
+            }
+
+            .match-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .modal {
+                padding: 0.5rem;
+            }
+            
+            .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+                width: 95vw;
+            }
+            
+            .modal-header {
+                padding: 1.5rem;
+            }
+            
+            .tab-content {
+                padding: 1.5rem;
+            }
+            
+            .recipient-summary {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .recipient-controls {
+                flex-direction: column;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .match-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="config.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="https://raw.githubusercontent.com/newuser2017/rugby-manager/main/clontarf-logo.png" 
+                         alt="Clontarf Rugby Logo" 
+                         style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div class="club-name">
+                    <h1>Clontarf Rugby</h1>
+                    <p>Team Management System</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Match Fixtures</h1>
+            <div class="header-actions">
+                <a href="#" class="btn btn-secondary" onclick="exportMatches()">
+                    <span>📊</span>
+                    Export Schedule
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Team</label>
+                    <select id="teamFilter" onchange="filterMatches()">
+                        <option value="">All Teams</option>
+                        <option value="4ths">4ths Only</option>
+                        <option value="5ths">5ths Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select id="statusFilter" onchange="filterMatches()">
+                        <option value="">All Matches</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="team-selected">Team Selected</option>
+                        <option value="completed">Completed</option>
+                        <option value="availability-pending">Availability Pending</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select id="dateFilter" onchange="filterMatches()">
+                        <option value="">All Dates</option>
+                        <option value="this-week">This Week</option>
+                        <option value="next-week">Next Week</option>
+                        <option value="this-month">This Month</option>
+                        <option value="next-month">Next Month</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add Section -->
+        <div class="quick-add">
+            <h3>Quick Actions</h3>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="sendWeeklyAvailability()">
+                    <span>📱</span>
+                    Send This Week's Availability
+                </button>
+                <button class="btn btn-secondary" onclick="refreshMatches()">
+                    <span>🔄</span>
+                    Refresh from Google Sheets
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            <p style="margin-left: 1rem;">Loading matches from Google Sheets...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <h3>⚠️ Unable to Load Matches</h3>
+            <p>There was an error connecting to Google Sheets. Please check your setup and try again.</p>
+            <button class="btn btn-primary" onclick="loadMatches()">
+                <span>🔄</span>
+                Try Again
+            </button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h3>📅 No Matches Found</h3>
+            <p>No matches have been added to your Google Sheets yet. Add your first match to get started!</p>
+        </div>
+
+        <!-- Matches Container (populated by JavaScript) -->
+        <div id="matchesContainer" class="matches-container" style="display: none;">
+            <!-- Matches will be loaded here dynamically from Google Sheets -->
+        </div>
+    </div>
+
+    <!-- Send Availability Request Modal -->
+    <div class="modal" id="availabilityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeAvailabilityModal()">&times;</button>
+                <h2 id="modalMatchTitle">Send Availability Request</h2>
+                <div class="match-summary" id="matchSummary">
+                    <!-- Will be populated with match data -->
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Tabs -->
+                <div class="modal-tabs">
+                    <button class="modal-tab active" onclick="showAvailabilityTab('message')" data-tab="message">Message</button>
+                    <button class="modal-tab" onclick="showAvailabilityTab('recipients')" data-tab="recipients">Recipients</button>
+                    <button class="modal-tab" onclick="showAvailabilityTab('send')" data-tab="send">Send</button>
+                </div>
+
+    
+  <!-- Message Tab -->
+<div class="tab-content active" id="messageTab">
+    <h3>Message Content</h3>
+    <div class="message-preview">
+        <div class="form-group">
+            <label class="form-label">Email Subject</label>
+            <input type="text" id="emailSubject" class="form-input" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Message Preview</label>
+            <textarea id="messagePreview" class="form-textarea" rows="8" readonly></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Character Count</label>
+            <div class="character-count" id="characterCount">0 characters</div>
+        </div>
+    </div>
+</div>
+
+                <!-- Recipients Tab -->
+                <div class="tab-content" id="recipientsTab">
+                    <h3>Select Recipients</h3>
+                    
+                    <div class="recipient-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Selected:</span>
+                            <span class="summary-value" id="selectedCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Squad Players:</span>
+                            <span class="summary-value" id="squadCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="recipient-controls">
+                        <button class="btn btn-secondary" onclick="selectAllPlayers()">Select All</button>
+                        <button class="btn btn-secondary" onclick="deselectAllPlayers()">Deselect All</button>
+                        <button class="btn btn-secondary" onclick="selectSquadOnly()">Squad Only</button>
+                    </div>
+                    
+                    <div class="recipients-list" id="recipientsList">
+                        <div class="loading-recipients">
+                            <div class="loading-spinner"></div>
+                            <div>Loading players...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Send Tab -->
+                <div class="tab-content" id="sendTab">
+                    <h3>Delivery Options</h3>
+                    
+                    <div class="send-options">
+                        <div class="form-group">
+                            <label class="form-label">Delivery Method</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="deliveryMethod" value="email" checked>
+                                    <span>Email Only</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="deliveryMethod" value="both">
+                                    <span>Email + WhatsApp</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Send Mode</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="sendMode" value="test" checked>
+                                    <span>Test Mode (your email only)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="sendMode" value="live">
+                                    <span>Live Send</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="send-summary" id="sendSummary">
+                        <!-- Will be populated based on selections -->
+                    </div>
+                    
+                    <div class="send-actions">
+                        <button class="btn btn-primary" id="sendAvailabilityBtn" onclick="sendAvailabilityRequest()">
+                            <span id="sendBtnText">Send Availability Request</span>
+                            <span id="sendBtnSpinner" style="display: none;">Sending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION AND GLOBAL VARIABLES
+        // ============================================================================
+        
+        console.log('✅ JavaScript loading...');
+        console.log('📊 Config loaded:', CONFIG);
+        
+        // Global variables
+        let allMatches = [];
+        let filteredMatches = [];
+        let WEB_APP_URL;
+        let DEBUG_MODE = false;
+
+        // Enhanced modal variables
+        let currentMatchData = null;
+        let allPlayersForAvailability = [];
+        let selectedPlayers = [];
+        let matchAvailabilityData = {};
+
+        // ============================================================================
+        // INITIALIZATION - USING PROVEN PATTERN FROM ROSTER-V2.HTML
+        // ============================================================================
+        
+        function initializeApp() {
+            if (typeof CONFIG === 'undefined') {
+                console.error('❌ CONFIG still not available, retrying...');
+                setTimeout(initializeApp, 100);
+                return;
+            }
+            
+            // Set all variables using CONFIG
+            WEB_APP_URL = CONFIG.WEB_APP_URL;
+            DEBUG_MODE = CONFIG.DEBUG_MODE || false;
+            
+            console.log('✅ App initialized with CONFIG:', {
+                webAppUrl: WEB_APP_URL,
+                debug: DEBUG_MODE
+            });
+            
+            loadMatches();
+        }
+
+        // ============================================================================
+        // CORS-FRIENDLY API FUNCTIONS - SAME AS ROSTER-V2.HTML
+        // ============================================================================
+        
+        async function fetchData(action, params = {}) {
+            if (!WEB_APP_URL) {
+                throw new Error('WEB_APP_URL not initialized. Please wait for config to load.');
+            }
+            
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', action);
+            
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+
+            try {
+                if (DEBUG_MODE) {
+                    console.log('🔄 API Request:', action, params);
+                }
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (DEBUG_MODE) {
+                    console.log('✅ API Response:', action, result);
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZATION ON DOM LOAD
+        // ============================================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM loaded, initializing app');
+            initializeApp();
+        });
+
+        window.addEventListener('load', function() {
+            initializeApp();
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // ============================================================================
+        // MATCH LOADING AND DISPLAY
+        // ============================================================================
+        
+        async function loadMatches() {
+            console.log('📋 loadMatches function called');
+            showLoadingState();
+            
+            try {
+                if (!WEB_APP_URL || WEB_APP_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                    console.log('❌ No Google Apps Script URL configured');
+                    setTimeout(showEmptyState, 1000);
+                    return;
+                }
+
+                console.log('📡 Fetching matches from:', WEB_APP_URL);
+                const data = await fetchData('getMatches');
+                console.log('📊 API Response:', data);
+                
+                if (data.success) {
+                    allMatches = data.matches || [];
+                    console.log(`✅ Loaded ${allMatches.length} matches`);
+                    
+                    if (allMatches.length === 0) {
+                        showEmptyState();
+                    } else {
+                        displayMatches(allMatches);
+                    }
+                } else {
+                    throw new Error(data.error || 'API returned unsuccessful response');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading matches:', error);
+                showErrorState();
+            }
+        }
+
+        async function displayMatches(matches) {
+            console.log('🎨 Displaying', matches.length, 'matches');
+            const container = document.getElementById('matchesContainer');
+            
+            if (!container) {
+                console.error('❌ Matches container not found');
+                return;
+            }
+            
+            if (matches.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            container.innerHTML = matches.map(match => createMatchCard(match)).join('');
+            
+            hideAllStates();
+            container.style.display = 'block';
+            console.log('✅ Matches displayed successfully');
+            
+            // Load availability data for each match
+            console.log('📊 Loading availability data for each match...');
+            for (const match of matches) {
+                await loadMatchAvailability(match.matchId);
+            }
+        }
+
+        async function loadMatchAvailability(matchId) {
+            try {
+                console.log(`📊 Loading availability for match ${matchId}`);
+                const data = await fetchData('getMatchAvailability', { matchId: matchId });
+                
+                if (data.success) {
+                    console.log(`✅ Availability data for ${matchId}:`, data);
+                    matchAvailabilityData[matchId] = data;
+                    updateMatchAvailabilityDisplay(matchId, data);
+                } else {
+                    console.log(`⚠️ No availability data for ${matchId}:`, data.error);
+                }
+            } catch (error) {
+                console.error(`❌ Error loading availability for ${matchId}:`, error);
+            }
+        }
+
+        function updateMatchAvailabilityDisplay(matchId, availabilityData) {
+            const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
+            if (!matchCard) {
+                console.error(`❌ Match card not found for ${matchId}`);
+                return;
+            }
+            
+            const statusIndicator = matchCard.querySelector('.status-indicator.availability');
+            if (!statusIndicator) {
+                console.error(`❌ Status indicator not found for ${matchId}`);
+                return;
+            }
+            
+            if (availabilityData && availabilityData.summary) {
+                const { available, unavailable, total, pending } = availabilityData.summary;
+                
+                if (total > 0) {
+                    statusIndicator.innerHTML = `
+                        <span>📱</span>
+                        <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable${pending > 0 ? `, ${pending} pending` : ''})</span>
+                    `;
+                    statusIndicator.className = 'status-indicator availability pending';
+                    
+                    let statsSection = matchCard.querySelector('.match-stats');
+                    if (!statsSection) {
+                        const statsHTML = `
+                            <div class="match-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${available}</div>
+                                    <div class="stat-label">Available</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${unavailable}</div>
+                                    <div class="stat-label">Unavailable</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${pending}</div>
+                                    <div class="stat-label">No Response</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        const actionsDiv = matchCard.querySelector('.match-actions');
+                        if (actionsDiv) {
+                            actionsDiv.insertAdjacentHTML('beforebegin', statsHTML);
+                        }
+                    } else {
+                        const statItems = statsSection.querySelectorAll('.stat-item');
+                        if (statItems[0]) statItems[0].querySelector('.stat-value').textContent = available;
+                        if (statItems[1]) statItems[1].querySelector('.stat-value').textContent = unavailable;
+                        if (statItems[2]) statItems[2].querySelector('.stat-value').textContent = pending;
+                    }
+                    
+                    console.log(`✅ Updated availability display for ${matchId}: ${available} available, ${unavailable} unavailable, ${pending} pending`);
+                } else {
+                    statusIndicator.innerHTML = `
+                        <span>📱</span>
+                        <span>Availability: Form sent, awaiting responses</span>
+                    `;
+                    statusIndicator.className = 'status-indicator availability pending';
+                }
+            } else {
+                statusIndicator.innerHTML = `
+                    <span>📱</span>
+                    <span>Availability: Not sent</span>
+                `;
+                statusIndicator.className = 'status-indicator availability none';
+            }
+        }
+
+        function createMatchCard(match) {
+            const teamBadgeClass = match.squad === '4ths' ? 'j4' : 'j5';
+            const venueBadgeClass = match.homeAway === 'Home' ? 'home' : 'away';
+            const statusClasses = getStatusClasses(match.status);
+            
+            return `
+                <div class="match-card" data-match-id="${match.matchId}">
+                    <div class="match-header">
+                        <div class="match-details">
+                            <div class="match-title">
+                                ${getMatchTitle(match)}
+                                <span class="team-badge ${teamBadgeClass}">${match.squad}</span>
+                            </div>
+                            <div class="match-info">
+                                <div class="match-info-item">
+                                    <span>📅</span>
+                                    <span>${formatDate(match.date)}</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>⏰</span>
+                                    <span>${match.time} Kick-off</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>📍</span>
+                                    <span>${match.location}</span>
+                                    <span class="venue-badge ${venueBadgeClass}">${match.homeAway.toUpperCase()}</span>
+                                </div>
+                                <div class="match-info-item">
+                                    <span>🏆</span>
+                                    <span>${match.matchType}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-status">
+                        <div class="status-indicator availability ${statusClasses.availability}">
+                            <span>${getStatusIcon(match.status, 'availability')}</span>
+                            <span>${getStatusText(match.status, 'availability', match)}</span>
+                        </div>
+                        <div class="status-indicator team-selection ${statusClasses.teamSelection}">
+                            <span>${getStatusIcon(match.status, 'team')}</span>
+                            <span>${getStatusText(match.status, 'team', match)}</span>
+                        </div>
+                    </div>
+
+                    <div class="match-actions">
+                        ${createActionButtons(match)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================================
+        // HELPER FUNCTIONS FOR MATCH DISPLAY
+        // ============================================================================
+
+        function getMatchTitle(match) {
+            if (match.homeAway === 'Home') {
+                return `Clontarf ${match.squad} vs ${match.opponent}`;
+            } else {
+                return `${match.opponent} vs Clontarf ${match.squad}`;
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const dayName = days[date.getDay()];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            
+            return `${dayName}, ${day} ${month}`;
+        }
+
+        function getStatusClasses(status) {
+            switch(status) {
+                case 'Created':
+                    return { availability: 'none', teamSelection: 'none' };
+                case 'Availability Sent':
+                    return { availability: 'pending', teamSelection: 'none' };
+                case 'Team Selected':
+                    return { availability: '', teamSelection: '' };
+                case 'Completed':
+                    return { availability: '', teamSelection: '' };
+                default:
+                    return { availability: 'none', teamSelection: 'none' };
+            }
+        }
+
+        function getStatusIcon(status, type) {
+            if (type === 'availability') {
+                switch(status) {
+                    case 'Created': return '📱';
+                    case 'Availability Sent': return '📱';
+                    case 'Team Selected': return '✅';
+                    case 'Completed': return '✅';
+                    default: return '📱';
+                }
+            } else {
+                switch(status) {
+                    case 'Created': return '👥';
+                    case 'Availability Sent': return '👥';
+                    case 'Team Selected': return '👥';
+                    case 'Completed': return '📝';
+                    default: return '👥';
+                }
+            }
+        }
+
+        function getStatusText(status, type, match) {
+            if (type === 'availability') {
+                switch(status) {
+                    case 'Created': return 'Availability: Not Sent';
+                    case 'Availability Sent': return 'Availability: Pending';
+                    case 'Team Selected': return 'Availability: Complete';
+                    case 'Completed': return 'Match Completed';
+                    default: return 'Availability: Not Sent';
+                }
+            } else {
+                switch(status) {
+                    case 'Created': return 'Team: Not Selected';
+                    case 'Availability Sent': return 'Team: Pending Selection';
+                    case 'Team Selected': return 'Team: Selected';
+                    case 'Completed': return 'Results Entered';
+                    default: return 'Team: Not Selected';
+                }
+            }
+        }
+
+        function createActionButtons(match) {
+            const buttons = [];
+            
+            switch(match.status) {
+                case 'Created':
+                    buttons.push(`<a href="#" class="action-btn primary" onclick="openAvailabilityModal('${match.matchId}')"><span>📱</span>Send Availability Request</a>`);
+                    break;
+                case 'Availability Sent':
+                    buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
+                    break;
+                case 'Team Selected':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
+                    break;
+                case 'Completed':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
+                    break;
+            }
+            
+            buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
+            
+            return buttons.join('');
+        }
+
+        // ============================================================================
+        // ENHANCED MODAL FUNCTIONS
+        // ============================================================================
+
+        async function openAvailabilityModal(matchId) {
+            console.log('Opening availability modal for match:', matchId);
+            
+            try {
+                document.getElementById('availabilityModal').classList.add('active');
+                
+                const matchData = await fetchData('getMatch', { matchId: matchId });
+                if (!matchData.success) {
+                    throw new Error('Could not load match details');
+                }
+                
+                currentMatchData = matchData;
+                console.log('Match data loaded:', currentMatchData);
+                
+                populateMatchSummary(currentMatchData);
+                generateMessageContent(currentMatchData);
+                await loadPlayersForSelection(matchId);
+                showAvailabilityTab('message');
+                
+            } catch (error) {
+                console.error('Error opening availability modal:', error);
+                showNotification('Error loading match details: ' + error.message, 'error');
+                closeAvailabilityModal();
+            }
+        }
+
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').classList.remove('active');
+            currentMatchData = null;
+            allPlayersForAvailability = [];
+            selectedPlayers = [];
+        }
+
+        function showAvailabilityTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            
+            const tabContent = document.getElementById(tabName + 'Tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            if (tabName === 'send') {
+                updateSendSummary();
+            }
+        }
+
+        function populateMatchSummary(matchData) {
+            const modalTitle = document.getElementById('modalMatchTitle');
+            const matchSummary = document.getElementById('matchSummary');
+            
+            modalTitle.textContent = `Send Availability Request`;
+            
+            matchSummary.innerHTML = `
+                <span class="match-badge">${matchData.squad}</span>
+                <span style="opacity: 0.9;">${matchData.squad} vs ${matchData.opponent}</span>
+                <span style="opacity: 0.8;">${matchData.date} at ${matchData.time || 'TBC'}</span>
+                <span class="match-badge">${matchData.homeAway}</span>
+            `;
+        }
+
+        function generateMessageContent(matchData) {
+            const subject = `🏉 Availability Request: ${matchData.squad} vs ${matchData.opponent}`;
+            
+            const message = `Clontarf Rugby - Match Availability Request
+
+Match: ${matchData.squad} vs ${matchData.opponent}
+Date: ${matchData.date} at ${matchData.time || 'TBC'}
+Venue: ${matchData.homeAway} - ${matchData.location}
+
+Please confirm your availability:
+[Google Form Link will be generated automatically]`;
+
+            document.getElementById('emailSubject').value = subject;
+            document.getElementById('messagePreview').value = message;
+            updateCharacterCount();
+        }
+
+        function updateCharacterCount() {
+            const message = document.getElementById('messagePreview').value;
+            const count = message.length;
+            document.getElementById('characterCount').textContent = `${count} characters`;
+        }
+
+        async function loadPlayersForSelection(matchId) {
+            try {
+                console.log('Loading players for selection modal...');
+                
+                document.getElementById('recipientsList').innerHTML = `
+                    <div class="loading-recipients">
+                        <div class="loading-spinner"></div>
+                        <div>Loading players...</div>
+                    </div>
+                `;
+                
+                const result = await fetchData('getPlayersForSelectionModal', { matchId: matchId });
+                
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+                
+                allPlayersForAvailability = result.players;
+                console.log(`Loaded ${allPlayersForAvailability.length} players for selection`);
+                
+                selectedPlayers = allPlayersForAvailability
+                    .filter(player => player.autoSelected)
+                    .map(player => player.email);
+                
+                console.log(`Auto-selected ${selectedPlayers.length} squad players`);
+                
+                displayPlayersForSelection();
+                updateRecipientCounts();
+                
+            } catch (error) {
+                console.error('Error loading players:', error);
+                document.getElementById('recipientsList').innerHTML = `
+                    <div class="loading-recipients" style="color: #dc3545;">
+                        <div>❌</div>
+                        <div>Error loading players: ${error.message}</div>
+                        <button class="btn btn-primary" onclick="loadPlayersForSelection('${matchId}')" style="margin-top: 1rem;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function displayPlayersForSelection() {
+            const container = document.getElementById('recipientsList');
+            
+            if (allPlayersForAvailability.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-recipients">
+                        <div>📭</div>
+                        <div>No players found for this match</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const matchAvailability = matchAvailabilityData[currentMatchData.matchId];
+            const responses = matchAvailability?.availability || [];
+            
+            const playersHTML = allPlayersForAvailability.map(player => {
+                const isSelected = selectedPlayers.includes(player.email);
+                
+                const playerResponse = responses.find(r => 
+                    r.playerName === player.name || 
+                    r.email === player.email ||
+                    r.playerName.toLowerCase().includes(player.name.toLowerCase())
+                );
+                
+                let statusClass, statusText, isDisabled = false;
+                
+                if (playerResponse) {
+                    const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
+                    const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
+                    
+                    if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
+                        statusClass = 'status-responded-available';
+                        statusText = `✅ Available (${responseDate})`;
+                    } else if (responseStatus.toLowerCase().includes('unavailable')) {
+                        statusClass = 'status-responded-unavailable';
+                        statusText = `❌ Unavailable (${responseDate})`;
+                    } else {
+                        statusClass = 'status-responded-maybe';
+                        statusText = `❓ ${responseStatus} (${responseDate})`;
+                    }
+                    isDisabled = true;
+                } else if (!player.isActive) {
+                    statusClass = 'status-unavailable';
+                    statusText = player.status;
+                    isDisabled = true;
+                } else if (player.isInMatchSquad) {
+                    statusClass = 'status-squad';
+                    statusText = 'Squad Player - No Response';
+                } else {
+                    statusClass = 'status-additional';
+                    statusText = 'Additional Player';
+                }
+                
+                return `
+                    <div class="recipient-item ${isDisabled ? 'responded' : ''}" ${isDisabled ? 'style="opacity: 0.7;"' : ''}>
+                        <input type="checkbox" 
+                               class="recipient-checkbox" 
+                               value="${player.email}"
+                               ${isSelected && !isDisabled ? 'checked' : ''}
+                               ${isDisabled ? 'disabled' : ''}
+                               onchange="togglePlayerSelection('${player.email}')">
+                        <div class="recipient-info">
+                            <div class="recipient-name">${player.name}</div>
+                            <div class="recipient-details">
+                                ${player.positions} • ${player.email}
+                            </div>
+                        </div>
+                        <div class="recipient-status ${statusClass}">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = playersHTML;
+            
+            const respondedEmails = responses.map(r => r.email || r.playerName).filter(Boolean);
+            selectedPlayers = selectedPlayers.filter(email => {
+                const player = allPlayersForAvailability.find(p => p.email === email);
+                const hasResponded = responses.some(r => 
+                    r.email === email || 
+                    r.playerName === player?.name ||
+                    r.playerName.toLowerCase().includes(player?.name.toLowerCase())
+                );
+                return !hasResponded;
+            });
+        }
+
+        function togglePlayerSelection(email) {
+            const index = selectedPlayers.indexOf(email);
+            
+            if (index === -1) {
+                selectedPlayers.push(email);
+            } else {
+                selectedPlayers.splice(index, 1);
+            }
+            
+            updateRecipientCounts();
+            console.log('Selected players:', selectedPlayers.length);
+        }
+
+        function updateRecipientCounts() {
+            const selectedCount = selectedPlayers.length;
+            const squadCount = allPlayersForAvailability.filter(p => p.isInMatchSquad && p.isActive).length;
+            
+            document.getElementById('selectedCount').textContent = selectedCount;
+            document.getElementById('squadCount').textContent = squadCount;
+        }
+
+        function selectAllPlayers() {
+            selectedPlayers = allPlayersForAvailability
+                .filter(player => player.canSend)
+                .map(player => player.email);
+            
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = selectedPlayers.includes(checkbox.value);
+                }
+            });
+            
+            updateRecipientCounts();
+        }
+
+        function deselectAllPlayers() {
+            selectedPlayers = [];
+            
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            updateRecipientCounts();
+        }
+
+        function selectSquadOnly() {
+            selectedPlayers = allPlayersForAvailability
+                .filter(player => player.isInMatchSquad && player.canSend)
+                .map(player => player.email);
+            
+            document.querySelectorAll('.recipient-checkbox').forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    const player = allPlayersForAvailability.find(p => p.email === checkbox.value);
+                    checkbox.checked = player && player.isInMatchSquad;
+                }
+            });
+            
+            updateRecipientCounts();
+        }
+
+        function updateSendSummary() {
+            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
+            const selectedCount = selectedPlayers.length;
+            
+            const deliveryText = deliveryMethod === 'email' ? 'Email' : 'Email + WhatsApp';
+            const modeText = sendMode === 'test' ? 'Test Mode (your email only)' : 'Live Send';
+            
+            document.getElementById('sendSummary').innerHTML = `
+                <h4>Send Summary</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <strong>Recipients:</strong><br>
+                        ${sendMode === 'test' ? '1 (test email)' : selectedCount + ' players'}
+                    </div>
+                    <div>
+                        <strong>Delivery:</strong><br>
+                        ${deliveryText}
+                    </div>
+                    <div>
+                        <strong>Mode:</strong><br>
+                        ${modeText}
+                    </div>
+                    <div>
+                        <strong>Match:</strong><br>
+                        ${currentMatchData.squad} vs ${currentMatchData.opponent}
+                    </div>
+                </div>
+                
+                ${sendMode === 'test' ? `
+                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
+                        <strong>🧪 Test Mode Active</strong><br>
+                        Email will only be sent to your email address for testing purposes.
+                    </div>
+                ` : ''}
+                
+                ${selectedCount === 0 && sendMode === 'live' ? `
+                    <div style="background: #f8d7da; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #f5c6cb;">
+                        <strong>⚠️ No Recipients Selected</strong><br>
+                        Please go back to the Recipients tab and select players to send to.
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        async function sendAvailabilityRequest() {
+            console.log('=== SENDING AVAILABILITY REQUEST ===');
+            
+            if (!currentMatchData) {
+                showNotification('No match selected', 'error');
+                return;
+            }
+            
+            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
+            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+            
+            if (sendMode === 'live' && selectedPlayers.length === 0) {
+                showNotification('Please select at least one player to send to, or switch to Test Mode.', 'error');
+                showAvailabilityTab('recipients');
+                return;
+            }
+            
+            const sendBtn = document.getElementById('sendAvailabilityBtn');
+            const sendText = document.getElementById('sendBtnText');
+            const sendSpinner = document.getElementById('sendBtnSpinner');
+            
+            sendBtn.disabled = true;
+            sendText.style.display = 'none';
+            sendSpinner.style.display = 'inline';
+            
+            try {
+                let result;
+                
+                if (sendMode === 'test') {
+                    console.log('🧪 Sending in TEST mode');
+                    
+                    result = await fetchData('sendMatchSpecificAvailabilityRequest', {
+                        matchId: currentMatchData.matchId,
+                        testMode: 'true',
+                        testEmail: 'luketeeling@gmail.com',
+                        testPlayerName: 'Luke Teeling (TEST)'
+                    });
+                    
+                } else {
+                    console.log('📧 Sending in LIVE mode to selected players');
+                    
+                    result = await fetchData('sendAvailabilityToSelectedPlayers', {
+                        matchId: currentMatchData.matchId,
+                        selectedPlayerEmails: selectedPlayers.join(','),
+                        testMode: 'false'
+                    });
+                }
+                
+                console.log('Send result:', result);
+                
+                if (result.success) {
+                    showSuccessModal(result, sendMode);
+                    closeAvailabilityModal();
+                    
+                    // Refresh availability data
+                    await loadMatchAvailability(currentMatchData.matchId);
+                    
+                } else {
+                    throw new Error(result.error || 'Unknown error occurred');
+                }
+                
+            } catch (error) {
+                console.error('Error sending availability request:', error);
+                showNotification('Error sending availability request: ' + error.message, 'error');
+                
+            } finally {
+                sendBtn.disabled = false;
+                sendText.style.display = 'inline';
+                sendSpinner.style.display = 'none';
+            }
+        }
+
+        function showSuccessModal(result, sendMode) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.zIndex = '3000';
+            
+            const successContent = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        <h2>✅ Availability Request Sent!</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div style="padding: 2rem;">
+                        <h3>Send Summary</h3>
+                        <div style="background: #d4edda; padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid #c3e6cb;">
+                            ${sendMode === 'test' ? `
+                                <strong>🧪 Test Mode:</strong><br>
+                                Test email sent to: ${result.testEmail || 'your email'}<br>
+                                Match: ${result.squad} vs ${result.opponent}
+                            ` : `
+                                <strong>📧 Live Send Complete:</strong><br>
+                                Sent to: ${result.sentTo} players<br>
+                                Match: ${result.squad} vs ${result.opponent}<br>
+                                ${result.errors > 0 ? `<br><span style="color: #dc3545;">Failed: ${result.errors} emails</span>` : ''}
+                            `}
+                        </div>
+                        
+                        ${result.formIsNew ? `
+                            <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                                <strong>📝 New Form Created:</strong><br>
+                                A new availability form was created for this match.<br>
+                                <a href="${result.formUrl}" target="_blank" style="color: #1e3c72;">View Form</a>
+                            </div>
+                        ` : `
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                                <strong>📋 Using Existing Form:</strong><br>
+                                Reused the existing form for this match.
+                            </div>
+                        `}
+                        
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.innerHTML = successContent;
+            document.body.appendChild(modal);
+            
+            setTimeout(() => {
+                if (modal.parentNode) {
+                    modal.remove();
+                }
+            }, 10000);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // ============================================================================
+        // STATE MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        function showLoadingState() {
+            console.log('⏳ Showing loading state');
+            hideAllStates();
+            const loadingElement = document.getElementById('loadingState');
+            if (loadingElement) {
+                loadingElement.style.display = 'flex';
+            }
+        }
+
+        function showErrorState() {
+            console.log('❌ Showing error state');
+            hideAllStates();
+            const errorElement = document.getElementById('errorState');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function showEmptyState() {
+            console.log('📭 Showing empty state');
+            hideAllStates();
+            const emptyElement = document.getElementById('emptyState');
+            if (emptyElement) {
+                emptyElement.style.display = 'block';
+            }
+        }
+
+        function hideAllStates() {
+            const elements = ['loadingState', 'errorState', 'emptyState', 'matchesContainer'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        // ============================================================================
+        // ACTION FUNCTIONS
+        // ============================================================================
+
+        function sendReminder(matchId, team) {
+            console.log('🔔 Send reminder called:', matchId, team);
+            if (confirm(`Send reminder to players who haven't responded yet for ${team} match?`)) {
+                showNotification('Reminder functionality will be implemented soon.', 'info');
+            }
+        }
+
+        function sendWeeklyAvailability() {
+            console.log('📅 Send weekly availability called');
+            if (confirm('Send availability requests for all matches this week?')) {
+                showNotification('Weekly availability request functionality will be implemented soon.', 'info');
+            }
+        }
+
+        function exportMatches() {
+            console.log('📊 Export matches called');
+            showNotification('Export functionality will be implemented soon.', 'info');
+        }
+
+        function refreshMatches() {
+            console.log('🔄 Refresh matches called');
+            loadMatches();
+        }
+
+        // ============================================================================
+        // FILTER FUNCTIONS
+        // ============================================================================
+
+        function filterMatches() {
+            console.log('🔍 Filter matches called');
+            const teamFilter = document.getElementById('teamFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let filtered = allMatches;
+            
+            if (teamFilter) {
+                filtered = filtered.filter(match => match.squad === teamFilter);
+            }
+            
+            if (statusFilter) {
+                filtered = filtered.filter(match => {
+                    switch(statusFilter) {
+                        case 'upcoming': return match.status !== 'Completed';
+                        case 'team-selected': return match.status === 'Team Selected';
+                        case 'completed': return match.status === 'Completed';
+                        case 'availability-pending': return match.status === 'Availability Sent';
+                        default: return true;
+                    }
+                });
+            }
+            
+            if (dateFilter) {
+                const now = new Date();
+                filtered = filtered.filter(match => {
+                    const matchDate = new Date(match.date);
+                    switch(dateFilter) {
+                        case 'this-week':
+                            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 6);
+                            return matchDate >= weekStart && matchDate <= weekEnd;
+                        case 'next-week':
+                            const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
+                            const nextWeekEnd = new Date(nextWeekStart);
+                            nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
+                            return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
+                        case 'this-month':
+                            return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
+                        case 'next-month':
+                            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                            return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
+                        default: return true;
+                    }
+                });
+            }
+            
+            displayMatches(filtered);
+        }
+
+        // ============================================================================
+        // EVENT LISTENERS AND MODAL HANDLERS
+        // ============================================================================
+
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('availabilityModal');
+            if (modal && e.target === modal) {
+                closeAvailabilityModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('availabilityModal');
+                if (modal && modal.classList.contains('active')) {
+                    closeAvailabilityModal();
+                }
+            }
+        });
+
+        // ============================================================================
+        // DEBUGGING AND TESTING
+        // ============================================================================
+
+        window.testMatches = function() {
+            console.log('🧪 Testing matches functionality...');
+            console.log('📊 All matches:', allMatches);
+            console.log('🔗 WEB_APP_URL:', WEB_APP_URL);
+            console.log('⚙️ CONFIG:', CONFIG);
+            
+            if (allMatches.length > 0) {
+                console.log('✅ Matches loaded successfully');
+                displayMatches(allMatches);
+            } else {
+                console.log('❌ No matches found - calling loadMatches()');
+                loadMatches();
+            }
+        };
+
+        window.testModal = function(matchId = null) {
+            const testMatchId = matchId || (allMatches.length > 0 ? allMatches[0].matchId : 'M001');
+            console.log('🧪 Testing modal with match:', testMatchId);
+            openAvailabilityModal(testMatchId);
+        };
+
+        console.log('✅ All JavaScript functions loaded successfully');
+        console.log('🏉 Clontarf Rugby Matches v2 Page Ready');
+        console.log('🔧 Debug: Type testMatches() or testModal() in console to test functionality');
+    </script>
+</body>
+</html>
