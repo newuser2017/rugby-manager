@@ -1248,6 +1248,8 @@ async function fetchData(action, params = {}) {
     <!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
 <!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
 
+<!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
+
 <!-- Send Availability Request Modal -->
 <div class="modal" id="availabilityModal">
     <div class="modal-content">
@@ -1753,38 +1755,125 @@ async function fetchData(action, params = {}) {
     background: #d4d4d4;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .modal {
-        padding: 0.5rem;
-    }
-    
-    .modal-content {
-        max-width: 95vw;
-        max-height: 95vh;
-        width: 95vw;
-    }
-    
-    .modal-header {
-        padding: 1.5rem;
-    }
-    
-    .tab-content {
-        padding: 1.5rem;
-    }
-    
-    .recipient-summary {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .recipient-controls {
-        flex-direction: column;
-    }
-    
-    .radio-group {
-        flex-direction: column;
-    }
+/* Response Status Styles */
+.status-responded-available {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-responded-unavailable {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-responded-maybe {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.recipient-item.responded {
+    background: #f8f9fa;
+    border-left: 3px solid #28a745;
+}
+
+.recipient-item.responded .recipient-checkbox {
+    opacity: 0.5;
+}
+
+/* Availability Details Modal */
+.availability-details-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.availability-details-modal.active {
+    display: flex;
+}
+
+.availability-details-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.availability-details-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.availability-details-body {
+    padding: 1.5rem;
+    max-height: calc(80vh - 120px);
+    overflow-y: auto;
+}
+
+.response-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+}
+
+.response-item:last-child {
+    margin-bottom: 0;
+}
+
+.response-player {
+    flex: 1;
+}
+
+.response-player-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.response-player-details {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.response-status {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.response-status.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.response-status.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.response-status.maybe {
+    background: #fff3cd;
+    color: #856404;
 }
 </style>
 
@@ -1963,7 +2052,7 @@ async function loadPlayersForSelection(matchId) {
     }
 }
 
-// Display players for selection
+// Display players for selection with response status
 function displayPlayersForSelection() {
     const container = document.getElementById('recipientsList');
     
@@ -1977,35 +2066,60 @@ function displayPlayersForSelection() {
         return;
     }
     
+    // Get availability responses for this match
+    const matchAvailability = window.matchAvailabilityData?.[currentMatchData.matchId];
+    const responses = matchAvailability?.availability || [];
+    
     const playersHTML = allPlayersForAvailability.map(player => {
         const isSelected = selectedPlayers.includes(player.email);
-        const statusClass = player.isInMatchSquad ? 'status-squad' : 'status-additional';
-        const statusText = player.isInMatchSquad ? 'Squad Player' : 'Additional';
         
-        // Show unavailable players with different styling
-        if (!player.isActive) {
-            return `
-                <div class="recipient-item" style="opacity: 0.6;">
-                    <input type="checkbox" class="recipient-checkbox" disabled>
-                    <div class="recipient-info">
-                        <div class="recipient-name">${player.name}</div>
-                        <div class="recipient-details">
-                            ${player.positions} • ${player.email}
-                        </div>
-                    </div>
-                    <div class="recipient-status status-unavailable">
-                        ${player.status}
-                    </div>
-                </div>
-            `;
+        // Check if this player has already responded
+        const playerResponse = responses.find(r => 
+            r.playerName === player.name || 
+            r.email === player.email ||
+            r.playerName.toLowerCase().includes(player.name.toLowerCase())
+        );
+        
+        let statusClass, statusText, isDisabled = false;
+        
+        if (playerResponse) {
+            // Player has already responded
+            const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
+            const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
+            
+            if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
+                statusClass = 'status-responded-available';
+                statusText = `✅ Available (${responseDate})`;
+            } else if (responseStatus.toLowerCase().includes('unavailable')) {
+                statusClass = 'status-responded-unavailable';
+                statusText = `❌ Unavailable (${responseDate})`;
+            } else {
+                statusClass = 'status-responded-maybe';
+                statusText = `❓ ${responseStatus} (${responseDate})`;
+            }
+            isDisabled = true; // Don't send again to players who responded
+        } else if (!player.isActive) {
+            // Player is inactive (injured/unavailable)
+            statusClass = 'status-unavailable';
+            statusText = player.status;
+            isDisabled = true;
+        } else if (player.isInMatchSquad) {
+            // Active squad player, no response yet
+            statusClass = 'status-squad';
+            statusText = 'Squad Player - No Response';
+        } else {
+            // Additional player, no response yet
+            statusClass = 'status-additional';
+            statusText = 'Additional Player';
         }
         
         return `
-            <div class="recipient-item">
+            <div class="recipient-item ${isDisabled ? 'responded' : ''}" ${isDisabled ? 'style="opacity: 0.7;"' : ''}>
                 <input type="checkbox" 
                        class="recipient-checkbox" 
                        value="${player.email}"
-                       ${isSelected ? 'checked' : ''}
+                       ${isSelected && !isDisabled ? 'checked' : ''}
+                       ${isDisabled ? 'disabled' : ''}
                        onchange="togglePlayerSelection('${player.email}')">
                 <div class="recipient-info">
                     <div class="recipient-name">${player.name}</div>
@@ -2021,6 +2135,18 @@ function displayPlayersForSelection() {
     }).join('');
     
     container.innerHTML = playersHTML;
+    
+    // Remove any already-responded players from selected list
+    const respondedEmails = responses.map(r => r.email || r.playerName).filter(Boolean);
+    selectedPlayers = selectedPlayers.filter(email => {
+        const player = allPlayersForAvailability.find(p => p.email === email);
+        const hasResponded = responses.some(r => 
+            r.email === email || 
+            r.playerName === player?.name ||
+            r.playerName.toLowerCase().includes(player?.name.toLowerCase())
+        );
+        return !hasResponded;
+    });
 }
 
 // Toggle player selection
@@ -2343,13 +2469,120 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Update character count when typing in message preview
-document.addEventListener('DOMContentLoaded', function() {
-    const messagePreview = document.getElementById('messagePreview');
-    if (messagePreview) {
-        messagePreview.addEventListener('input', updateCharacterCount);
+// Show availability details modal
+function showAvailabilityDetails(matchId) {
+    console.log('Showing availability details for match:', matchId);
+    
+    const matchAvailability = window.matchAvailabilityData?.[matchId];
+    if (!matchAvailability || !matchAvailability.availability) {
+        alert('No availability data found for this match');
+        return;
     }
-});
+    
+    const responses = matchAvailability.availability;
+    const match = allMatches.find(m => m.matchId === matchId);
+    
+    if (!match) {
+        alert('Match not found');
+        return;
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'availability-details-modal active';
+    modal.id = 'availabilityDetailsModal';
+    
+    const responsesHTML = responses.map(response => {
+        const status = response.availabilityStatus || response.availability || 'Unknown';
+        const date = response.responseDate ? new Date(response.responseDate).toLocaleDateString() : 'Recently';
+        
+        let statusClass = 'maybe';
+        if (status.toLowerCase().includes('available') && !status.toLowerCase().includes('unavailable')) {
+            statusClass = 'available';
+        } else if (status.toLowerCase().includes('unavailable')) {
+            statusClass = 'unavailable';
+        }
+        
+        return `
+            <div class="response-item">
+                <div class="response-player">
+                    <div class="response-player-name">${response.playerName}</div>
+                    <div class="response-player-details">Responded: ${date}</div>
+                </div>
+                <div class="response-status ${statusClass}">
+                    ${status}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    modal.innerHTML = `
+        <div class="availability-details-content">
+            <div class="availability-details-header">
+                <button class="close-btn" onclick="closeAvailabilityDetails()">&times;</button>
+                <h2>Availability Responses</h2>
+                <div style="opacity: 0.9; margin-top: 0.5rem;">
+                    ${match.squad} vs ${match.opponent} • ${match.date}
+                </div>
+            </div>
+            <div class="availability-details-body">
+                <div style="margin-bottom: 1rem;">
+                    <strong>Summary:</strong> ${responses.length} response${responses.length !== 1 ? 's' : ''} received
+                </div>
+                ${responsesHTML || '<div style="text-align: center; color: #666; padding: 2rem;">No responses yet</div>'}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Close availability details modal
+function closeAvailabilityDetails() {
+    const modal = document.getElementById('availabilityDetailsModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .modal {
+        padding: 0.5rem;
+    }
+    
+    .modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+        width: 95vw;
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+    }
+    
+    .tab-content {
+        padding: 1.5rem;
+    }
+    
+    .recipient-summary {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .recipient-controls {
+        flex-direction: column;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+    }
+    
+    .availability-details-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+}
 </script>
 
 </body>
