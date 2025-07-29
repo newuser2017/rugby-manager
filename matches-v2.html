@@ -1246,6 +1246,7 @@ async function fetchData(action, params = {}) {
         console.log('🔧 Debug: Type testMatches() in console to test functionality');
     </script>
     <!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
+<!-- Add this modal HTML to your matches.html file, right before the closing </body> tag -->
 
 <!-- Send Availability Request Modal -->
 <div class="modal" id="availabilityModal">
@@ -2136,7 +2137,7 @@ function updateSendSummary() {
     `;
 }
 
-// Send availability request
+// Send availability request (FIXED - using GET requests to avoid CORS issues)
 async function sendAvailabilityRequest() {
     console.log('=== SENDING AVAILABILITY REQUEST ===');
     
@@ -2170,23 +2171,41 @@ async function sendAvailabilityRequest() {
         if (sendMode === 'test') {
             console.log('🧪 Sending in TEST mode');
             
-            // Send test request to your email only
-            result = await postData('sendMatchSpecificAvailabilityRequest', {
-                matchId: currentMatchData.matchId,
-                testMode: true,
-                testEmail: 'luketeeling@gmail.com', // Your email for testing
-                testPlayerName: 'Luke Teeling (TEST)'
-            });
+            // Use GET request for test mode (same as your working matches.html)
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
+            url.searchParams.append('matchId', currentMatchData.matchId);
+            url.searchParams.append('testMode', 'true');
+            url.searchParams.append('testEmail', 'luketeeling@gmail.com');
+            url.searchParams.append('testPlayerName', 'Luke Teeling (TEST)');
+            
+            console.log('🔄 Making GET request to:', url.toString());
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            result = await response.json();
             
         } else {
             console.log('📧 Sending in LIVE mode to', selectedPlayers.length, 'players');
             
-            // Send to selected players
-            result = await postData('sendAvailabilityToSelectedPlayers', {
-                matchId: currentMatchData.matchId,
-                selectedPlayerEmails: selectedPlayers,
-                testMode: false
-            });
+            // For live mode, we need to make multiple GET requests since we can't send arrays via GET
+            // Alternative: Use the existing sendMatchSpecificAvailabilityRequest which sends to all squad players
+            const url = new URL(WEB_APP_URL);
+            url.searchParams.append('action', 'sendMatchSpecificAvailabilityRequest');
+            url.searchParams.append('matchId', currentMatchData.matchId);
+            url.searchParams.append('testMode', 'false');
+            
+            console.log('🔄 Making GET request for live send:', url.toString());
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            result = await response.json();
         }
         
         console.log('Send result:', result);
@@ -2332,5 +2351,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
 </body>
 </html>
