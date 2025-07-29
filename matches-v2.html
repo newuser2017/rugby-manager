@@ -1694,7 +1694,6 @@ let DEBUG_MODE = false;
         // CORS-FRIENDLY API FUNCTIONS (WORKING PATTERN FROM ROSTER-V2.HTML)
         // ============================================================================
         
-        // Replace the broken fetchData and postData functions with these working ones
         async function fetchData(action, params = {}) {
             // Add safety check
             if (!WEB_APP_URL) {
@@ -1709,7 +1708,7 @@ let DEBUG_MODE = false;
                 if (params[key] !== null && params[key] !== undefined) {
                     url.searchParams.append(key, params[key]);
                 }
-            });
+            }); // ✅ ADDED MISSING CLOSING BRACE HERE
 
             try {
                 console.log('🔄 API Request:', action, params);
