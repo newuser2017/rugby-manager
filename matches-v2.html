@@ -805,7 +805,37 @@
                 statusIndicator.className = 'status-indicator availability none';
             }
         }
+// Helper function for GET requests (add this if not already present)
+async function fetchData(action, params = {}) {
+    if (!WEB_APP_URL) {
+        throw new Error('WEB_APP_URL not configured');
+    }
+    
+    const url = new URL(WEB_APP_URL);
+    url.searchParams.append('action', action);
+    
+    // Add any additional parameters
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
+        }
+    });
 
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result;
+        
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
         // Create HTML for a single match card
         function createMatchCard(match) {
             const teamBadgeClass = match.squad === '4ths' ? 'j4' : 'j5';
@@ -944,7 +974,7 @@
             
             switch(match.status) {
                 case 'Created':
-                    buttons.push(`<a href="#" class="action-btn primary" onclick="sendAvailability('${match.matchId}', '${match.squad}')"><span>📱</span>Send Availability Request</a>`);
+                    buttons.push(`<a href="#" class="action-btn primary" onclick="openAvailabilityModal('${match.matchId}')"><span>📱</span>Send Availability Request</a>`);
                     break;
                 case 'Availability Sent':
                     buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
