@@ -1274,6 +1274,35 @@
     </div>
 
     <script>
+
+        // ============================================================================
+        // WAIT FOR CONFIG TO LOAD BEFORE INITIALIZING (COPY FROM ROSTER-V2.HTML)
+        // ============================================================================
+        
+        let WEB_APP_URL;
+        let DEBUG_MODE = false;
+        
+        // Function to initialize when CONFIG is ready
+        function initializeApp() {
+            if (typeof CONFIG === 'undefined') {
+                console.error('❌ CONFIG still not available, retrying...');
+                setTimeout(initializeApp, 100); // Retry in 100ms
+                return;
+            }
+            
+            // ✅ Now CONFIG is available - set all variables
+            WEB_APP_URL = CONFIG.WEB_APP_URL;
+            DEBUG_MODE = CONFIG.DEBUG_MODE || false;
+            
+            console.log('✅ Matches app initialized with CONFIG:', {
+                webAppUrl: WEB_APP_URL,
+                debug: DEBUG_MODE
+            });
+            
+            // Now it's safe to load matches
+            loadMatches();
+        }
+        
         // ============================================================================
         // CONFIGURATION AND GLOBAL VARIABLES
         // ============================================================================
@@ -1281,17 +1310,18 @@
         console.log('✅ JavaScript loading...');
         console.log('📊 Config loaded:', CONFIG);
         
-        // Global variables
-        let allMatches = [];
-        let filteredMatches = [];
-        let matchAvailabilityData = {};
-        let currentMatchData = null;
-        let allPlayersForAvailability = [];
-        let selectedPlayers = [];
-        let matchResponseData = {};
+      // Global variables
+let allMatches = [];
+let filteredMatches = [];
+let matchAvailabilityData = {};
+let currentMatchData = null;
+let allPlayersForAvailability = [];
+let selectedPlayers = [];
+let matchResponseData = {};
 
-        // Use WEB_APP_URL from config.js consistently
-        const WEB_APP_URL = CONFIG.WEB_APP_URL;
+// These will be set when CONFIG loads
+let WEB_APP_URL;
+let DEBUG_MODE = false;
         
         // Test configuration for safe availability requests
         const TEST_CONFIG = {
@@ -1301,15 +1331,20 @@
         };
         
         // ============================================================================
-        // INITIALIZATION
+        // MAIN INITIALIZATION (REPLACE YOUR CURRENT EVENT LISTENERS)
         // ============================================================================
         
-        // Load matches on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM loaded, calling loadMatches');
-            console.log('🔗 Using WEB_APP_URL:', WEB_APP_URL);
-            loadMatches();
+        // Wait for page load, then initialize
+        window.addEventListener('load', function() {
+            initializeApp();
         });
+        
+        // Also try to initialize immediately if DOM is already ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
 
         // ============================================================================
         // MATCH LOADING AND DISPLAY
