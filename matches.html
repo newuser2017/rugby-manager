@@ -626,13 +626,6 @@
         // Use WEB_APP_URL from config.js consistently
         const WEB_APP_URL = CONFIG.WEB_APP_URL;
         
-        // Test configuration
-        const TEST_CONFIG = {
-            testMode: true,                           
-            testEmail: 'luketeeling@gmail.com',       
-            testPlayerName: 'Luke Teeling (TEST)'     
-        };
-        
         // ============================================================================
         // INITIALIZATION
         // ============================================================================
@@ -691,7 +684,7 @@
         }
 
         // Display matches on the page
-        async function displayMatches(matches) {
+        function displayMatches(matches) {
             console.log('🎨 Displaying', matches.length, 'matches');
             const container = document.getElementById('matchesContainer');
             
@@ -711,106 +704,6 @@
             hideAllStates();
             container.style.display = 'block';
             console.log('✅ Matches displayed successfully');
-            
-            // Load availability data for each match
-            console.log('📊 Loading availability data for each match...');
-            for (const match of matches) {
-                await loadMatchAvailability(match.matchId);
-            }
-        }
-
-        // Load availability data for a specific match
-        async function loadMatchAvailability(matchId) {
-            try {
-                console.log(`📊 Loading availability for match ${matchId}`);
-                const response = await fetch(`${WEB_APP_URL}?action=getMatchAvailability&matchId=${matchId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    console.log(`✅ Availability data for ${matchId}:`, data);
-                    updateMatchAvailabilityDisplay(matchId, data);
-                } else {
-                    console.log(`⚠️ No availability data for ${matchId}:`, data.error);
-                }
-            } catch (error) {
-                console.error(`❌ Error loading availability for ${matchId}:`, error);
-            }
-        }
-
-        // Update the match display with availability data
-        function updateMatchAvailabilityDisplay(matchId, availabilityData) {
-            const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
-            if (!matchCard) {
-                console.error(`❌ Match card not found for ${matchId}`);
-                return;
-            }
-            
-            const statusIndicator = matchCard.querySelector('.status-indicator.availability');
-            if (!statusIndicator) {
-                console.error(`❌ Status indicator not found for ${matchId}`);
-                return;
-            }
-            
-            if (availabilityData && availabilityData.summary) {
-                const { available, unavailable, total, pending } = availabilityData.summary;
-                
-                if (total > 0) {
-                    // Update the availability status
-                    statusIndicator.innerHTML = `
-                        <span>📱</span>
-                        <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable${pending > 0 ? `, ${pending} pending` : ''})</span>
-                    `;
-                    statusIndicator.className = 'status-indicator availability pending';
-                    
-                    // Add stats section if it doesn't exist
-                    let statsSection = matchCard.querySelector('.match-stats');
-                    if (!statsSection) {
-                        const statsHTML = `
-                            <div class="match-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${available}</div>
-                                    <div class="stat-label">Available</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${unavailable}</div>
-                                    <div class="stat-label">Unavailable</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${pending}</div>
-                                    <div class="stat-label">No Response</div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        const actionsDiv = matchCard.querySelector('.match-actions');
-                        if (actionsDiv) {
-                            actionsDiv.insertAdjacentHTML('beforebegin', statsHTML);
-                        }
-                    } else {
-                        // Update existing stats
-                        const statItems = statsSection.querySelectorAll('.stat-item');
-                        if (statItems[0]) statItems[0].querySelector('.stat-value').textContent = available;
-                        if (statItems[1]) statItems[1].querySelector('.stat-value').textContent = unavailable;
-                        if (statItems[2]) statItems[2].querySelector('.stat-value').textContent = pending;
-                    }
-                    
-                    console.log(`✅ Updated availability display for ${matchId}: ${available} available, ${unavailable} unavailable, ${pending} pending`);
-                } else {
-                    // No responses yet, but form was sent
-                    statusIndicator.innerHTML = `
-                        <span>📱</span>
-                        <span>Availability: Form sent, awaiting responses</span>
-                    `;
-                    statusIndicator.className = 'status-indicator availability pending';
-                }
-            } else {
-                // No availability data - form not sent yet
-                statusIndicator.innerHTML = `
-                    <span>📱</span>
-                    <span>Availability: Not sent</span>
-                `;
-                statusIndicator.className = 'status-indicator availability none';
-            }
         }
 
         // Create HTML for a single match card
@@ -935,3 +828,196 @@
                     case 'Completed': return 'Match Completed';
                     default: return 'Availability: Not Sent';
                 }
+            } else {
+                switch(status) {
+                    case 'Created': return 'Team: Not Selected';
+                    case 'Availability Sent': return 'Team: Pending Selection';
+                    case 'Team Selected': return 'Team: Selected';
+                    case 'Completed': return 'Results Entered';
+                    default: return 'Team: Not Selected';
+                }
+            }
+        }
+
+        function createActionButtons(match) {
+            const buttons = [];
+            
+            switch(match.status) {
+                case 'Created':
+                    buttons.push(`<a href="#" class="action-btn primary" onclick="sendAvailability('${match.matchId}', '${match.squad}')"><span>📱</span>Send Availability Request</a>`);
+                    break;
+                case 'Availability Sent':
+                    buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
+                    break;
+                case 'Team Selected':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
+                    break;
+                case 'Completed':
+                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
+                    break;
+            }
+            
+            // Always add match details button
+            buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
+            
+            return buttons.join('');
+        }
+
+        // ============================================================================
+        // STATE MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        function showLoadingState() {
+            console.log('⏳ Showing loading state');
+            hideAllStates();
+            const loadingElement = document.getElementById('loadingState');
+            if (loadingElement) {
+                loadingElement.style.display = 'flex';
+            }
+        }
+
+        function showErrorState() {
+            console.log('❌ Showing error state');
+            hideAllStates();
+            const errorElement = document.getElementById('errorState');
+            if (errorElement) {
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function showEmptyState() {
+            console.log('📭 Showing empty state');
+            hideAllStates();
+            const emptyElement = document.getElementById('emptyState');
+            if (emptyElement) {
+                emptyElement.style.display = 'block';
+            }
+        }
+
+        function hideAllStates() {
+            const elements = ['loadingState', 'errorState', 'emptyState', 'matchesContainer'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        // ============================================================================
+        // ACTION FUNCTIONS
+        // ============================================================================
+
+        function sendAvailability(matchId, team) {
+            console.log('📱 Send availability called:', matchId, team);
+            alert(`Send availability request for ${team} match ${matchId}\n\n(This will be connected to your Google Apps Script)`);
+        }
+
+        function sendReminder(matchId, team) {
+            console.log('🔔 Send reminder called:', matchId, team);
+            if (confirm(`Send reminder to players who haven't responded yet?`)) {
+                alert(`Reminder sent for match ${matchId}`);
+            }
+        }
+
+        function sendWeeklyAvailability() {
+            console.log('📅 Send weekly availability called');
+            if (confirm('Send availability requests for all matches this week?')) {
+                alert('Weekly availability requests sent!');
+            }
+        }
+
+        function exportMatches() {
+            console.log('📊 Export matches called');
+            alert('Export functionality will be added here');
+        }
+
+        function refreshMatches() {
+            console.log('🔄 Refresh matches called');
+            loadMatches();
+        }
+
+        // ============================================================================
+        // FILTER FUNCTIONS
+        // ============================================================================
+
+        function filterMatches() {
+            console.log('🔍 Filter matches called');
+            const teamFilter = document.getElementById('teamFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let filtered = allMatches;
+            
+            if (teamFilter) {
+                filtered = filtered.filter(match => match.squad === teamFilter);
+            }
+            
+            if (statusFilter) {
+                filtered = filtered.filter(match => {
+                    switch(statusFilter) {
+                        case 'upcoming': return match.status !== 'Completed';
+                        case 'team-selected': return match.status === 'Team Selected';
+                        case 'completed': return match.status === 'Completed';
+                        case 'availability-pending': return match.status === 'Availability Sent';
+                        default: return true;
+                    }
+                });
+            }
+            
+            if (dateFilter) {
+                const now = new Date();
+                filtered = filtered.filter(match => {
+                    const matchDate = new Date(match.date);
+                    switch(dateFilter) {
+                        case 'this-week':
+                            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 6);
+                            return matchDate >= weekStart && matchDate <= weekEnd;
+                        case 'next-week':
+                            const nextWeekStart = new Date(now.setDate(now.getDate() - now.getDay() + 7));
+                            const nextWeekEnd = new Date(nextWeekStart);
+                            nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
+                            return matchDate >= nextWeekStart && matchDate <= nextWeekEnd;
+                        case 'this-month':
+                            return matchDate.getMonth() === now.getMonth() && matchDate.getFullYear() === now.getFullYear();
+                        case 'next-month':
+                            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                            return matchDate.getMonth() === nextMonth.getMonth() && matchDate.getFullYear() === nextMonth.getFullYear();
+                        default: return true;
+                    }
+                });
+            }
+            
+            displayMatches(filtered);
+        }
+
+        // ============================================================================
+        // DEBUGGING AND TESTING
+        // ============================================================================
+
+        // Test function for console debugging
+        window.testMatches = function() {
+            console.log('🧪 Testing matches functionality...');
+            console.log('📊 All matches:', allMatches);
+            console.log('🔗 WEB_APP_URL:', WEB_APP_URL);
+            console.log('⚙️ CONFIG:', CONFIG);
+            
+            if (allMatches.length > 0) {
+                console.log('✅ Matches loaded successfully');
+                displayMatches(allMatches);
+            } else {
+                console.log('❌ No matches found - calling loadMatches()');
+                loadMatches();
+            }
+        };
+
+        // Debug information
+        console.log('✅ All JavaScript functions loaded successfully');
+        console.log('🏉 Clontarf Rugby Matches Page Ready');
+        console.log('🔧 Debug: Type testMatches() in console to test functionality');
+    </script>
+</body>
+</html>
