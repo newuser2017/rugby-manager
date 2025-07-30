@@ -769,7 +769,11 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
-
+.status-responded-maybe {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
         .recipient-item.responded {
             background: #f8f9fa;
             border-left: 3px solid #28a745;
@@ -1851,54 +1855,100 @@ function displayPlayersForSelection() {
         return;
     }
     
-    const matchAvailability = matchAvailabilityData[currentMatchData.matchId];
-    const responses = matchAvailability?.availability || [];
+    // Get responses and sent data
+    const responses = currentMatchAvailability?.availability || [];
+    const summary = currentMatchAvailability?.summary || {};
     
-    const playersHTML = allPlayersForAvailability.map(player => {
+    console.log('Displaying players with availability data:', {
+        responses: responses.length,
+        summary: summary
+    });
+    
+    // Process and categorize all players
+    const categorizedPlayers = allPlayersForAvailability.map(player => {
         const isSelected = selectedPlayers.includes(player.email);
         
+        // Check if player has responded
         const playerResponse = responses.find(r => 
             r.playerName === player.name || 
             r.email === player.email ||
             r.playerName.toLowerCase().includes(player.name.toLowerCase())
         );
         
-        let statusClass, statusText, isDisabled = false;
+        let statusClass, statusText, isDisabled = false, sortPriority = 4;
         
         if (playerResponse) {
+            // Player has responded
             const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
             const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
             
             if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
                 statusClass = 'status-responded-available';
                 statusText = `✅ Available (${responseDate})`;
+                sortPriority = 1; // 🎯 AVAILABLE = TOP PRIORITY
             } else if (responseStatus.toLowerCase().includes('unavailable')) {
                 statusClass = 'status-responded-unavailable';
                 statusText = `❌ Unavailable (${responseDate})`;
+                sortPriority = 2; // 🎯 UNAVAILABLE = SECOND PRIORITY
             } else {
                 statusClass = 'status-responded-maybe';
                 statusText = `❓ ${responseStatus} (${responseDate})`;
+                sortPriority = 2; // Treat unknown responses like unavailable
             }
             isDisabled = true;
-        } else if (!player.isActive) {
-            statusClass = 'status-unavailable';
-            statusText = player.status;
-            isDisabled = true;
-        } else if (player.isInMatchSquad) {
-            statusClass = 'status-squad';
-            statusText = 'Squad Player - No Response';
+            
         } else {
-            statusClass = 'status-additional';
-            statusText = 'Additional Player';
+            // Player hasn't responded - check if they were sent a request
+            const wasSentRequest = summary.totalSent > 0;
+            
+            if (!player.isActive) {
+                statusClass = 'status-unavailable';
+                statusText = player.status;
+                isDisabled = true;
+                sortPriority = 5; // Inactive players at bottom
+            } else if (wasSentRequest && player.isInMatchSquad) {
+                statusClass = 'status-pending';
+                statusText = '⏳ Pending Response';
+                sortPriority = 3; // 🎯 PENDING = THIRD PRIORITY
+            } else if (player.isInMatchSquad) {
+                statusClass = 'status-squad';
+                statusText = 'Squad Player - No Request Sent';
+                sortPriority = 4; // 🎯 NOT SENT = FOURTH PRIORITY
+            } else {
+                statusClass = 'status-additional';
+                statusText = 'Additional Player';
+                sortPriority = 4;
+            }
         }
         
+        return {
+            ...player,
+            isSelected,
+            statusClass,
+            statusText,
+            isDisabled,
+            sortPriority
+        };
+    });
+    
+    // 🎯 SORT BY PRIORITY: Available → Unavailable → Pending → Not Sent
+    categorizedPlayers.sort((a, b) => {
+        if (a.sortPriority !== b.sortPriority) {
+            return a.sortPriority - b.sortPriority; // Lower number = higher priority
+        }
+        // Within same priority, sort alphabetically
+        return a.name.localeCompare(b.name);
+    });
+    
+    // Generate HTML with sorted players
+    const playersHTML = categorizedPlayers.map(player => {
         return `
-            <div class="recipient-item ${isDisabled ? 'responded' : ''}" ${isDisabled ? 'style="opacity: 0.7;"' : ''}>
+            <div class="recipient-item ${player.isDisabled ? 'responded' : ''}" ${player.isDisabled ? 'style="opacity: 0.7;"' : ''}>
                 <input type="checkbox" 
                        class="recipient-checkbox" 
                        value="${player.email}"
-                       ${isSelected && !isDisabled ? 'checked' : ''}
-                       ${isDisabled ? 'disabled' : ''}
+                       ${player.isSelected && !player.isDisabled ? 'checked' : ''}
+                       ${player.isDisabled ? 'disabled' : ''}
                        onchange="togglePlayerSelection('${player.email}')">
                 <div class="recipient-info">
                     <div class="recipient-name">${player.name}</div>
@@ -1906,8 +1956,8 @@ function displayPlayersForSelection() {
                         ${player.positions} • ${player.email}
                     </div>
                 </div>
-                <div class="recipient-status ${statusClass}">
-                    ${statusText}
+                <div class="recipient-status ${player.statusClass}">
+                    ${player.statusText}
                 </div>
             </div>
         `;
@@ -1915,7 +1965,7 @@ function displayPlayersForSelection() {
     
     container.innerHTML = playersHTML;
     
-    const respondedEmails = responses.map(r => r.email || r.playerName).filter(Boolean);
+    // Update selected players list (remove those who have responded or are unavailable)
     selectedPlayers = selectedPlayers.filter(email => {
         const player = allPlayersForAvailability.find(p => p.email === email);
         const hasResponded = responses.some(r => 
@@ -1923,8 +1973,10 @@ function displayPlayersForSelection() {
             r.playerName === player?.name ||
             r.playerName.toLowerCase().includes(player?.name.toLowerCase())
         );
-        return !hasResponded;
+        return !hasResponded && player?.isActive;
     });
+    
+    console.log(`Players sorted: Available first, then Unavailable, then Pending, then Not Sent`);
 }
 
 function togglePlayerSelection(email) {
