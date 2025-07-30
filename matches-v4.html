@@ -1932,15 +1932,15 @@ function displayPlayersForSelection() {
                 statusClass = 'status-pending';
                 statusText = '⏳ Pending Response';
                 sortPriority = 3; // PENDING = THIRD PRIORITY
-            } else if (player.isInMatchSquad) {
-                statusClass = 'status-squad';
-                statusText = 'Squad Player - No Request Sent';
-                sortPriority = 4; // NOT SENT = FOURTH PRIORITY
-            } else {
-                statusClass = 'status-additional';
-                statusText = 'Additional Player';
-                sortPriority = 4;
-            }
+          } else if (player.isInMatchSquad) {
+    statusClass = 'status-squad';
+    statusText = 'Squad Player - No Request Sent';
+    sortPriority = 4; // SQUAD PLAYERS = FOURTH PRIORITY
+} else {
+    statusClass = 'status-additional';
+    statusText = 'Additional Player';
+    sortPriority = 5; // ADDITIONAL PLAYERS = FIFTH PRIORITY
+}
         }
         
         return {
@@ -1953,13 +1953,14 @@ function displayPlayersForSelection() {
         };
     });
     
-    // Sort by priority: Available → Unavailable → Pending → Not Sent
-    categorizedPlayers.sort((a, b) => {
-        if (a.sortPriority !== b.sortPriority) {
-            return a.sortPriority - b.sortPriority;
-        }
-        return a.name.localeCompare(b.name);
-    });
+    // Sort by priority: Available → Unavailable → Pending → Squad Players → Additional Players
+categorizedPlayers.sort((a, b) => {
+    if (a.sortPriority !== b.sortPriority) {
+        return a.sortPriority - b.sortPriority;
+    }
+    // Within same priority, sort alphabetically
+    return a.name.localeCompare(b.name);
+});
     
     // Generate HTML with sorted players
     const playersHTML = categorizedPlayers.map(player => {
