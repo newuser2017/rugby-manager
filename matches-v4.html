@@ -1263,6 +1263,7 @@ let currentMatchData = null;
 let allPlayersForAvailability = [];
 let selectedPlayers = [];
 let matchAvailabilityData = {};
+let currentMatchAvailability = null; // 
 
 // ============================================================================
 // INITIALIZATION - USING PROVEN PATTERN FROM ROSTER-V2.HTML
@@ -1810,14 +1811,32 @@ async function loadPlayersForSelection(matchId) {
             </div>
         `;
         
-        const result = await fetchData('getPlayersForSelectionModal', { matchId: matchId });
+        // Get players first
+        const playersResult = await fetchData('getPlayersForSelectionModal', { matchId: matchId });
         
-        if (!result.success) {
-            throw new Error(result.error);
+        if (!playersResult.success) {
+            throw new Error(playersResult.error);
         }
         
-        allPlayersForAvailability = result.players;
+        allPlayersForAvailability = playersResult.players;
         console.log(`Loaded ${allPlayersForAvailability.length} players for selection`);
+        
+        // Get availability data
+        try {
+            const availabilityResult = await fetchData('getMatchAvailability', { matchId: matchId });
+            currentMatchAvailability = availabilityResult.success ? availabilityResult : { 
+                summary: { total: 0, available: 0, unavailable: 0, pending: 0, totalSent: 0 },
+                availability: []
+            };
+            console.log('Availability data:', currentMatchAvailability);
+        } catch (availError) {
+            console.warn('Could not load availability data:', availError);
+            // Set default availability data
+            currentMatchAvailability = { 
+                summary: { total: 0, available: 0, unavailable: 0, pending: 0, totalSent: 0 },
+                availability: []
+            };
+        }
         
         selectedPlayers = allPlayersForAvailability
             .filter(player => player.autoSelected)
