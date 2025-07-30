@@ -1877,10 +1877,12 @@ function displayPlayersForSelection() {
     // Get responses and sent data
     const responses = currentMatchAvailability?.availability || [];
     const summary = currentMatchAvailability?.summary || {};
+    const sentEmails = currentMatchAvailability?.sentEmails || []; // 🎯 GET ACTUAL SENT EMAILS
     
     console.log('Displaying players with availability data:', {
         responses: responses.length,
-        summary: summary
+        summary: summary,
+        sentEmails: sentEmails  // 🎯 LOG SENT EMAILS
     });
     
     // Process and categorize all players
@@ -1904,35 +1906,36 @@ function displayPlayersForSelection() {
             if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
                 statusClass = 'status-responded-available';
                 statusText = `✅ Available (${responseDate})`;
-                sortPriority = 1; // 🎯 AVAILABLE = TOP PRIORITY
+                sortPriority = 1; // AVAILABLE = TOP PRIORITY
             } else if (responseStatus.toLowerCase().includes('unavailable')) {
                 statusClass = 'status-responded-unavailable';
                 statusText = `❌ Unavailable (${responseDate})`;
-                sortPriority = 2; // 🎯 UNAVAILABLE = SECOND PRIORITY
+                sortPriority = 2; // UNAVAILABLE = SECOND PRIORITY
             } else {
                 statusClass = 'status-responded-maybe';
                 statusText = `❓ ${responseStatus} (${responseDate})`;
-                sortPriority = 2; // Treat unknown responses like unavailable
+                sortPriority = 2;
             }
             isDisabled = true;
             
         } else {
-            // Player hasn't responded - check if they were sent a request
-            const wasSentRequest = summary.totalSent > 0;
+            // Player hasn't responded - check if they were ACTUALLY sent a request
+            const wasSentRequest = sentEmails.includes(player.email); // 🎯 CHECK ACTUAL SENT LIST
             
             if (!player.isActive) {
                 statusClass = 'status-unavailable';
                 statusText = player.status;
                 isDisabled = true;
                 sortPriority = 5; // Inactive players at bottom
-            } else if (wasSentRequest && player.isInMatchSquad) {
+            } else if (wasSentRequest) {
+                // 🎯 ONLY show as pending if actually sent a request
                 statusClass = 'status-pending';
                 statusText = '⏳ Pending Response';
-                sortPriority = 3; // 🎯 PENDING = THIRD PRIORITY
+                sortPriority = 3; // PENDING = THIRD PRIORITY
             } else if (player.isInMatchSquad) {
                 statusClass = 'status-squad';
                 statusText = 'Squad Player - No Request Sent';
-                sortPriority = 4; // 🎯 NOT SENT = FOURTH PRIORITY
+                sortPriority = 4; // NOT SENT = FOURTH PRIORITY
             } else {
                 statusClass = 'status-additional';
                 statusText = 'Additional Player';
@@ -1950,12 +1953,11 @@ function displayPlayersForSelection() {
         };
     });
     
-    // 🎯 SORT BY PRIORITY: Available → Unavailable → Pending → Not Sent
+    // Sort by priority: Available → Unavailable → Pending → Not Sent
     categorizedPlayers.sort((a, b) => {
         if (a.sortPriority !== b.sortPriority) {
-            return a.sortPriority - b.sortPriority; // Lower number = higher priority
+            return a.sortPriority - b.sortPriority;
         }
-        // Within same priority, sort alphabetically
         return a.name.localeCompare(b.name);
     });
     
@@ -1984,7 +1986,7 @@ function displayPlayersForSelection() {
     
     container.innerHTML = playersHTML;
     
-    // Update selected players list (remove those who have responded or are unavailable)
+    // Update selected players list
     selectedPlayers = selectedPlayers.filter(email => {
         const player = allPlayersForAvailability.find(p => p.email === email);
         const hasResponded = responses.some(r => 
@@ -1996,6 +1998,7 @@ function displayPlayersForSelection() {
     });
     
     console.log(`Players sorted: Available first, then Unavailable, then Pending, then Not Sent`);
+    console.log(`Sent emails list:`, sentEmails);
 }
 
 function togglePlayerSelection(email) {
