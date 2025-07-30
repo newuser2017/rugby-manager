@@ -1135,20 +1135,64 @@
                             </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label">Send Mode</label>
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="sendMode" value="test" checked>
-                                    <span>Test Mode (your email only)</span>
-                                </label>
-                                <label class="radio-option">
-                                    <input type="radio" name="sendMode" value="live">
-                                    <span>Live Send</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                        <!-- SMART SEND MODE SECTION WITH BACKEND CONTROL -->
+<div class="form-group">
+    <label class="form-label">Send Mode</label>
+    
+    <!-- This div will be populated by JavaScript based on backend config -->
+    <div id="sendModeContainer">
+        <!-- Content populated by showSendModeOptions() -->
+    </div>
+    
+    <!-- Hidden inputs to maintain compatibility -->
+    <input type="radio" name="sendMode" value="live" id="hiddenLiveMode" style="display: none;">
+    <input type="radio" name="sendMode" value="test" id="hiddenTestMode" style="display: none;">
+</div>
+
+<script>
+// Initialize send mode options when modal opens
+function showSendModeOptions() {
+    const container = document.getElementById('sendModeContainer');
+    
+    if (isTestModeActive()) {
+        // BACKEND TEST MODE - Show test mode interface
+        container.innerHTML = `
+            <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; border: 1px solid #ffeaa7; margin-bottom: 1rem;">
+                <strong>🧪 BACKEND TEST MODE ACTIVE</strong><br>
+                <span style="color: #856404; font-size: 0.875rem;">
+                    All sends will be redirected to test email regardless of selection
+                </span>
+            </div>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="sendMode" value="test" checked>
+                    <span>Test Send (${BACKEND_TEST_CONFIG.testEmail})</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="sendMode" value="live">
+                    <span>Live Send (will be overridden to test)</span>
+                </label>
+            </div>
+            <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;">
+                <small style="color: #1565c0;">
+                    <strong>Developer Note:</strong> Set BACKEND_TEST_CONFIG.enableTestMode = false in code to enable production mode
+                </small>
+            </div>
+        `;
+    } else {
+        // PRODUCTION MODE - Clean interface
+        container.innerHTML = `
+            <div style="background: #d4edda; padding: 1rem; border-radius: 6px; border: 1px solid #c3e6cb;">
+                <strong>🚀 Production Mode Active</strong><br>
+                <span style="color: #155724; font-size: 0.875rem;">
+                    Availability requests will be sent to all selected players
+                </span>
+                <input type="radio" name="sendMode" value="live" checked style="display: none;">
+            </div>
+        `;
+    }
+}
+</script>
                     
                     <div class="send-summary" id="sendSummary">
                         <!-- Will be populated based on selections -->
@@ -1178,7 +1222,39 @@
         let filteredMatches = [];
         let WEB_APP_URL;
         let DEBUG_MODE = false;
+// ============================================================================
+// BACKEND TEST MODE CONFIGURATION
+// ============================================================================
+const BACKEND_TEST_CONFIG = {
+    // 🚨 MASTER SWITCH: Set to false for full production mode
+    enableTestMode: true,                     // Set to false when ready for production
+    
+    // Test configuration (only used when enableTestMode = true)
+    testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
+    testPlayerName: 'Luke Teeling (TEST)',    // Your name for testing
+    
+    // Safety settings
+    maxTestRecipients: 5,                     // Max players in test mode
+    showTestWarnings: true,                   // Show test mode warnings
+    
+    // Debug logging
+    logTestModeActions: true                  // Log when test mode is active
+};
 
+// Helper function to check if we're in test mode
+function isTestModeActive() {
+    return BACKEND_TEST_CONFIG.enableTestMode;
+}
+
+// Helper function to get effective send mode
+function getEffectiveSendMode(userSelectedMode) {
+    if (BACKEND_TEST_CONFIG.enableTestMode) {
+        if (BACKEND_TEST_CONFIG.logTestModeActions) {
+            console.log('🧪 BACKEND TEST MODE ACTIVE - Overriding user selection');
+        }
+        return 'test';
+    }
+    return userSelectedMode;
         // Enhanced modal variables
         let currentMatchData = null;
         let allPlayersForAvailability = [];
@@ -1581,31 +1657,35 @@
         // ENHANCED MODAL FUNCTIONS
         // ============================================================================
 
-        async function openAvailabilityModal(matchId) {
-            console.log('Opening availability modal for match:', matchId);
-            
-            try {
-                document.getElementById('availabilityModal').classList.add('active');
-                
-                const matchData = await fetchData('getMatch', { matchId: matchId });
-                if (!matchData.success) {
-                    throw new Error('Could not load match details');
-                }
-                
-                currentMatchData = matchData;
-                console.log('Match data loaded:', currentMatchData);
-                
-                populateMatchSummary(currentMatchData);
-                generateMessageContent(currentMatchData);
-                await loadPlayersForSelection(matchId);
-                showAvailabilityTab('message');
-                
-            } catch (error) {
-                console.error('Error opening availability modal:', error);
-                showNotification('Error loading match details: ' + error.message, 'error');
-                closeAvailabilityModal();
-            }
+       async function openAvailabilityModal(matchId) {
+    console.log('Opening availability modal for match:', matchId);
+    
+    try {
+        document.getElementById('availabilityModal').classList.add('active');
+        
+        const matchData = await fetchData('getMatch', { matchId: matchId });
+        if (!matchData.success) {
+            throw new Error('Could not load match details');
         }
+        
+        currentMatchData = matchData;
+        console.log('Match data loaded:', currentMatchData);
+        
+        populateMatchSummary(currentMatchData);
+        generateMessageContent(currentMatchData);
+        await loadPlayersForSelection(matchId);
+        
+        // ADD THIS LINE:
+        showSendModeOptions(); // Initialize send mode based on backend config
+        
+        showAvailabilityTab('message');
+        
+    } catch (error) {
+        console.error('Error opening availability modal:', error);
+        showNotification('Error loading match details: ' + error.message, 'error');
+        closeAvailabilityModal();
+    }
+}
 
         function closeAvailabilityModal() {
             document.getElementById('availabilityModal').classList.remove('active');
@@ -1869,180 +1949,230 @@ Please confirm your availability:
             updateRecipientCounts();
         }
 
-        function updateSendSummary() {
-            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
-            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
-            const selectedCount = selectedPlayers.length;
+       function updateSendSummary() {
+    const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+    const userSelectedMode = document.querySelector('input[name="sendMode"]:checked')?.value || 'live';
+    const effectiveMode = getEffectiveSendMode(userSelectedMode);
+    const selectedCount = selectedPlayers.length;
+    
+    const deliveryText = deliveryMethod === 'email' ? 'Email' : 'Email + WhatsApp';
+    
+    // Determine mode text and recipient count
+    let modeText, recipientText, warningSection = '';
+    
+    if (effectiveMode === 'test') {
+        modeText = isTestModeActive() ? 'Backend Test Mode' : 'User Test Mode';
+        recipientText = `1 (${BACKEND_TEST_CONFIG.testEmail})`;
+        
+        if (isTestModeActive()) {
+            warningSection = `
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
+                    <strong>🧪 Backend Test Mode Override Active</strong><br>
+                    Email will be sent to ${BACKEND_TEST_CONFIG.testEmail} regardless of selected players.<br>
+                    <small>Set BACKEND_TEST_CONFIG.enableTestMode = false to disable</small>
+                </div>
+            `;
+        } else {
+            warningSection = `
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
+                    <strong>🧪 User Test Mode Active</strong><br>
+                    Email will only be sent to your email address for testing purposes.
+                </div>
+            `;
+        }
+    } else {
+        modeText = 'Live Production Send';
+        recipientText = `${selectedCount} players`;
+    }
+    
+    document.getElementById('sendSummary').innerHTML = `
+        <h4>Send Summary</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div>
+                <strong>Recipients:</strong><br>
+                ${recipientText}
+            </div>
+            <div>
+                <strong>Delivery:</strong><br>
+                ${deliveryText}
+            </div>
+            <div>
+                <strong>Mode:</strong><br>
+                ${modeText}
+            </div>
+            <div>
+                <strong>Match:</strong><br>
+                ${currentMatchData.squad} vs ${currentMatchData.opponent}
+            </div>
+        </div>
+        
+        ${warningSection}
+        
+        ${selectedCount === 0 && effectiveMode === 'live' ? `
+            <div style="background: #f8d7da; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #f5c6cb;">
+                <strong>⚠️ No Recipients Selected</strong><br>
+                Please go back to the Recipients tab and select players to send to.
+            </div>
+        ` : effectiveMode === 'live' ? `
+            <div style="background: #d4edda; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #c3e6cb;">
+                <strong>✅ Ready to Send</strong><br>
+                Availability request will be sent to ${selectedCount} selected players.
+            </div>
+        ` : ''}
+    `;
+}
+
+      async function sendAvailabilityRequest() {
+    console.log('=== SENDING AVAILABILITY REQUEST ===');
+    
+    if (!currentMatchData) {
+        showNotification('No match selected', 'error');
+        return;
+    }
+
+    const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
+    const userSelectedMode = document.querySelector('input[name="sendMode"]:checked')?.value || 'live';
+    const effectiveMode = getEffectiveSendMode(userSelectedMode);
+    
+    // Validation based on effective mode
+    if (effectiveMode === 'live' && selectedPlayers.length === 0) {
+        showNotification('Please select at least one player to send to.', 'error');
+        showAvailabilityTab('recipients');
+        return;
+    }
+    
+    // Backend test mode safety check
+    if (isTestModeActive() && selectedPlayers.length > BACKEND_TEST_CONFIG.maxTestRecipients) {
+        const proceed = confirm(`Backend test mode is active but you have ${selectedPlayers.length} players selected.\n\nThis will still only send to ${BACKEND_TEST_CONFIG.testEmail}.\n\nContinue?`);
+        if (!proceed) return;
+    }
+    
+    const sendBtn = document.getElementById('sendAvailabilityBtn');
+    const sendText = document.getElementById('sendBtnText');
+    const sendSpinner = document.getElementById('sendBtnSpinner');
+    
+    sendBtn.disabled = true;
+    sendText.style.display = 'none';
+    sendSpinner.style.display = 'inline';
+    
+    try {
+        let result;
+        
+        if (effectiveMode === 'test') {
+            console.log(`🧪 Sending in ${isTestModeActive() ? 'BACKEND' : 'USER'} TEST mode`);
             
-            const deliveryText = deliveryMethod === 'email' ? 'Email' : 'Email + WhatsApp';
-            const modeText = sendMode === 'test' ? 'Test Mode (your email only)' : 'Live Send';
+            result = await fetchData('sendMatchSpecificAvailabilityRequest', {
+                matchId: currentMatchData.matchId,
+                testMode: 'true',
+                testEmail: BACKEND_TEST_CONFIG.testEmail,
+                testPlayerName: BACKEND_TEST_CONFIG.testPlayerName
+            });
             
-            document.getElementById('sendSummary').innerHTML = `
-                <h4>Send Summary</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                    <div>
-                        <strong>Recipients:</strong><br>
-                        ${sendMode === 'test' ? '1 (test email)' : selectedCount + ' players'}
-                    </div>
-                    <div>
-                        <strong>Delivery:</strong><br>
-                        ${deliveryText}
-                    </div>
-                    <div>
-                        <strong>Mode:</strong><br>
-                        ${modeText}
-                    </div>
-                    <div>
-                        <strong>Match:</strong><br>
-                        ${currentMatchData.squad} vs ${currentMatchData.opponent}
-                    </div>
+        } else {
+            console.log('📧 Sending in LIVE PRODUCTION mode to selected players');
+            
+            result = await fetchData('sendAvailabilityToSelectedPlayers', {
+                matchId: currentMatchData.matchId,
+                selectedPlayerEmails: selectedPlayers.join(','),
+                testMode: 'false'
+            });
+        }
+        
+        console.log('Send result:', result);
+        
+        if (result.success) {
+            showSuccessModal(result, effectiveMode);
+            closeAvailabilityModal();
+            
+            // Refresh availability data
+            await loadMatchAvailability(currentMatchData.matchId);
+            
+        } else {
+            throw new Error(result.error || 'Unknown error occurred');
+        }
+        
+    } catch (error) {
+        console.error('Error sending availability request:', error);
+        showNotification('Error sending availability request: ' + error.message, 'error');
+        
+    } finally {
+        sendBtn.disabled = false;
+        sendText.style.display = 'inline';
+        sendSpinner.style.display = 'none';
+    }
+}
+
+       function showSuccessModal(result, effectiveMode) {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.style.zIndex = '3000';
+    
+    const isTestMode = effectiveMode === 'test';
+    const headerColor = isTestMode ? '#f59e0b' : '#28a745';
+    const headerGradient = isTestMode ? 
+        'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 
+        'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+    
+    const successContent = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header" style="background: ${headerGradient};">
+                <h2>${isTestMode ? '🧪' : '✅'} ${isTestMode ? 'Test' : 'Live'} Send Complete!</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div style="padding: 2rem;">
+                <h3>Send Summary</h3>
+                <div style="background: ${isTestMode ? '#fff3cd' : '#d4edda'}; padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid ${isTestMode ? '#ffeaa7' : '#c3e6cb'};">
+                    ${isTestMode ? `
+                        <strong>🧪 ${isTestModeActive() ? 'Backend' : 'User'} Test Mode:</strong><br>
+                        Test email sent to: ${result.testEmail || BACKEND_TEST_CONFIG.testEmail}<br>
+                        Match: ${result.squad} vs ${result.opponent}<br>
+                        ${isTestModeActive() ? '<br><small>Backend test mode was active - no real players contacted</small>' : ''}
+                    ` : `
+                        <strong>📧 Live Send Complete:</strong><br>
+                        Sent to: ${result.sentTo} players<br>
+                        Match: ${result.squad} vs ${result.opponent}<br>
+                        ${result.errors > 0 ? `<br><span style="color: #dc3545;">Failed: ${result.errors} emails</span>` : ''}
+                    `}
                 </div>
                 
-                ${sendMode === 'test' ? `
-                    <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #ffeaa7;">
-                        <strong>🧪 Test Mode Active</strong><br>
-                        Email will only be sent to your email address for testing purposes.
+                ${result.formIsNew ? `
+                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                        <strong>📝 New Form Created:</strong><br>
+                        A new availability form was created for this match.<br>
+                        <a href="${result.formUrl}" target="_blank" style="color: #1e3c72;">View Form</a>
+                    </div>
+                ` : `
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                        <strong>📋 Using Existing Form:</strong><br>
+                        Reused the existing form for this match.
+                    </div>
+                `}
+                
+                ${isTestMode && isTestModeActive() ? `
+                    <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                        <strong>🔧 Ready for Production?</strong><br>
+                        <small>Set BACKEND_TEST_CONFIG.enableTestMode = false to enable live sending</small>
                     </div>
                 ` : ''}
                 
-                ${selectedCount === 0 && sendMode === 'live' ? `
-                    <div style="background: #f8d7da; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid #f5c6cb;">
-                        <strong>⚠️ No Recipients Selected</strong><br>
-                        Please go back to the Recipients tab and select players to send to.
-                    </div>
-                ` : ''}
-            `;
-        }
-
-        async function sendAvailabilityRequest() {
-            console.log('=== SENDING AVAILABILITY REQUEST ===');
-            
-            if (!currentMatchData) {
-                showNotification('No match selected', 'error');
-                return;
-            }
-            
-            const sendMode = document.querySelector('input[name="sendMode"]:checked').value;
-            const deliveryMethod = document.querySelector('input[name="deliveryMethod"]:checked').value;
-            
-            if (sendMode === 'live' && selectedPlayers.length === 0) {
-                showNotification('Please select at least one player to send to, or switch to Test Mode.', 'error');
-                showAvailabilityTab('recipients');
-                return;
-            }
-            
-            const sendBtn = document.getElementById('sendAvailabilityBtn');
-            const sendText = document.getElementById('sendBtnText');
-            const sendSpinner = document.getElementById('sendBtnSpinner');
-            
-            sendBtn.disabled = true;
-            sendText.style.display = 'none';
-            sendSpinner.style.display = 'inline';
-            
-            try {
-                let result;
-                
-                if (sendMode === 'test') {
-                    console.log('🧪 Sending in TEST mode');
-                    
-                    result = await fetchData('sendMatchSpecificAvailabilityRequest', {
-                        matchId: currentMatchData.matchId,
-                        testMode: 'true',
-                        testEmail: 'luketeeling@gmail.com',
-                        testPlayerName: 'Luke Teeling (TEST)'
-                    });
-                    
-                } else {
-                    console.log('📧 Sending in LIVE mode to selected players');
-                    
-                    result = await fetchData('sendAvailabilityToSelectedPlayers', {
-                        matchId: currentMatchData.matchId,
-                        selectedPlayerEmails: selectedPlayers.join(','),
-                        testMode: 'false'
-                    });
-                }
-                
-                console.log('Send result:', result);
-                
-                if (result.success) {
-                    showSuccessModal(result, sendMode);
-                    closeAvailabilityModal();
-                    
-                    // Refresh availability data
-                    await loadMatchAvailability(currentMatchData.matchId);
-                    
-                } else {
-                    throw new Error(result.error || 'Unknown error occurred');
-                }
-                
-            } catch (error) {
-                console.error('Error sending availability request:', error);
-                showNotification('Error sending availability request: ' + error.message, 'error');
-                
-            } finally {
-                sendBtn.disabled = false;
-                sendText.style.display = 'inline';
-                sendSpinner.style.display = 'none';
-            }
-        }
-
-        function showSuccessModal(result, sendMode) {
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.style.zIndex = '3000';
-            
-            const successContent = `
-                <div class="modal-content" style="max-width: 500px;">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        <h2>✅ Availability Request Sent!</h2>
-                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
-                    <div style="padding: 2rem;">
-                        <h3>Send Summary</h3>
-                        <div style="background: #d4edda; padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid #c3e6cb;">
-                            ${sendMode === 'test' ? `
-                                <strong>🧪 Test Mode:</strong><br>
-                                Test email sent to: ${result.testEmail || 'your email'}<br>
-                                Match: ${result.squad} vs ${result.opponent}
-                            ` : `
-                                <strong>📧 Live Send Complete:</strong><br>
-                                Sent to: ${result.sentTo} players<br>
-                                Match: ${result.squad} vs ${result.opponent}<br>
-                                ${result.errors > 0 ? `<br><span style="color: #dc3545;">Failed: ${result.errors} emails</span>` : ''}
-                            `}
-                        </div>
-                        
-                        ${result.formIsNew ? `
-                            <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
-                                <strong>📝 New Form Created:</strong><br>
-                                A new availability form was created for this match.<br>
-                                <a href="${result.formUrl}" target="_blank" style="color: #1e3c72;">View Form</a>
-                            </div>
-                        ` : `
-                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
-                                <strong>📋 Using Existing Form:</strong><br>
-                                Reused the existing form for this match.
-                            </div>
-                        `}
-                        
-                        <div style="text-align: center; margin-top: 2rem;">
-                            <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
-                                Close
-                            </button>
-                        </div>
-                    </div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
+                        Close
+                    </button>
                 </div>
-            `;
-            
-            modal.innerHTML = successContent;
-            document.body.appendChild(modal);
-            
-            setTimeout(() => {
-                if (modal.parentNode) {
-                    modal.remove();
-                }
-            }, 10000);
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = successContent;
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+        if (modal.parentNode) {
+            modal.remove();
         }
+    }, 10000);
+}
 
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
