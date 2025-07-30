@@ -1173,11 +1173,7 @@ function showSendModeOptions() {
                     <span>Live Send (will be overridden to test)</span>
                 </label>
             </div>
-            <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;">
-                <small style="color: #1565c0;">
-                    <strong>Developer Note:</strong> Set BACKEND_TEST_CONFIG.enableTestMode = false in code to enable production mode
-                </small>
-            </div>
+           
         `;
     } else {
         // PRODUCTION MODE - Clean interface
@@ -1228,7 +1224,7 @@ let DEBUG_MODE = false;
 // ============================================================================
 const BACKEND_TEST_CONFIG = {
     // 🚨 MASTER SWITCH: Set to false for full production mode
-    enableTestMode: true,                     // Set to false when ready for production
+    enableTestMode: false,                     // Set to false when ready for production
     
     // Test configuration (only used when enableTestMode = true)
     testEmail: 'luketeeling@gmail.com',       // YOUR email for testing
@@ -1352,11 +1348,7 @@ function showSendModeOptions() {
                     <span>Live Send (will be overridden to test)</span>
                 </label>
             </div>
-            <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;">
-                <small style="color: #1565c0;">
-                    <strong>Developer Note:</strong> Set BACKEND_TEST_CONFIG.enableTestMode = false in code to enable production mode
-                </small>
-            </div>
+           
         `;
     } else {
         // PRODUCTION MODE - Clean interface
