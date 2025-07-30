@@ -2119,14 +2119,16 @@ async function sendAvailabilityRequest() {
        
        console.log('Send result:', result);
        
-       if (result.success) {
-           showSuccessModal(result, effectiveMode);
-           closeAvailabilityModal();
-           
-           // Refresh availability data
-           await loadMatchAvailability(currentMatchData.matchId);
-           
-       } else {
+      if (result.success) {
+    // Store the match ID before closing modal
+    const matchId = currentMatchData.matchId;
+    
+    showSuccessModal(result, effectiveMode);
+    closeAvailabilityModal();
+    
+    // Refresh availability data using stored match ID
+    await loadMatchAvailability(matchId);
+} else {
            throw new Error(result.error || 'Unknown error occurred');
        }
        
