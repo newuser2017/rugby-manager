@@ -1206,7 +1206,7 @@ loadMatchHistory();
                 const data = await response.json();
                 
                 if (data.success) {
-                    availablePlayers = data.players;
+                    availablePlayers = data.data;
                     populatePlayerDropdowns();
                 } else {
                     throw new Error(data.error);
