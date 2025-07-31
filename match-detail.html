@@ -1529,8 +1529,8 @@ function showButtonSuccess(button, message) {
         'no-response': ''
     }[player.availability || 'no-response'];
     
-    option.textContent = `${indicator} ${player['First Name']} ${player['Last Name']} (${player['Player ID'] || 'No ID'})`;  // ✅ Use correct column headers
-    dropdown.appendChild(option);
+option.textContent = `${indicator} ${player['First Name']} ${player['Last Name']}`;
+                    dropdown.appendChild(option);
 });
             });
         }
@@ -1786,19 +1786,11 @@ function showButtonSuccess(button, message) {
             if (!currentMatch) return;
             
             try {
-                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'saveTeamSelection',
-                        matchId: currentMatch.matchId,
-                        startingXV: teamSelection,
-                        reserves: reserves
-                    })
-                });
-                
+               const result = await fetchData('saveTeamSelection', {
+    matchId: currentMatch.matchId,
+    startingXV: JSON.stringify(teamSelection),
+    reserves: JSON.stringify(reserves)
+});
                 const data = await response.json();
                 if (data.success) {
                     console.log('Team selection auto-saved');
