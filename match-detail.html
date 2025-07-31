@@ -1517,21 +1517,21 @@ function showButtonSuccess(button, message) {
                 dropdown.innerHTML = '<option value="">Select Player...</option>';
                 
                 availablePlayers.forEach(player => {
-                    const option = document.createElement('option');
-                    option.value = player.playerId;
-                    option.className = player.availability || 'no-response';
-                    
-                    // Add availability indicator
-                    const indicator = {
-                        'available': '✓',
-                        'maybe': '?',
-                        'unavailable': '✗',
-                        'no-response': '⏳'
-                    }[player.availability] || '⏳';
-                    
-                    option.textContent = `${indicator} ${player.firstName} ${player.lastName} (${player.irfuNumber || 'No ID'})`;
-                    dropdown.appendChild(option);
-                });
+    const option = document.createElement('option');
+    option.value = player['Player ID'] || player['Email'];  // ✅ Use correct column header
+    option.className = player.availability || 'no-response';
+    
+    // Add availability indicator  
+    const indicator = {
+        'available': '✓',
+        'maybe': '?',
+        'unavailable': '✗',
+        'no-response': ''
+    }[player.availability || 'no-response'];
+    
+    option.textContent = `${indicator} ${player['First Name']} ${player['Last Name']} (${player['Player ID'] || 'No ID'})`;  // ✅ Use correct column headers
+    dropdown.appendChild(option);
+});
             });
         }
 
