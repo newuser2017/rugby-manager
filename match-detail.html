@@ -1202,7 +1202,7 @@ loadMatchHistory();
         // Load available players for team selection
         async function loadAvailablePlayers() {
             try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getPlayers&team=${currentMatch.squad}`);
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getAllPlayers`);
                 const data = await response.json();
                 
                 if (data.success) {
