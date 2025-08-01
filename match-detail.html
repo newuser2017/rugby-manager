@@ -1190,6 +1190,9 @@
             // Load players for team selection
             await loadAvailablePlayers();
             
+            // Load saved team selection
+            await loadSavedTeamSelection();
+            
             // Load other match data
             await loadMatchNotes();
             
@@ -2365,6 +2368,94 @@ function getPositionName(positionNumber) {
                 alert('Team selections cleared');
             }
         }
+
+        // Load saved team selection from Google Sheets
+async function loadSavedTeamSelection() {
+    if (!currentMatch) {
+        console.log('No current match - skipping team selection load');
+        return;
+    }
+    
+    try {
+        console.log(`🔄 Loading saved team selection for match ${currentMatch.matchId}`);
+        
+        const result = await fetchData('getTeamSelection', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success) {
+            console.log('✅ Loaded saved team selection:', result);
+            
+            // Populate the global variables
+            teamSelection = {};
+            reserves = {};
+            
+            // Load starting XV selections
+            if (result.startingXV) {
+                Object.keys(result.startingXV).forEach(position => {
+                    const playerData = result.startingXV[position];
+                    if (playerData && playerData.email) {
+                        teamSelection[position] = playerData.email;
+                        console.log(`Restored position ${position}: ${playerData.name}`);
+                    }
+                });
+            }
+            
+            // Load reserve selections  
+            if (result.reserves) {
+                Object.keys(result.reserves).forEach(reserveNum => {
+                    const playerData = result.reserves[reserveNum];
+                    if (playerData && playerData.email) {
+                        reserves[reserveNum] = playerData.email;
+                        console.log(`Restored reserve ${reserveNum}: ${playerData.name}`);
+                    }
+                });
+            }
+            
+            // Update the dropdowns to show selected players
+            updateDropdownSelections();
+            
+            console.log(`✅ Restored ${Object.keys(teamSelection).length} starting positions and ${Object.keys(reserves).length} reserves`);
+            
+        } else {
+            console.log('⚪ No saved team selection found');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading saved team selection:', error);
+    }
+}
+
+// Update dropdown selections to show saved choices
+function updateDropdownSelections() {
+    console.log('🔄 Updating dropdown selections...');
+    
+    // Update starting XV dropdowns
+    for (let position = 1; position <= 15; position++) {
+        const playerId = teamSelection[position];
+        if (playerId) {
+            const dropdown = document.querySelector(`select[onchange*="handleSelection(${position}"]`);
+            if (dropdown) {
+                dropdown.value = playerId;
+                console.log(`Set position ${position} dropdown to: ${playerId}`);
+            }
+        }
+    }
+    
+    // Update reserve dropdowns
+    Object.keys(reserves).forEach(reserveNum => {
+        const playerId = reserves[reserveNum];
+        if (playerId) {
+            const dropdown = document.querySelector(`select[onchange*="handleReserveSelection(${reserveNum}"]`);
+            if (dropdown) {
+                dropdown.value = playerId;
+                console.log(`Set reserve ${reserveNum} dropdown to: ${playerId}`);
+            }
+        }
+    });
+    
+    console.log('✅ Dropdown selections updated');
+}
 
               // Utility functions
         function showSuccessMessage(message) {
