@@ -1194,7 +1194,7 @@
             await loadMatchNotes();
             
             // Display match information
-            displayMatchInfo(data);
+            displayMatch(data);
             showMatchContent();
             
         } else {
@@ -1752,7 +1752,10 @@ function getSectionColor(priority) {
 
 // Parse player positions string into array of numbers
 function parsePlayerPositions(positionsString) {
-    if (!positionsString) return [];
+    // Safety check - ensure we have a string
+    if (!positionsString || typeof positionsString !== 'string') {
+        return [];
+    }
     
     // Handle formats like "1, 3", "9,10", "4/5", etc.
     return positionsString
