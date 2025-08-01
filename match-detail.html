@@ -1131,7 +1131,8 @@
         let reserves = {};
         let reserveCount = 4;
         let availablePlayers = [];
-
+        let currentMatchAvailabilityData = null;
+        
         // Configuration - loaded from config.js
         // CONFIG will be available as window.RUGBY_CONFIG
 
@@ -1170,34 +1171,41 @@
         });
 
         // Load match data from Google Sheets
-        async function loadMatchData(matchId) {
-            console.log('Loading match data for:', matchId);
-            showLoading();
+       async function loadMatchData(matchId) {
+    try {
+        showLoading();
+        console.log('Loading match data for:', matchId);
+        
+        // Load match details
+        const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentMatch = data;
+            console.log('API response data:', data);
             
-            try {
-                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch match data');
-                }
-                
-                const data = await response.json();
-                console.log('API response data:', data);
-
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to load match');
-                }
-                
-                currentMatch = data;
-displayMatchData(currentMatch);
-loadAvailablePlayers();
-loadMatchHistory();
-                
-            } catch (error) {
-                console.error('Error loading match data:', error);
-                showError('Unable to load match details. Please check your Google Apps Script URL configuration.');
-            }
+            // Load availability data for team selection
+            await loadMatchAvailabilityData();
+            
+            // Load players for team selection
+            await loadAvailablePlayers();
+            
+            // Load other match data
+            await loadMatchNotes();
+            
+            // Display match information
+            displayMatchInfo(data);
+            showMatchContent();
+            
+        } else {
+            throw new Error(data.error || 'Failed to load match data');
         }
+        
+    } catch (error) {
+        console.error('Error loading match data:', error);
+        showError(`Unable to load match data: ${error.message}`);
+    }
+}
 
         // Load available players for team selection
         async function loadAvailablePlayers() {
@@ -1221,7 +1229,66 @@ loadMatchHistory();
 // ============================================================================
 // ADD THESE FUNCTIONS TO match-detail.html
 // ============================================================================
+// Load availability data when match loads
+async function loadMatchAvailabilityData() {
+    if (!currentMatch) {
+        console.log('No current match - skipping availability load');
+        return;
+    }
+    
+    try {
+        console.log(`🔄 Loading availability data for match ${currentMatch.matchId}`);
+        
+        const result = await fetchData('getAvailabilityForTeamSelection', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success) {
+            currentMatchAvailabilityData = result;
+            console.log(`✅ Loaded availability data:`, result.summary);
+            console.log(`📊 Response rate: ${result.summary.responseRate}% (${result.summary.total}/${result.summary.totalSquadPlayers})`);
+            
+            // Update any availability displays on the page
+            updateAvailabilityDisplay(result.summary);
+            
+            return result;
+        } else {
+            console.error('❌ Failed to load availability data:', result.error);
+            return null;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading availability data:', error);
+        return null;
+    }
+}
 
+// Update availability display on the page
+function updateAvailabilityDisplay(summary) {
+    console.log(`📊 Availability Summary:
+    - Total Squad Players: ${summary.totalSquadPlayers}
+    - Responses: ${summary.total} (${summary.responseRate}%)
+    - Available: ${summary.available}
+    - Unavailable: ${summary.unavailable}  
+    - Maybe: ${summary.maybe}
+    - No Response: ${summary.nonResponders}`);
+}
+
+// Get player availability status using real data
+function getPlayerAvailabilityStatusReal(player) {
+    // Use real availability data if available
+    if (currentMatchAvailabilityData && currentMatchAvailabilityData.players) {
+        const playerEmail = player['Email'];
+        const playerData = currentMatchAvailabilityData.players.find(p => p['Email'] === playerEmail);
+        
+        if (playerData && playerData.availability) {
+            return playerData.availability;
+        }
+    }
+    
+    // Fallback for players not in the squad or without responses
+    return 'No Response';
+}
 // Add fetchData function if not already present
 async function fetchData(action, params = {}) {
     const url = new URL(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL);
@@ -1512,28 +1579,235 @@ function showButtonSuccess(button, message) {
         }
 
         // Populate all player dropdowns
-        function populatePlayerDropdowns() {
-            document.querySelectorAll('.player-dropdown').forEach(dropdown => {
-                dropdown.innerHTML = '<option value="">Select Player...</option>';
-                
-                availablePlayers.forEach(player => {
-    const option = document.createElement('option');
-    option.value = player['Player ID'] || player['Email'];  // ✅ Use correct column header
-    option.className = player.availability || 'no-response';
+     // Add this enhanced function to your match-detail.html
+// Replace your existing populatePlayerDropdowns() function with this smart version
+
+function populatePlayerDropdowns() {
+    console.log('🏉 Populating dropdowns with smart sorting...');
     
-    // Add availability indicator  
-    const indicator = {
-        'available': '✓',
-        'maybe': '?',
-        'unavailable': '✗',
-        'no-response': ''
-    }[player.availability || 'no-response'];
-    
-option.textContent = `${indicator} ${player['First Name']} ${player['Last Name']}`;
-                    dropdown.appendChild(option);
-});
-            });
+    document.querySelectorAll('.player-dropdown').forEach(dropdown => {
+        const positionContainer = dropdown.closest('.position-selector');
+        const positionLabel = positionContainer ? positionContainer.querySelector('.position-label') : null;
+        
+        // Extract position number from label (e.g., "1. Loosehead Prop" → 1)
+        let targetPosition = null;
+        if (positionLabel) {
+            const match = positionLabel.textContent.match(/^(\d+)\./);
+            if (match) {
+                targetPosition = parseInt(match[1]);
+            }
         }
+        
+        console.log(`Sorting dropdown for position ${targetPosition}`);
+        
+        // Smart sort players for this position
+        const sortedPlayers = smartSortPlayersForPosition(availablePlayers, targetPosition);
+        
+        // Clear and populate dropdown
+        dropdown.innerHTML = '<option value="">Select Player...</option>';
+        
+        let currentSection = null;
+        
+        sortedPlayers.forEach(player => {
+            // Add section headers
+            if (player.section !== currentSection) {
+                if (currentSection !== null) {
+                    // Add separator between sections
+                    const separator = document.createElement('option');
+                    separator.disabled = true;
+                    separator.textContent = '─────────────────';
+                    separator.style.fontStyle = 'italic';
+                    separator.style.color = '#999';
+                    dropdown.appendChild(separator);
+                }
+                
+                // Add section header
+                const header = document.createElement('option');
+                header.disabled = true;
+                header.textContent = player.sectionHeader;
+                header.style.fontWeight = 'bold';
+                header.style.color = getSectionColor(player.section);
+                header.style.backgroundColor = '#f8f9fa';
+                dropdown.appendChild(header);
+                
+                currentSection = player.section;
+            }
+            
+            // Create player option
+            const option = document.createElement('option');
+            option.value = player['Player ID'] || player['Email'];
+            
+            // Check if already selected elsewhere
+            const isAlreadySelected = isPlayerAlreadySelected(option.value);
+            
+            // Build display text with indicators
+            const availabilityIcon = getAvailabilityIcon(player.availability);
+            const positionText = player.positions || '';
+            const alreadySelectedText = isAlreadySelected ? ' (Already Selected)' : '';
+            
+            option.textContent = `${availabilityIcon} ${player['First Name']} ${player['Last Name']} (${positionText})${alreadySelectedText}`;
+            
+            // Apply styling based on status
+            option.className = `player-option ${player.availability || 'no-response'}`;
+            if (isAlreadySelected) {
+                option.className += ' already-selected';
+                option.style.color = '#6c757d';
+                option.style.fontStyle = 'italic';
+            }
+            
+            // Move already selected to bottom of their section
+            if (isAlreadySelected) {
+                // We'll add these at the end of each section
+                option.dataset.alreadySelected = 'true';
+            }
+            
+            dropdown.appendChild(option);
+        });
+    });
+    
+    console.log('✅ Smart dropdown population complete');
+}
+
+// Enhanced sorting function
+function smartSortPlayersForPosition(players, targetPosition) {
+    console.log(`🎯 Smart sorting for position ${targetPosition}`);
+    
+    // Parse and categorize all players
+    const categorizedPlayers = players.map(player => {
+        const playerPositions = parsePlayerPositions(player.Positions || '');
+        const availability = getPlayerAvailabilityStatus(player);
+        const canPlayPosition = targetPosition ? playerPositions.includes(targetPosition) : false;
+        
+        return {
+            ...player,  // Include all original player data
+            positions: player.Positions || '',
+            parsedPositions: playerPositions,
+            availability: availability,
+            canPlayPosition: canPlayPosition,
+            sortPriority: calculateSortPriority(availability, canPlayPosition)
+        };
+    });
+    
+    // Sort by priority, then by name
+    categorizedPlayers.sort((a, b) => {
+        if (a.sortPriority !== b.sortPriority) {
+            return a.sortPriority - b.sortPriority; // Lower number = higher priority
+        }
+        // Same priority - sort alphabetically
+        const nameA = `${a['First Name']} ${a['Last Name']}`;
+        const nameB = `${b['First Name']} ${b['Last Name']}`;
+        return nameA.localeCompare(nameB);
+    });
+    
+    // Add section headers and metadata
+    const sectioned = [];
+    let currentPriority = null;
+    
+    categorizedPlayers.forEach(player => {
+        if (player.sortPriority !== currentPriority) {
+            player.section = player.sortPriority;
+            player.sectionHeader = getSectionHeader(player.sortPriority, targetPosition);
+            currentPriority = player.sortPriority;
+        }
+    });
+    
+    console.log(`📊 Categorized ${categorizedPlayers.length} players into ${new Set(categorizedPlayers.map(p => p.sortPriority)).size} sections`);
+    
+    return categorizedPlayers;
+}
+
+// Calculate sort priority (lower = higher priority)
+function calculateSortPriority(availability, canPlayPosition) {
+    const isAvailable = availability === 'Available';
+    
+    if (isAvailable && canPlayPosition) return 1;  // 🟢 Available + Right Position
+    if (isAvailable && !canPlayPosition) return 2; // 🟡 Available + Any Position  
+    if (!isAvailable && canPlayPosition) return 3; // 🔵 Any Availability + Right Position
+    return 4; // ⚪ Everyone Else
+}
+
+// Get section header text
+function getSectionHeader(priority, targetPosition) {
+    const positionName = getPositionName(targetPosition);
+    
+    switch(priority) {
+        case 1: return `🟢 Available ${positionName}s`;
+        case 2: return `🟡 Available (Other Positions)`;
+        case 3: return `🔵 ${positionName}s (Any Availability)`;
+        case 4: return `⚪ Other Players`;
+        default: return `Players`;
+    }
+}
+
+// Get section color for styling
+function getSectionColor(priority) {
+    switch(priority) {
+        case 1: return '#28a745'; // Green
+        case 2: return '#ffc107'; // Yellow/Orange
+        case 3: return '#007bff'; // Blue
+        case 4: return '#6c757d'; // Grey
+        default: return '#333';
+    }
+}
+
+// Parse player positions string into array of numbers
+function parsePlayerPositions(positionsString) {
+    if (!positionsString) return [];
+    
+    // Handle formats like "1, 3", "9,10", "4/5", etc.
+    return positionsString
+        .split(/[,\/\s]+/)
+        .map(pos => parseInt(pos.trim()))
+        .filter(pos => !isNaN(pos) && pos >= 1 && pos <= 15);
+}
+
+// Get player availability status for current match
+function getPlayerAvailabilityStatus(player) {
+    return getPlayerAvailabilityStatusReal(player);
+}
+
+// Get availability icon
+function getAvailabilityIcon(availability) {
+    switch(availability) {
+        case 'Available': return '✅';
+        case 'Maybe': return '❓';
+        case 'Unavailable': return '❌';
+        case 'No Response': return '⚪';
+        default: return '⚪';
+    }
+}
+
+// Check if player is already selected in another position
+function isPlayerAlreadySelected(playerId) {
+    // Check starting XV
+    for (let pos = 1; pos <= 15; pos++) {
+        if (teamSelection[pos] === playerId) {
+            return true;
+        }
+    }
+    
+    // Check reserves
+    for (let reserve in reserves) {
+        if (reserves[reserve] === playerId) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Get position name from number
+function getPositionName(positionNumber) {
+    const positions = {
+        1: 'Loosehead Prop', 2: 'Hooker', 3: 'Tighthead Prop',
+        4: 'Lock', 5: 'Lock', 6: 'Blindside Flanker',
+        7: 'Openside Flanker', 8: 'Number 8', 9: 'Scrum-half',
+        10: 'Fly-half', 11: 'Left Wing', 12: 'Inside Centre',
+        13: 'Outside Centre', 14: 'Right Wing', 15: 'Fullback'
+    };
+    
+    return positions[positionNumber] || `Position ${positionNumber}`;
+}
 
         // Format date for display
         function formatDate(dateString) {
