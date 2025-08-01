@@ -2322,33 +2322,40 @@ function getPositionName(positionNumber) {
             return `Clontarf_${match.squad}_vs_${opponent}_${day}${month}.jpg`;
         }
 
-        async function downloadTeamSheet(fileName) {
-            try {
-                const element = document.getElementById('teamSheetPreview');
-                const canvas = await html2canvas(element, {
-                    width: 800,
-                    height: 1200,
-                    scale: 2,
-                    backgroundColor: '#ffffff'
-                });
-                
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = url;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    
-                    markTeamAsPublished();
-                    closeTeamSheetModal();
-                }, 'image/jpeg', 0.9);
-                
-            } catch (error) {
-                console.error('Error generating team sheet image:', error);
-                alert('Failed to generate team sheet image');
-            }
-        }
+       async function downloadTeamSheet(fileName) {
+    try {
+        const element = document.getElementById('teamSheetPreview');
+        console.log('📸 Starting team sheet image generation...');
+        
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: false,
+            // Remove fixed width/height - let it auto-calculate
+        });
+        
+        console.log(`📐 Generated canvas: ${canvas.width}px x ${canvas.height}px`);
+        
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            markTeamAsPublished();
+            closeTeamSheetModal();
+        }, 'image/jpeg', 0.9);
+        
+        console.log('✅ Team sheet download completed');
+        
+    } catch (error) {
+        console.error('Error generating team sheet image:', error);
+        alert('Failed to generate team sheet image');
+    }
+}
 
         function markTeamAsPublished() {
             const publishBtn = document.querySelector('[onclick*="publishTeam"]');
