@@ -1194,7 +1194,8 @@
             await loadMatchNotes();
             
             // Display match information
-            displayMatch(data);
+        // Match info display handled by existing code
+console.log('Match data loaded successfully');
             showMatchContent();
             
         } else {
@@ -1586,17 +1587,27 @@ function populatePlayerDropdowns() {
     console.log('🏉 Populating dropdowns with smart sorting...');
     
     document.querySelectorAll('.player-dropdown').forEach(dropdown => {
-        const positionContainer = dropdown.closest('.position-selector');
-        const positionLabel = positionContainer ? positionContainer.querySelector('.position-label') : null;
-        
-        // Extract position number from label (e.g., "1. Loosehead Prop" → 1)
-        let targetPosition = null;
+    const positionContainer = dropdown.closest('.position-selector');
+    const reserveContainer = dropdown.closest('.reserve-selector');
+    
+    let targetPosition = null;
+    
+    // Handle starting XV positions
+    if (positionContainer) {
+        const positionLabel = positionContainer.querySelector('.position-label');
         if (positionLabel) {
             const match = positionLabel.textContent.match(/^(\d+)\./);
             if (match) {
                 targetPosition = parseInt(match[1]);
             }
         }
+    }
+    
+    // Handle reserves (no specific position, so use null)
+    if (reserveContainer) {
+        targetPosition = null; // Reserves can play any position
+        console.log('Processing reserve dropdown');
+    }
         
         console.log(`Sorting dropdown for position ${targetPosition}`);
         
