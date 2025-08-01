@@ -1193,9 +1193,44 @@
             // Load other match data
             await loadMatchNotes();
             
-            // Display match information
-        // Match info display handled by existing code
-console.log('Match data loaded successfully');
+          // Display match information directly
+const matchTitle = data.homeAway === 'Home' 
+    ? `Clontarf ${data.squad} vs ${data.opponent}`
+    : `${data.opponent} vs Clontarf ${data.squad}`;
+
+const titleElement = document.getElementById('matchTitle');
+if (titleElement) titleElement.textContent = matchTitle;
+
+// Update basic match info
+const matchDateEl = document.getElementById('matchDate');
+if (matchDateEl) matchDateEl.textContent = formatDate(data.date);
+
+const matchTimeEl = document.getElementById('matchTime');
+if (matchTimeEl) matchTimeEl.textContent = formatTime(data.time);
+
+const venueNameEl = document.getElementById('venueName');
+if (venueNameEl) venueNameEl.textContent = data.location;
+
+const venueType = document.getElementById('venueType');
+if (venueType) {
+    venueType.textContent = data.homeAway.toUpperCase();
+    venueType.className = `venue-badge ${data.homeAway.toLowerCase()}`;
+}
+
+const matchTypeEl = document.getElementById('matchType');
+if (matchTypeEl) matchTypeEl.textContent = data.matchType;
+
+const matchStatusEl = document.getElementById('matchStatus');
+if (matchStatusEl) matchStatusEl.textContent = data.status;
+
+// Update team badge
+const teamBadge = document.getElementById('teamBadge');
+if (teamBadge) {
+    teamBadge.textContent = data.squad;
+    teamBadge.className = `team-badge ${data.squad === '4ths' ? 'j4' : 'j5'}`;
+}
+
+console.log('✅ Match info displayed successfully');
             showMatchContent();
             
         } else {
