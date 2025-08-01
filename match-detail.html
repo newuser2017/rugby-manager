@@ -1964,15 +1964,15 @@ function getPositionName(positionNumber) {
 
         // Team selection functions
         function handleSelection(position, playerId) {
-            if (playerId) {
-                teamSelection[position] = playerId;
-                console.log(`Position ${position} assigned to ${playerId}`);
-                saveTeamSelection();
-            } else {
-                delete teamSelection[position];
-                console.log(`Position ${position} cleared`);
-            }
-        }
+    if (playerId) {
+        teamSelection[position] = playerId;
+        console.log(`Position ${position} assigned to ${playerId}`);
+        saveTeamSelection(); // ← Make sure this line exists
+    } else {
+        delete teamSelection[position];
+        console.log(`Position ${position} cleared`);
+    }
+}
 
         function handleReserveSelection(reserveNumber, playerId) {
             if (playerId) {
@@ -2143,38 +2143,56 @@ function getPositionName(positionNumber) {
         }
 
         // Team sheet generation
-        function generateTeamSheetPreview() {
-            const teamSheetData = {
-                match: currentMatch,
-                startingXV: [],
-                reserves: []
-            };
-            
-            // Collect starting XV
-            for (let i = 1; i <= 15; i++) {
-                const playerId = teamSelection[i];
-                const player = availablePlayers.find(p => p.playerId === playerId);
-                teamSheetData.startingXV.push({
-                    position: i,
-                    positionName: getPositionName(i),
-                    player: player || null
-                });
-            }
-            
-            // Collect reserves
-            Object.keys(reserves).forEach(reserveNum => {
-                const playerId = reserves[reserveNum];
-                const player = availablePlayers.find(p => p.playerId === playerId);
-                if (player) {
-                    teamSheetData.reserves.push({
-                        number: reserveNum,
-                        player: player
-                    });
+       function generateTeamSheetPreview() {
+    const teamSheetData = {
+        match: currentMatch,
+        startingXV: [],
+        reserves: []
+    };
+    
+    // Collect starting XV
+    for (let i = 1; i <= 15; i++) {
+        const playerId = teamSelection[i];
+        // Find player by email (Player ID) in availablePlayers
+        const player = availablePlayers.find(p => 
+            (p['Player ID'] && p['Player ID'] === playerId) || 
+            (p['Email'] && p['Email'] === playerId)
+        );
+        
+        teamSheetData.startingXV.push({
+            position: i,
+            positionName: getPositionName(i),
+            player: player ? {
+                firstName: player['First Name'],
+                lastName: player['Last Name'],
+                irfuNumber: player['IRFU Number'] || player['Player ID'] || 'No ID'
+            } : null
+        });
+    }
+    
+    // Collect reserves
+    Object.keys(reserves).forEach(reserveNum => {
+        const playerId = reserves[reserveNum];
+        const player = availablePlayers.find(p => 
+            (p['Player ID'] && p['Player ID'] === playerId) || 
+            (p['Email'] && p['Email'] === playerId)
+        );
+        
+        if (player) {
+            teamSheetData.reserves.push({
+                number: reserveNum,
+                player: {
+                    firstName: player['First Name'],
+                    lastName: player['Last Name'],
+                    irfuNumber: player['IRFU Number'] || player['Player ID'] || 'No ID'
                 }
             });
-            
-            showTeamSheetModal(teamSheetData);
         }
+    });
+    
+    console.log('Team sheet data prepared:', teamSheetData);
+    showTeamSheetModal(teamSheetData);
+}
 
         function getPositionName(positionNumber) {
             const positions = {
