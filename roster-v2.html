@@ -741,7 +741,7 @@
                 const status = player['Status'] || 'Active';
                 const statusClass = status.toLowerCase().replace(' ', '');
                 const playerName = `${player['First Name']} ${player['Last Name']}`;
-                
+                const safePlayerName = playerName.replace(/'/g, "\\'");
                 // Format availability info
                 let availabilityInfo = '';
                 if (status !== 'Active' && player['Unavailable Until']) {
