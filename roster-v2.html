@@ -1271,7 +1271,69 @@ async function updateAvailability() {
             statusFilter.addEventListener('change', applyFilters);
             positionFilter.addEventListener('change', applyFilters);
         }
+// Add this function to your roster-v2.html JavaScript section (NOT to code.gs)
 
+function debugPositionsField() {
+    console.log('=== DEBUGGING POSITIONS FIELD ===');
+    
+    if (!allPlayers || allPlayers.length === 0) {
+        console.log('❌ allPlayers is not loaded yet. Wait for data to load first.');
+        return;
+    }
+    
+    console.log('Total players loaded:', allPlayers.length);
+    
+    const problemPlayers = [];
+    const positionTypes = {};
+    
+    allPlayers.forEach((player, index) => {
+        const playerName = `${player['First Name']} ${player['Last Name']}`;
+        const positions = player['Positions'];
+        const posType = typeof positions;
+        
+        // Count each type
+        positionTypes[posType] = (positionTypes[posType] || 0) + 1;
+        
+        // Log details for non-string values
+        if (posType !== 'string') {
+            problemPlayers.push({
+                index: index,
+                name: playerName,
+                positions: positions,
+                type: posType,
+                value: positions
+            });
+            
+            console.log(`❌ PROBLEM PLAYER #${index + 1}:`, {
+                name: playerName,
+                positions: positions,
+                type: posType,
+                isNull: positions === null,
+                isUndefined: positions === undefined,
+                hasMatchMethod: typeof positions?.match === 'function'
+            });
+        }
+    });
+    
+    console.log('\n=== SUMMARY ===');
+    console.log('Position field types found:', positionTypes);
+    console.log(`Problem players (non-string): ${problemPlayers.length}`);
+    
+    if (problemPlayers.length > 0) {
+        console.log('\nFirst 5 problem players:');
+        problemPlayers.slice(0, 5).forEach(p => {
+            console.log(`- ${p.name}: type=${p.type}, value=`, p.value);
+        });
+    } else {
+        console.log('✅ All players have valid string positions');
+    }
+    
+    return {
+        totalPlayers: allPlayers.length,
+        problemPlayers: problemPlayers,
+        positionTypes: positionTypes
+    };
+}
       // ============================================================================
 // FAST FANCY LOADING SYSTEM
 // ============================================================================
