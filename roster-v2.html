@@ -172,7 +172,7 @@
             
             // Open popup immediately with loading state
             document.getElementById('notesPopup').classList.add('active');
-            document.getElementById('notesPopupTitle').textContent = `Notes for ${playerName}`;
+            document.getElementById('notesPopupTitle').textContent = `Notes for ${safePlayerName}`;
             
             // Reset form to defaults
             document.getElementById('popupNoteCategory').value = 'general';
@@ -224,7 +224,7 @@
                 
                 if (result.success) {
                     displayNotesInPopup(result.data);
-                    console.log(`Loaded ${result.data.length} notes for ${playerName}`);
+                    console.log(`Loaded ${result.data.length} notes for ${safePlayerName}`);
                 } else {
                     console.error('Error loading notes:', result.error);
                     showNotesError('Error loading notes');
@@ -754,15 +754,15 @@
                 const notesCount = player['Notes Count'] || 0;
                 let notesIndicator = '';
                 if (notesCount > 0) {
-                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${playerName}')" title="View ${notesCount} note${notesCount > 1 ? 's' : ''}">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
+                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${safePlayerName}')" title="View ${notesCount} note${notesCount > 1 ? 's' : ''}">${notesCount} note${notesCount > 1 ? 's' : ''}</span>`;
                 } else {
-                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${playerName}')" title="Add first note" style="background: #f0f8ff; color: #1e3c72; border: 1px dashed #1e3c72;">+ Add note</span>`;
+                    notesIndicator = `<span class="notes-indicator" onclick="openNotesPopup('${safePlayerName}')" title="Add first note" style="background: #f0f8ff; color: #1e3c72; border: 1px dashed #1e3c72;">+ Add note</span>`;
                 }
                 
                 return `
                     <tr>
                         <td>
-                            <a href="#" class="player-name" onclick="openPlayerModal('${playerName}'); return false;">${playerName}</a>
+                            <a href="#" class="player-name" onclick="openPlayerModal('${safePlayerName}'); return false;">${safePlayerName}</a>
                         </td>
                         <td>${squadBadges}</td>
                         <td>${player['Positions'] ? player['Positions'].match(/\d+/g)?.join(', ') || '' : ''}</td>
@@ -1137,7 +1137,7 @@ async function updateAvailability() {
                     logActivity('status', `Updated status to ${status}${until ? ` until ${until}` : ''}`, playerName);
                     
                     // Show success message
-                    showSuccess(`${playerName}'s availability updated successfully!`);
+                    showSuccess(`${safePlayerName}'s availability updated successfully!`);
                     
                 } catch (refreshError) {
                     console.error('Error during refresh:', refreshError);
@@ -1203,7 +1203,7 @@ async function updateAvailability() {
                 
                 if (result.success) {
                     await loadData(); // Refresh main table
-                    logActivity('squad', `Updated <strong>${playerName}</strong> squad assignment to ${squadTags.join(', ') || 'Unassigned'}`, playerName);
+                    logActivity('squad', `Updated <strong>${safePlayerName}</strong> squad assignment to ${squadTags.join(', ') || 'Unassigned'}`, playerName);
                     showSuccess('Squad assignment updated successfully!');
                 } else {
                     showError('Error updating squad assignment: ' + result.error);
