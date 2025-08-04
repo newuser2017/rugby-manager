@@ -652,6 +652,9 @@
         if (playersData.success) {
             allPlayers = playersData.data;
             displayPlayers(allPlayers);
+
+           debugPositionsField();
+          
         } else {
             showError('Failed to load players: ' + playersData.error);
             return;
