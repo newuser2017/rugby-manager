@@ -762,8 +762,7 @@
                 return `
                     <tr>
                         <td>
-                            <a href="#" class="player-name" onclick="openPlayerModal('${safePlayerName}'); return false;">${safePlayerName}</a>
-                        </td>
+<a href="#" class="player-name" onclick="openPlayerModal('${safePlayerName}'); return false;">${playerName}</a>                        </td>
                         <td>${squadBadges}</td>
                         <td>${player['Positions'] ? player['Positions'].match(/\d+/g)?.join(', ') || '' : ''}</td>
                         <td>
