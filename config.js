@@ -31,7 +31,7 @@ const CONFIG = {
     
     // App Settings
     APP_VERSION: '2.0',
-    DEBUG_MODE: true, // Set to false in production
+    DEBUG_MODE: false, // Set to false in production
     
     // Feature Flags
     FEATURES: {
