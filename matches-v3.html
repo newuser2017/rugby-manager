@@ -1695,75 +1695,67 @@
             }
         }
 
-        function updateMatchAvailabilityDisplay(matchId, availabilityData) {
-            const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
-            if (!matchCard) {
-                console.error(`❌ Match card not found for ${matchId}`);
-                return;
-            }
-            
-            const statusIndicator = matchCard.querySelector('.status-indicator.availability');
-            if (!statusIndicator) {
-                console.error(`❌ Status indicator not found for ${matchId}`);
-                return;
-            }
-            
-            if (availabilityData && availabilityData.summary) {
-                const { available, unavailable, total, pending } = availabilityData.summary;
-                
-                if (total > 0) {
-                    statusIndicator.innerHTML = `
-                        <span>📱</span>
-                        <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable${pending > 0 ? `, ${pending} pending` : ''})</span>
-                    `;
-                    statusIndicator.className = 'status-indicator availability pending';
-                    
-                    let statsSection = matchCard.querySelector('.match-stats');
-                    if (!statsSection) {
-                        const statsHTML = `
-                            <div class="match-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${available}</div>
-                                    <div class="stat-label">Available</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${unavailable}</div>
-                                    <div class="stat-label">Unavailable</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${pending}</div>
-                                    <div class="stat-label">No Response</div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        const actionsDiv = matchCard.querySelector('.match-actions');
-                        if (actionsDiv) {
-                            actionsDiv.insertAdjacentHTML('beforebegin', statsHTML);
-                        }
-                    } else {
-                        const statItems = statsSection.querySelectorAll('.stat-item');
-                        if (statItems[0]) statItems[0].querySelector('.stat-value').textContent = available;
-                        if (statItems[1]) statItems[1].querySelector('.stat-value').textContent = unavailable;
-                        if (statItems[2]) statItems[2].querySelector('.stat-value').textContent = pending;
-                    }
-                    
-                    console.log(`✅ Updated availability display for ${matchId}: ${available} available, ${unavailable} unavailable, ${pending} pending`);
-                } else {
-                    statusIndicator.innerHTML = `
-                        <span>📱</span>
-                        <span>Availability: Form sent, awaiting responses</span>
-                    `;
-                    statusIndicator.className = 'status-indicator availability pending';
-                }
-            } else {
+       function updateMatchAvailabilityDisplay(matchId, availabilityData) {
+    const matchCard = document.querySelector(`[data-match-id="${matchId}"]`);
+    if (!matchCard) {
+        console.error(`❌ Match card not found for ${matchId}`);
+        return;
+    }
+    
+    const statusIndicator = matchCard.querySelector('.status-indicator.availability');
+    if (!statusIndicator) {
+        console.error(`❌ Status indicator not found for ${matchId}`);
+        return;
+    }
+    
+    if (availabilityData && availabilityData.summary) {
+        const { available, unavailable, total, pending, totalSent } = availabilityData.summary;
+        
+        // ✅ FIXED: Check if emails were actually sent
+        if (totalSent > 0) {
+            if (total > 0) {
+                // Show detailed response stats when we have responses
                 statusIndicator.innerHTML = `
                     <span>📱</span>
-                    <span>Availability: Not sent</span>
+                    <span>Availability: ${total} responses (${available} available, ${unavailable} unavailable${pending > 0 ? `, ${pending} pending` : ''})</span>
                 `;
-                statusIndicator.className = 'status-indicator availability none';
+                statusIndicator.className = 'status-indicator availability responses';
+                
+                // Update detailed stats if available
+                const statItems = matchCard.querySelectorAll('.match-stat');
+                if (statItems[0]) statItems[0].querySelector('.stat-value').textContent = available;
+                if (statItems[1]) statItems[1].querySelector('.stat-value').textContent = unavailable;
+                if (statItems[2]) statItems[2].querySelector('.stat-value').textContent = pending;
+                
+                console.log(`✅ Updated availability display for ${matchId}: ${available} available, ${unavailable} unavailable, ${pending} pending`);
+            } else {
+                // Form was sent but no responses yet
+                statusIndicator.innerHTML = `
+                    <span>📱</span>
+                    <span>Availability: Form sent, awaiting responses (${totalSent} sent)</span>
+                `;
+                statusIndicator.className = 'status-indicator availability pending';
+                console.log(`📨 Form sent for ${matchId}: ${totalSent} emails sent, awaiting responses`);
             }
+        } else {
+            // ✅ FIXED: No emails sent yet - don't assume form was sent
+            statusIndicator.innerHTML = `
+                <span>📱</span>
+                <span>Availability: Not sent</span>
+            `;
+            statusIndicator.className = 'status-indicator availability none';
+            console.log(`📭 No availability request sent for ${matchId}`);
         }
+    } else {
+        // No availability data at all
+        statusIndicator.innerHTML = `
+            <span>📱</span>
+            <span>Availability: Not sent</span>
+        `;
+        statusIndicator.className = 'status-indicator availability none';
+        console.log(`📭 No availability data for ${matchId}`);
+    }
+}
 
         // ============================================================================
         // VIEW TOGGLE FUNCTIONS
