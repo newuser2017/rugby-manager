@@ -1,0 +1,2955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Details - Clontarf Rugby</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .club-name h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .club-name p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 1.5rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Back Button */
+        .back-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            color: #1e3c72;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+
+        /* Match Header */
+        .match-header {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .match-title {
+            font-size: 2rem;
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .team-badge.j4 {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .team-badge.j5 {
+            background: #dc2626;
+            color: white;
+        }
+
+        .match-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .info-icon {
+            font-size: 1.25rem;
+        }
+
+        .info-content h4 {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-content p {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .venue-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .venue-badge.home {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .venue-badge.away {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .tab-btn.active {
+            color: #1e3c72;
+            border-bottom-color: #1e3c72;
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Form Styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a5298;
+        }
+
+        .btn-secondary {
+            background: #e5e5e5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d4d4d4;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        /* Team Selector Styles */
+        .formation-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .formation-field {
+            background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+            border-radius: 8px;
+            padding: 2rem;
+            position: relative;
+            min-height: 600px;
+        }
+
+        .formation-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .position-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .group-title {
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .positions-row {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .position-selector {
+            background: rgba(255,255,255,0.95);
+            border-radius: 6px;
+            padding: 0.75rem;
+            min-width: 140px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .position-label {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            text-align: center;
+        }
+
+        .player-dropdown {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .player-dropdown:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 2px rgba(30, 60, 114, 0.1);
+        }
+
+        .player-dropdown option.available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .player-dropdown option.maybe {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .player-dropdown option.unavailable {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .player-dropdown option.no-response {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* Reserves Section */
+        .reserves-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .reserves-title {
+            font-size: 1.125rem;
+            color: #1e3c72;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reserves-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .reserve-selector {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            border: 1px solid #e5e5e5;
+        }
+
+        .reserve-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-reserve {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #f5f5f5;
+            border-color: #1e3c72;
+        }
+
+        /* History Styles */
+        .history-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #1e3c72;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .history-date {
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .history-result {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .history-result.win {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .history-result.loss {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .history-result.draw {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            background: #fef2f2;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .error-state h3 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .formation-container {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .reserves-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .positions-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+
+            .overview-container {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .reserves-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .score-inputs {
+                justify-content: center !important;
+            }
+        }
+    </style>
+  <style>
+/* Enhanced Loading Styles - Add these to your existing styles */
+.fancy-loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.loading-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.loading-title {
+    font-size: 1.5rem;
+    color: #1e3c72;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.loading-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    background: #f1f5f9;
+    border-radius: 8px;
+    height: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+    border-radius: 8px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.4) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Loading Steps */
+.loading-steps {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.loading-step {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.loading-step.active {
+    background: #e3f2fd;
+    border-left: 4px solid #1e3c72;
+    transform: translateX(4px);
+}
+
+.loading-step.completed {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.loading-step.pending .step-icon {
+    background: #e5e7eb;
+    color: #9ca3af;
+}
+
+.loading-step.active .step-icon {
+    background: #1e3c72;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.loading-step.completed .step-icon {
+    background: #22c55e;
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.loading-step.active .step-title {
+    color: #1e3c72;
+}
+
+.loading-step.completed .step-title {
+    color: #166534;
+}
+
+.step-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.loading-step.active .step-description {
+    color: #1e40af;
+}
+
+.loading-step.completed .step-description {
+    color: #15803d;
+}
+
+/* Current Status */
+.current-status {
+    text-align: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.status-text {
+    font-weight: 500;
+    color: #1e3c72;
+    margin-bottom: 0.5rem;
+}
+
+.status-detail {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Loading Animation */
+.loading-dots {
+    display: inline-flex;
+    margin-left: 0.5rem;
+}
+
+.loading-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1e3c72;
+    margin: 0 1px;
+    animation: loadingDots 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes loadingDots {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .fancy-loading {
+        margin: 1rem;
+        padding: 2rem 1rem;
+    }
+    
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="https://raw.githubusercontent.com/newuser2017/rugby-manager/main/clontarf-logo.png" 
+                         alt="Clontarf Rugby Logo" 
+                         style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div class="club-name">
+                    <h1>Clontarf Rugby</h1>
+                    <p>Team Management System</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Back Button -->
+        <div class="back-section">
+            <a href="matches-v3.html" class="back-btn">
+                <span>←</span>
+                Back to Matches
+            </a>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="fancy-loading">
+    <div class="loading-header">
+        <div class="loading-title">Loading Match Details</div>
+        <div class="loading-subtitle">Preparing your rugby management dashboard</div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+    </div>
+
+    <div class="loading-steps">
+        <div class="loading-step pending" id="step1">
+            <div class="step-icon">🏉</div>
+            <div class="step-content">
+                <div class="step-title">Loading Match Information</div>
+                <div class="step-description">Fetching match details from Google Sheets</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step2">
+            <div class="step-icon">📊</div>
+            <div class="step-content">
+                <div class="step-title">Loading Player Availability</div>
+                <div class="step-description">Checking who's available for selection</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step3">
+            <div class="step-icon">👥</div>
+            <div class="step-content">
+                <div class="step-title">Loading Team Roster</div>
+                <div class="step-description">Getting complete player database</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step4">
+            <div class="step-icon">⚡</div>
+            <div class="step-content">
+                <div class="step-title">Loading Saved Selections</div>
+                <div class="step-description">Restoring previously selected team</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step5">
+            <div class="step-icon">📝</div>
+            <div class="step-content">
+                <div class="step-title">Finalizing Display</div>
+                <div class="step-description">Loading notes and preparing interface</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="current-status">
+        <div class="status-text" id="statusText">
+            Initializing connection
+            <span class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </div>
+        <div class="status-detail" id="statusDetail">
+            Connecting to Google Sheets database...
+        </div>
+    </div>
+</div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <h3>⚠️ Match Not Found</h3>
+            <p>Unable to load match details. Please check the match ID and try again.</p>
+            <button class="btn btn-primary" onclick="loadMatchData()">
+                <span>🔄</span>
+                Try Again
+            </button>
+        </div>
+
+        <!-- Match Content (hidden until loaded) -->
+        <div id="matchContent" style="display: none;">
+            <!-- Match Header -->
+            <div class="match-header">
+                <h1 class="match-title" id="matchTitle">
+                    Loading match...
+                    <span class="team-badge" id="teamBadge">J4</span>
+                </h1>
+
+                <div class="match-info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">📅</div>
+                        <div class="info-content">
+                            <h4>Match Date</h4>
+                            <p id="matchDate">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">⏰</div>
+                        <div class="info-content">
+                            <h4>Kick-off Time</h4>
+                            <p id="matchTime">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">📍</div>
+                        <div class="info-content">
+                            <h4>Venue</h4>
+                            <p id="matchVenue">
+                                <span id="venueName">Loading...</span>
+                                <span class="venue-badge" id="venueType">HOME</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">🏆</div>
+                        <div class="info-content">
+                            <h4>Match Type</h4>
+                            <p id="matchType">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">📊</div>
+                        <div class="info-content">
+                            <h4>Status</h4>
+                            <p id="matchStatus">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item" id="matchResultInfo" style="display: none;">
+                        <div class="info-icon">🏉</div>
+                        <div class="info-content">
+                            <h4>Result</h4>
+                            <p id="matchResult">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs Container -->
+            <div class="tabs-container">
+                <!-- Tabs Header -->
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+                    <button class="tab-btn" onclick="showTab('team')">Team</button>
+                    <button class="tab-btn" onclick="showTab('history')">History</button>
+                    <button class="tab-btn" onclick="showTab('notes')">Notes</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div id="overview-tab" class="tab-panel active">
+                        <h3>Match Overview</h3>
+                        <p>Complete match information and result entry.</p>
+
+                        <div class="overview-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                            <!-- Match Result Section -->
+                            <div class="match-result-section">
+                                <h4 style="margin-bottom: 1rem; color: #1e3c72;">Match Result</h4>
+                                
+                                <div class="score-inputs" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                                    <div class="form-group" style="margin-bottom: 0; flex: 0 0 80px;">
+                                        <label class="form-label">Our Score</label>
+                                        <input type="number" class="form-input" id="ourScore" placeholder="0" min="0" max="999" style="text-align: center; font-weight: 600;">
+                                    </div>
+                                    
+                                    <div style="font-size: 1.5rem; font-weight: 600; color: #666; align-self: end; padding-bottom: 0.75rem;">
+                                        -
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-bottom: 0; flex: 0 0 80px;">
+                                        <label class="form-label">Their Score</label>
+                                        <input type="number" class="form-input" id="theirScore" placeholder="0" min="0" max="999" style="text-align: center; font-weight: 600;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Match Result</label>
+                                    <input type="text" class="form-input" id="resultDisplay" placeholder="Result will appear here..." readonly style="background: #f8f9fa; font-weight: 600; text-align: center;">
+                                </div>
+
+                                <button class="btn btn-primary" onclick="saveMatchResult()" style="width: 100%;">
+                                    <span>💾</span>
+                                    Save Match Result
+                                </button>
+                            </div>
+
+                            <!-- Pre-Match Notes Section -->
+                            <div class="prematch-notes-section">
+                                <h4 style="margin-bottom: 1rem; color: #1e3c72;">Pre-Match Notes</h4>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Team Instructions</label>
+                                    <textarea class="form-input" id="teamInstructions" placeholder="Key points for the team before the match..." style="min-height: 100px;"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Opposition Analysis</label>
+                                    <textarea class="form-input" id="oppositionAnalysis" placeholder="What do we know about this team..." style="min-height: 100px;"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Match Strategy</label>
+                                    <textarea class="form-input" id="matchStrategy" placeholder="Game plan and tactical approach..." style="min-height: 100px;"></textarea>
+                                </div>
+
+                              <button class="btn btn-secondary" onclick="savePreMatchNotes()" style="width: 100%;">
+    <span>📝</span>
+    Save Pre-Match Notes
+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Tab -->
+                    <div id="team-tab" class="tab-panel">
+                        <h3>Team Selection</h3>
+                        <p>Select your starting XV and reserves for this match.</p>
+
+                        <!-- Quick Actions -->
+                        <div class="quick-actions">
+                            <button class="quick-btn" onclick="assignTeam('4ths')">Assign All 4ths Players</button>
+                            <button class="quick-btn" onclick="assignTeam('5ths')">Assign All 5ths Players</button>
+                            <button class="quick-btn" onclick="clearTeam()">Clear All Selections</button>
+                        </div>
+
+                        <!-- Formation Layout -->
+                        <div class="formation-container">
+                            <!-- Starting XV -->
+                            <div class="formation-field">
+                                <div class="formation-title">Starting XV</div>
+
+                                <!-- Front Row -->
+                                <div class="position-group">
+                                    <div class="group-title">Front Row</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">1. Loosehead Prop</div>
+                                            <select class="player-dropdown" onchange="handleSelection(1, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">2. Hooker</div>
+                                            <select class="player-dropdown" onchange="handleSelection(2, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">3. Tighthead Prop</div>
+                                            <select class="player-dropdown" onchange="handleSelection(3, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Second Row -->
+                                <div class="position-group">
+                                    <div class="group-title">Second Row</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">4. Lock</div>
+                                            <select class="player-dropdown" onchange="handleSelection(4, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">5. Lock</div>
+                                            <select class="player-dropdown" onchange="handleSelection(5, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Back Row -->
+                                <div class="position-group">
+                                    <div class="group-title">Back Row</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">6. Blindside Flanker</div>
+                                            <select class="player-dropdown" onchange="handleSelection(6, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">7. Openside Flanker</div>
+                                            <select class="player-dropdown" onchange="handleSelection(7, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">8. Number 8</div>
+                                            <select class="player-dropdown" onchange="handleSelection(8, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Half Backs -->
+                                <div class="position-group">
+                                    <div class="group-title">Half Backs</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">9. Scrum-half</div>
+                                            <select class="player-dropdown" onchange="handleSelection(9, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">10. Fly-half</div>
+                                            <select class="player-dropdown" onchange="handleSelection(10, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Three Quarters -->
+                                <div class="position-group">
+                                    <div class="group-title">Three Quarters</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">11. Left Wing</div>
+                                            <select class="player-dropdown" onchange="handleSelection(11, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">12. Inside Centre</div>
+                                            <select class="player-dropdown" onchange="handleSelection(12, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">13. Outside Centre</div>
+                                            <select class="player-dropdown" onchange="handleSelection(13, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-selector">
+                                            <div class="position-label">14. Right Wing</div>
+                                            <select class="player-dropdown" onchange="handleSelection(14, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Full Back -->
+                                <div class="position-group">
+                                    <div class="group-title">Full Back</div>
+                                    <div class="positions-row">
+                                        <div class="position-selector">
+                                            <div class="position-label">15. Fullback</div>
+                                            <select class="player-dropdown" onchange="handleSelection(15, this.value)">
+                                                <option value="">Select Player...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reserves -->
+                            <div class="reserves-section">
+                                <div class="reserves-title">
+                                    <span>Reserves</span>
+                                    <button class="btn btn-secondary" onclick="addReserve()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                        + Add Reserve
+                                    </button>
+                                </div>
+                                <div class="reserves-grid" id="reservesGrid">
+                                    <div class="reserve-selector">
+                                        <div class="reserve-label">Reserve 1</div>
+                                        <select class="player-dropdown" onchange="handleReserveSelection(1, this.value)">
+                                            <option value="">Select Player...</option>
+                                        </select>
+                                    </div>
+                                    <div class="reserve-selector">
+                                        <div class="reserve-label">Reserve 2</div>
+                                        <select class="player-dropdown" onchange="handleReserveSelection(2, this.value)">
+                                            <option value="">Select Player...</option>
+                                        </select>
+                                    </div>
+                                    <div class="reserve-selector">
+                                        <div class="reserve-label">Reserve 3</div>
+                                        <select class="player-dropdown" onchange="handleReserveSelection(3, this.value)">
+                                            <option value="">Select Player...</option>
+                                        </select>
+                                    </div>
+                                    <div class="reserve-selector">
+                                        <div class="reserve-label">Reserve 4</div>
+                                        <select class="player-dropdown" onchange="handleReserveSelection(4, this.value)">
+                                            <option value="">Select Player...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="saveTeamDraft()">
+                                <span>💾</span>
+                                Save Draft
+                            </button>
+                            <button class="btn btn-primary" onclick="publishTeam()">
+                                <span>📤</span>
+                                Publish Team
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div id="history-tab" class="tab-panel">
+                        <h3>Match History</h3>
+                        <p>Previous matches against <span id="historyOpponent">this opponent</span>.</p>
+
+                        <div id="historyContent">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <p style="margin-left: 1rem;">Loading match history...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Tab -->
+                    <div id="notes-tab" class="tab-panel">
+                        <h3>Match Notes</h3>
+                        <p>Post-match analysis and observations.</p>
+
+                        <form id="notesForm" onsubmit="return false;">
+                            <div class="form-group">
+                                <label class="form-label">Clontarf Performance</label>
+                                <textarea class="form-input" id="clontarfPerformance" placeholder="How did the team perform overall?"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Opposition Notes</label>
+                                <textarea class="form-input" id="oppositionNotes" placeholder="Observations about the opposition team..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Tactical Notes</label>
+                                <textarea class="form-input" id="tacticalNotes" placeholder="What tactics worked well? What would you change?"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Key Players</label>
+                                    <textarea class="form-input" id="keyPlayers" placeholder="Standout performers..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Areas to Improve</label>
+                                    <textarea class="form-input" id="areasToImprove" placeholder="What to work on in training..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Injuries</label>
+                                    <textarea class="form-input" id="injuries" placeholder="Any injuries during the match..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Disciplinary</label>
+                                    <textarea class="form-input" id="disciplinary" placeholder="Cards, incidents, referee notes..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Additional Notes</label>
+                                <textarea class="form-input" id="additionalNotes" placeholder="Any other observations or notes..."></textarea>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" onclick="saveMatchNotes()" style="width: 100%;">
+    <span>💾</span>
+    Save Match Notes
+</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+      // Global loader state
+let currentLoadingStep = 0;
+const loadingSteps = [
+    { id: 'step1', progress: 20, title: 'Loading Match Information', description: 'Fetching match details from Google Sheets' },
+    { id: 'step2', progress: 40, title: 'Loading Player Availability', description: 'Checking who\'s available for selection' },
+    { id: 'step3', progress: 60, title: 'Loading Team Roster', description: 'Getting complete player database' },
+    { id: 'step4', progress: 80, title: 'Loading Saved Selections', description: 'Restoring previously selected team' },
+    { id: 'step5', progress: 100, title: 'Finalizing Display', description: 'Loading notes and preparing interface' }
+];
+
+// Update loader progress
+function updateLoadingProgress(stepNumber, statusText = null, statusDetail = null) {
+    console.log(`🔄 Loading Step ${stepNumber}: ${loadingSteps[stepNumber - 1]?.title}`);
+    
+    // Mark previous steps as completed
+    for (let i = 0; i < stepNumber - 1; i++) {
+        const stepElement = document.getElementById(loadingSteps[i].id);
+        if (stepElement) {
+            stepElement.classList.remove('pending', 'active');
+            stepElement.classList.add('completed');
+            stepElement.querySelector('.step-icon').textContent = '✅';
+        }
+    }
+    
+    // Mark current step as active
+    if (stepNumber <= loadingSteps.length) {
+        const currentStep = loadingSteps[stepNumber - 1];
+        const stepElement = document.getElementById(currentStep.id);
+        
+        if (stepElement) {
+            stepElement.classList.remove('pending', 'completed');
+            stepElement.classList.add('active');
+        }
+        
+        // Update progress bar
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = currentStep.progress + '%';
+        }
+        
+        // Update status text
+        const statusTextEl = document.getElementById('statusText');
+        const statusDetailEl = document.getElementById('statusDetail');
+        
+        if (statusTextEl) {
+            statusTextEl.innerHTML = (statusText || currentStep.title) + 
+                '<span class="loading-dots"><span></span><span></span><span></span></span>';
+        }
+        
+        if (statusDetailEl) {
+            statusDetailEl.textContent = statusDetail || currentStep.description;
+        }
+    }
+    
+    currentLoadingStep = stepNumber;
+}
+
+// Complete the loading process
+function completeLoading() {
+    console.log('✅ Loading completed successfully');
+    
+    // Mark final step as completed
+    const finalStep = document.getElementById('step5');
+    if (finalStep) {
+        finalStep.classList.remove('active');
+        finalStep.classList.add('completed');
+        finalStep.querySelector('.step-icon').textContent = '✅';
+    }
+    
+    // Update final status
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    
+    if (statusTextEl) statusTextEl.innerHTML = 'Match details loaded successfully! 🎉';
+    if (statusDetailEl) statusDetailEl.textContent = 'Preparing match dashboard...';
+    
+    // Hide loader after brief delay
+    setTimeout(() => {
+        showMatchContent();
+    }, 800);
+}
+
+// Show error in loader
+function showLoadingError(errorMessage) {
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    
+    if (statusTextEl) statusTextEl.innerHTML = '❌ Loading failed';
+    if (statusDetailEl) statusDetailEl.textContent = errorMessage;
+    
+    // Mark current step as failed
+    const currentStepEl = document.getElementById(loadingSteps[currentLoadingStep - 1]?.id);
+    if (currentStepEl) {
+        currentStepEl.classList.remove('active');
+        currentStepEl.style.background = '#fef2f2';
+        currentStepEl.style.borderLeft = '4px solid #dc2626';
+        currentStepEl.querySelector('.step-icon').textContent = '❌';
+        currentStepEl.querySelector('.step-icon').style.background = '#dc2626';
+    }
+}
+        // Global variables
+        let currentMatch = null;
+        let teamSelection = {};
+        let reserves = {};
+        let reserveCount = 4;
+        let availablePlayers = [];
+        let currentMatchAvailabilityData = null;
+        
+        // Configuration - loaded from config.js
+        // CONFIG will be available as window.RUGBY_CONFIG
+
+        // Load match data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing...');
+            
+            // Wait a moment for config.js to fully load
+            setTimeout(() => {
+                // Check if configuration is properly loaded
+                if (typeof window.checkConfig === 'function' && !window.checkConfig()) {
+                    showError('Configuration not properly set. Please check config.js file.');
+                    return;
+                }
+                
+                // Get match ID from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const matchId = urlParams.get('matchId');
+                
+                if (!matchId) {
+                    showError('No match ID provided in URL');
+                    return;
+                }
+                
+                console.log('Loading match:', matchId);
+                loadMatchData(matchId);
+                
+                // Set default active tab to overview
+                showTab('overview');
+                
+                // Set up score calculation
+                setTimeout(() => {
+                    setupScoreCalculation();
+                }, 1500);
+            }, 100); // Small delay to ensure config.js is loaded
+        });
+
+        // Load match data from Google Sheets
+    async function loadMatchData(matchId) {
+    try {
+        showLoading(); // Initialize the fancy loader
+        console.log('Loading match data for:', matchId);
+        
+        // ===== STEP 1: Load Match Details =====
+        updateLoadingProgress(1, 'Connecting to database...', 'Fetching match information from Google Sheets');
+        
+        const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load match data');
+        }
+        
+        currentMatch = data;
+        console.log('✅ Step 1 complete: Match data loaded');
+        console.log('API response data:', data);
+        
+        // ===== STEP 2: Load Player Availability =====
+        updateLoadingProgress(2, 'Analyzing player responses...', 'Processing availability form data for team selection');
+        
+        await loadMatchAvailabilityData();
+        console.log('✅ Step 2 complete: Availability data loaded');
+        
+        // ===== STEP 3: Load Team Roster =====
+        updateLoadingProgress(3, 'Loading team roster...', 'Fetching complete player database for dropdowns');
+        
+        await loadAvailablePlayers();
+        console.log('✅ Step 3 complete: Players loaded');
+        
+        // ===== STEP 4: Load Saved Selections =====
+        updateLoadingProgress(4, 'Restoring team selection...', 'Loading previously saved team choices and formations');
+        
+        await loadSavedTeamSelection();
+        console.log('✅ Step 4 complete: Team selection loaded');
+        
+        // ===== STEP 5: Final Setup =====
+        updateLoadingProgress(5, 'Preparing interface...', 'Loading match notes and finalizing display');
+        
+        await loadMatchNotes();
+        
+        // Display match information directly
+        const matchTitle = data.homeAway === 'Home' 
+            ? `Clontarf ${data.squad} vs ${data.opponent}`
+            : `${data.opponent} vs Clontarf ${data.squad}`;
+        
+        const titleElement = document.getElementById('matchTitle');
+        if (titleElement) titleElement.textContent = matchTitle;
+        
+        // Update basic match info
+        const matchDateEl = document.getElementById('matchDate');
+        if (matchDateEl) matchDateEl.textContent = formatDate(data.date);
+        
+        const matchTimeEl = document.getElementById('matchTime');
+        if (matchTimeEl) matchTimeEl.textContent = formatTime(data.time);
+        
+        const venueNameEl = document.getElementById('venueName');
+        if (venueNameEl) venueNameEl.textContent = data.location;
+        
+        const venueType = document.getElementById('venueType');
+        if (venueType) {
+            venueType.textContent = data.homeAway.toUpperCase();
+            venueType.className = `venue-badge ${data.homeAway.toLowerCase()}`;
+        }
+        
+        const matchTypeEl = document.getElementById('matchType');
+        if (matchTypeEl) matchTypeEl.textContent = data.matchType;
+        
+        const matchStatusEl = document.getElementById('matchStatus');
+        if (matchStatusEl) matchStatusEl.textContent = data.status;
+        
+        // Update team badge
+        const teamBadge = document.getElementById('teamBadge');
+        if (teamBadge) {
+            teamBadge.textContent = data.squad;
+            teamBadge.className = `team-badge ${data.squad === '4ths' ? 'j4' : 'j5'}`;
+        }
+        
+        console.log('✅ Step 5 complete: Interface ready');
+        console.log('✅ Match info displayed successfully');
+        
+        // ===== COMPLETE LOADING =====
+        // Complete the loading process with success animation
+        completeLoading();
+        
+    } catch (error) {
+        console.error('❌ Error loading match data:', error);
+        
+        // Show error in the fancy loader
+        showLoadingError(`Unable to load match data: ${error.message}`);
+        
+        // After showing the error in loader, transition to error state
+        setTimeout(() => {
+            showError(`Unable to load match data: ${error.message}`);
+        }, 2500); // Give users time to see the error in the loader
+    }
+}
+
+        // Load available players for team selection
+        async function loadAvailablePlayers() {
+            try {
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getAllPlayers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    availablePlayers = data.data;
+                    populatePlayerDropdowns();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+    console.error('Error loading players:', error);
+    // showError('Unable to load player data'); // Comment out this line
+    console.log('Continuing without player data - team selection will be limited');
+}
+        }
+
+// ============================================================================
+// ADD THESE FUNCTIONS TO match-detail.html
+// ============================================================================
+// Load availability data when match loads
+async function loadMatchAvailabilityData() {
+    if (!currentMatch) {
+        console.log('No current match - skipping availability load');
+        return;
+    }
+    
+    try {
+        console.log(`🔄 Loading availability data for match ${currentMatch.matchId}`);
+        
+        const result = await fetchData('getAvailabilityForTeamSelection', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success) {
+            currentMatchAvailabilityData = result;
+            console.log(`✅ Loaded availability data:`, result.summary);
+            console.log(`📊 Response rate: ${result.summary.responseRate}% (${result.summary.total}/${result.summary.totalSquadPlayers})`);
+            
+            // Update any availability displays on the page
+            updateAvailabilityDisplay(result.summary);
+            
+            return result;
+        } else {
+            console.error('❌ Failed to load availability data:', result.error);
+            return null;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading availability data:', error);
+        return null;
+    }
+}
+
+// Update availability display on the page
+function updateAvailabilityDisplay(summary) {
+    console.log(`📊 Availability Summary:
+    - Total Squad Players: ${summary.totalSquadPlayers}
+    - Responses: ${summary.total} (${summary.responseRate}%)
+    - Available: ${summary.available}
+    - Unavailable: ${summary.unavailable}  
+    - Maybe: ${summary.maybe}
+    - No Response: ${summary.nonResponders}`);
+}
+
+// Get player availability status using real data
+function getPlayerAvailabilityStatusReal(player) {
+    // Use real availability data if available
+    if (currentMatchAvailabilityData && currentMatchAvailabilityData.players) {
+        const playerEmail = player['Email'];
+        const playerData = currentMatchAvailabilityData.players.find(p => p['Email'] === playerEmail);
+        
+        if (playerData && playerData.availability) {
+            return playerData.availability;
+        }
+    }
+    
+    // Fallback for players not in the squad or without responses
+    return 'No Response';
+}
+// Add fetchData function if not already present
+async function fetchData(action, params = {}) {
+    const url = new URL(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL);
+    url.searchParams.append('action', action);
+    
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+            url.searchParams.append(key, params[key]);
+        }
+    });
+
+    try {
+        console.log('🔄 API Request:', action, params);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ API Response:', action, result);
+        return result;
+    } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+    }
+}
+
+// ============================================================================
+async function savePreMatchNotes() {
+    const teamInstructions = document.getElementById('teamInstructions').value;
+    const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
+    const matchStrategy = document.getElementById('matchStrategy').value;
+    
+    try {
+        const result = await fetchData('savePreMatchNotes', {
+            matchId: currentMatch.matchId,
+            teamInstructions: teamInstructions,
+            oppositionAnalysis: oppositionAnalysis,
+            matchStrategy: matchStrategy
+        });
+        
+        if (result.success) {
+            console.log('✅ Pre-match notes saved successfully!');
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('❌ Error saving pre-match notes:', error);
+        alert('Failed to save pre-match notes: ' + error.message);
+    }
+}
+
+// ✅ NEW: Save post-match notes
+async function saveMatchNotes() {
+    // Get all form values from Notes tab
+    const clontarfPerformance = document.getElementById('clontarfPerformance').value;
+    const oppositionNotes = document.getElementById('oppositionNotes').value;
+    const tacticalNotes = document.getElementById('tacticalNotes').value;
+    const keyPlayers = document.getElementById('keyPlayers').value;
+    const areasToImprove = document.getElementById('areasToImprove').value;
+    const injuries = document.getElementById('injuries').value;
+    const disciplinary = document.getElementById('disciplinary').value;
+    const additionalNotes = document.getElementById('additionalNotes').value;
+    
+    try {
+        const result = await fetchData('saveMatchNotes', {
+            matchId: currentMatch.matchId,
+            clontarfPerformance: clontarfPerformance,
+            oppositionNotes: oppositionNotes,
+            tacticalNotes: tacticalNotes,
+            keyPlayers: keyPlayers,
+            areasToImprove: areasToImprove,
+            injuries: injuries,
+            disciplinary: disciplinary,
+            additionalNotes: additionalNotes
+        });
+        
+        if (result.success) {
+            console.log('✅ Match notes saved successfully!');
+            // No UI feedback needed since data saves correctly
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        console.error('❌ Error saving match notes:', error);
+        alert('Failed to save match notes: ' + error.message);
+    }
+}
+
+// ✅ NEW: Load existing notes when match loads
+async function loadMatchNotes() {
+    if (!currentMatch || !currentMatch.matchId) return;
+    
+    try {
+        const result = await fetchData('getMatchNotes', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success && result.data) {
+            const data = result.data;
+            
+            // Load pre-match notes
+            const teamInstructionsEl = document.getElementById('teamInstructions');
+            if (teamInstructionsEl) teamInstructionsEl.value = data.teamInstructions || '';
+            
+            const oppositionAnalysisEl = document.getElementById('oppositionAnalysis');
+            if (oppositionAnalysisEl) oppositionAnalysisEl.value = data.oppositionAnalysis || '';
+            
+            const matchStrategyEl = document.getElementById('matchStrategy');
+            if (matchStrategyEl) matchStrategyEl.value = data.matchStrategy || '';
+            
+            // Parse and load post-match notes (if they exist)
+            if (data.postMatchNotes) {
+                parseAndLoadPostMatchNotes(data.postMatchNotes);
+            }
+            
+            console.log('Match notes loaded successfully');
+        }
+    } catch (error) {
+        console.error('Error loading match notes:', error);
+    }
+}
+
+// Helper function to parse structured post-match notes back into form fields
+function parseAndLoadPostMatchNotes(notesText) {
+    if (!notesText) return;
+    
+    // Simple parsing - look for section headers
+    const sections = {
+        'CLONTARF PERFORMANCE:': 'clontarfPerformance',
+        'OPPOSITION NOTES:': 'oppositionNotes', 
+        'TACTICAL NOTES:': 'tacticalNotes',
+        'KEY PLAYERS:': 'keyPlayers',
+        'AREAS TO IMPROVE:': 'areasToImprove',
+        'INJURIES:': 'injuries',
+        'DISCIPLINARY:': 'disciplinary',
+        'ADDITIONAL NOTES:': 'additionalNotes'
+    };
+    
+    Object.keys(sections).forEach(sectionHeader => {
+        const fieldId = sections[sectionHeader];
+        const field = document.getElementById(fieldId);
+        
+        if (field && notesText.includes(sectionHeader)) {
+            const startIndex = notesText.indexOf(sectionHeader) + sectionHeader.length;
+            let endIndex = notesText.length;
+            
+            // Find the next section header
+            Object.keys(sections).forEach(otherHeader => {
+                if (otherHeader !== sectionHeader) {
+                    const otherIndex = notesText.indexOf(otherHeader, startIndex);
+                    if (otherIndex !== -1 && otherIndex < endIndex) {
+                        endIndex = otherIndex;
+                    }
+                }
+            });
+            
+            const content = notesText.substring(startIndex, endIndex).trim();
+            field.value = content;
+        }
+    });
+}
+
+// Helper function for button success feedback
+function showButtonSuccess(button, message) {
+    const originalText = button.innerHTML;
+    button.innerHTML = `<span>✅</span> ${message}`;
+    button.style.backgroundColor = '#28a745';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.style.backgroundColor = '';
+        button.disabled = false;
+    }, 2000);
+}
+
+// ✅ UPDATE: Call loadMatchNotes after displaying match data
+// Add this line to the end of your displayMatchData() function:
+// loadMatchNotes();
+        
+        // Load match history
+        async function loadMatchHistory() {
+            try {
+                const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatchHistory&opponent=${encodeURIComponent(currentMatch.opponent)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayMatchHistory(data.history);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error loading match history:', error);
+                document.getElementById('historyContent').innerHTML = '<p>Unable to load match history.</p>';
+            }
+        }
+
+        // Display match data in the UI
+        async function displayMatchData(match) {
+            hideLoading();
+            showMatchContent();
+            
+            // Update match header
+            const matchTitle = match.homeAway === 'Home' 
+                ? `Clontarf ${match.squad} vs ${match.opponent}`
+                : `${match.opponent} vs Clontarf ${match.squad}`;
+            
+            const titleElement = document.getElementById('matchTitle');
+            if (titleElement) {
+                titleElement.textContent = matchTitle;
+            }
+            
+            const teamBadge = document.getElementById('teamBadge');
+            if (teamBadge) {
+                teamBadge.textContent = match.squad;
+                teamBadge.className = `team-badge ${match.squad === '4ths' ? 'j4' : 'j5'}`;
+            }
+            
+            // Update match info
+            const matchDateEl = document.getElementById('matchDate');
+            if (matchDateEl) matchDateEl.textContent = formatDate(match.date);
+            
+            const matchTimeEl = document.getElementById('matchTime');
+            if (matchTimeEl) matchTimeEl.textContent = formatTime(match.time);
+            
+            const venueNameEl = document.getElementById('venueName');
+            if (venueNameEl) venueNameEl.textContent = match.location;
+            
+            const venueType = document.getElementById('venueType');
+            if (venueType) {
+                venueType.textContent = match.homeAway.toUpperCase();
+                venueType.className = `venue-badge ${match.homeAway.toLowerCase()}`;
+            }
+            
+            const matchTypeEl = document.getElementById('matchType');
+            if (matchTypeEl) matchTypeEl.textContent = match.matchType;
+            
+            const matchStatusEl = document.getElementById('matchStatus');
+            if (matchStatusEl) matchStatusEl.textContent = match.status;
+            
+            // Update result if available
+            if (match.ourScore !== null && match.theirScore !== null) {
+                const resultInfo = document.getElementById('matchResultInfo');
+                if (resultInfo) resultInfo.style.display = 'block';
+                
+                const ourScoreEl = document.getElementById('ourScore');
+                if (ourScoreEl) ourScoreEl.value = match.ourScore;
+                
+                const theirScoreEl = document.getElementById('theirScore');
+                if (theirScoreEl) theirScoreEl.value = match.theirScore;
+                
+                updateResultDisplay();
+            }
+            
+            // Update history opponent reference
+            const historyOpponentEl = document.getElementById('historyOpponent');
+            if (historyOpponentEl) historyOpponentEl.textContent = match.opponent;
+
+             await loadMatchNotes();
+        }
+
+        // Display match history
+        function displayMatchHistory(historyMatches) {
+            const historyContent = document.getElementById('historyContent');
+            
+            if (historyMatches.length === 0) {
+                historyContent.innerHTML = '<p>No previous matches found against this opponent.</p>';
+                return;
+            }
+            
+            historyContent.innerHTML = historyMatches.map(match => `
+                <div class="history-card">
+                    <div class="history-header">
+                        <div class="history-date">${formatDate(match.date)}</div>
+                        <div class="history-result ${getResultClass(match.result)}">
+                            ${match.result}
+                        </div>
+                    </div>
+                    <p><strong>Venue:</strong> ${match.venue} (${match.homeAway})</p>
+                    ${match.notes ? `<p><strong>Notes:</strong> ${match.notes}</p>` : ''}
+                    <a href="match-detail.html?matchId=${match.matchId}" style="color: #1e3c72; text-decoration: none; font-weight: 500;">
+                        → View full match details
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        // Populate all player dropdowns
+     // Add this enhanced function to your match-detail.html
+// Replace your existing populatePlayerDropdowns() function with this smart version
+
+function populatePlayerDropdowns() {
+    console.log('🏉 Populating dropdowns with smart sorting...');
+    
+    document.querySelectorAll('.player-dropdown').forEach(dropdown => {
+    const positionContainer = dropdown.closest('.position-selector');
+    const reserveContainer = dropdown.closest('.reserve-selector');
+    
+    let targetPosition = null;
+    
+    // Handle starting XV positions
+    if (positionContainer) {
+        const positionLabel = positionContainer.querySelector('.position-label');
+        if (positionLabel) {
+            const match = positionLabel.textContent.match(/^(\d+)\./);
+            if (match) {
+                targetPosition = parseInt(match[1]);
+            }
+        }
+    }
+    
+    // Handle reserves (no specific position, so use null)
+    if (reserveContainer) {
+        targetPosition = null; // Reserves can play any position
+        console.log('Processing reserve dropdown');
+    }
+        
+        console.log(`Sorting dropdown for position ${targetPosition}`);
+        
+        // Smart sort players for this position
+        const sortedPlayers = smartSortPlayersForPosition(availablePlayers, targetPosition);
+        
+        // Clear and populate dropdown
+        dropdown.innerHTML = '<option value="">Select Player...</option>';
+        
+        let currentSection = null;
+        
+        sortedPlayers.forEach(player => {
+            // Add section headers
+            if (player.section !== currentSection) {
+                if (currentSection !== null) {
+                    // Add separator between sections
+                    const separator = document.createElement('option');
+                    separator.disabled = true;
+                    separator.textContent = '─────────────────';
+                    separator.style.fontStyle = 'italic';
+                    separator.style.color = '#999';
+                    dropdown.appendChild(separator);
+                }
+                
+                // Add section header
+                const header = document.createElement('option');
+                header.disabled = true;
+                header.textContent = player.sectionHeader;
+                header.style.fontWeight = 'bold';
+                header.style.color = getSectionColor(player.section);
+                header.style.backgroundColor = '#f8f9fa';
+                dropdown.appendChild(header);
+                
+                currentSection = player.section;
+            }
+            
+            // Create player option
+            const option = document.createElement('option');
+            option.value = player['Player ID'] || player['Email'];
+            
+            // Check if already selected elsewhere
+            const isAlreadySelected = isPlayerAlreadySelected(option.value);
+            
+            // Build display text with indicators
+            const availabilityIcon = getAvailabilityIcon(player.availability);
+            const positionText = player.positions || '';
+            const alreadySelectedText = isAlreadySelected ? ' (Already Selected)' : '';
+            
+            option.textContent = `${availabilityIcon} ${player['First Name']} ${player['Last Name']} (${positionText})${alreadySelectedText}`;
+            
+            // Apply styling based on status
+            option.className = `player-option ${player.availability || 'no-response'}`;
+            if (isAlreadySelected) {
+                option.className += ' already-selected';
+                option.style.color = '#6c757d';
+                option.style.fontStyle = 'italic';
+            }
+            
+            // Move already selected to bottom of their section
+            if (isAlreadySelected) {
+                // We'll add these at the end of each section
+                option.dataset.alreadySelected = 'true';
+            }
+            
+            dropdown.appendChild(option);
+        });
+    });
+    
+    console.log('✅ Smart dropdown population complete');
+}
+
+// Enhanced sorting function
+function smartSortPlayersForPosition(players, targetPosition) {
+    console.log(`🎯 Smart sorting for position ${targetPosition}`);
+    
+    // Parse and categorize all players
+    const categorizedPlayers = players.map(player => {
+        const playerPositions = parsePlayerPositions(player.Positions || '');
+        const availability = getPlayerAvailabilityStatus(player);
+        const canPlayPosition = targetPosition ? playerPositions.includes(targetPosition) : false;
+        
+        return {
+            ...player,  // Include all original player data
+            positions: player.Positions || '',
+            parsedPositions: playerPositions,
+            availability: availability,
+            canPlayPosition: canPlayPosition,
+            sortPriority: calculateSortPriority(availability, canPlayPosition)
+        };
+    });
+    
+    // Sort by priority, then by name
+    categorizedPlayers.sort((a, b) => {
+        if (a.sortPriority !== b.sortPriority) {
+            return a.sortPriority - b.sortPriority; // Lower number = higher priority
+        }
+        // Same priority - sort alphabetically
+        const nameA = `${a['First Name']} ${a['Last Name']}`;
+        const nameB = `${b['First Name']} ${b['Last Name']}`;
+        return nameA.localeCompare(nameB);
+    });
+    
+    // Add section headers and metadata
+    const sectioned = [];
+    let currentPriority = null;
+    
+    categorizedPlayers.forEach(player => {
+        if (player.sortPriority !== currentPriority) {
+            player.section = player.sortPriority;
+            player.sectionHeader = getSectionHeader(player.sortPriority, targetPosition);
+            currentPriority = player.sortPriority;
+        }
+    });
+    
+    console.log(`📊 Categorized ${categorizedPlayers.length} players into ${new Set(categorizedPlayers.map(p => p.sortPriority)).size} sections`);
+    
+    return categorizedPlayers;
+}
+
+// Calculate sort priority (lower = higher priority)
+function calculateSortPriority(availability, canPlayPosition) {
+    const isAvailable = availability === 'Available';
+    
+    if (isAvailable && canPlayPosition) return 1;  // 🟢 Available + Right Position
+    if (isAvailable && !canPlayPosition) return 2; // 🟡 Available + Any Position  
+    if (!isAvailable && canPlayPosition) return 3; // 🔵 Any Availability + Right Position
+    return 4; // ⚪ Everyone Else
+}
+
+// Get section header text
+function getSectionHeader(priority, targetPosition) {
+    const positionName = getPositionName(targetPosition);
+    
+    switch(priority) {
+        case 1: return `🟢 Available ${positionName}s`;
+        case 2: return `🟡 Available (Other Positions)`;
+        case 3: return `🔵 ${positionName}s (Any Availability)`;
+        case 4: return `⚪ Other Players`;
+        default: return `Players`;
+    }
+}
+
+// Get section color for styling
+function getSectionColor(priority) {
+    switch(priority) {
+        case 1: return '#28a745'; // Green
+        case 2: return '#ffc107'; // Yellow/Orange
+        case 3: return '#007bff'; // Blue
+        case 4: return '#6c757d'; // Grey
+        default: return '#333';
+    }
+}
+
+// Parse player positions string into array of numbers
+function parsePlayerPositions(positionsString) {
+    // Safety check - ensure we have a string
+    if (!positionsString || typeof positionsString !== 'string') {
+        return [];
+    }
+    
+    // Handle formats like "1, 3", "9,10", "4/5", etc.
+    return positionsString
+        .split(/[,\/\s]+/)
+        .map(pos => parseInt(pos.trim()))
+        .filter(pos => !isNaN(pos) && pos >= 1 && pos <= 15);
+}
+
+// Get player availability status for current match
+function getPlayerAvailabilityStatus(player) {
+    return getPlayerAvailabilityStatusReal(player);
+}
+
+// Get availability icon
+function getAvailabilityIcon(availability) {
+    switch(availability) {
+        case 'Available': return '✅';
+        case 'Maybe': return '❓';
+        case 'Unavailable': return '❌';
+        case 'No Response': return '⚪';
+        default: return '⚪';
+    }
+}
+
+// Check if player is already selected in another position
+function isPlayerAlreadySelected(playerId) {
+    // Check starting XV
+    for (let pos = 1; pos <= 15; pos++) {
+        if (teamSelection[pos] === playerId) {
+            return true;
+        }
+    }
+    
+    // Check reserves
+    for (let reserve in reserves) {
+        if (reserves[reserve] === playerId) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Get position name from number
+function getPositionName(positionNumber) {
+    const positions = {
+        1: 'Loosehead Prop', 2: 'Hooker', 3: 'Tighthead Prop',
+        4: 'Lock', 5: 'Lock', 6: 'Blindside Flanker',
+        7: 'Openside Flanker', 8: 'Number 8', 9: 'Scrum-half',
+        10: 'Fly-half', 11: 'Left Wing', 12: 'Inside Centre',
+        13: 'Outside Centre', 14: 'Right Wing', 15: 'Fullback'
+    };
+    
+    return positions[positionNumber] || `Position ${positionNumber}`;
+}
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            const dayName = days[date.getDay()];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            
+            const suffix = day === 1 || day === 21 || day === 31 ? 'st' : 
+                          day === 2 || day === 22 ? 'nd' : 
+                          day === 3 || day === 23 ? 'rd' : 'th';
+            
+            return `${dayName}, ${day}${suffix} ${month} ${year}`;
+        }
+
+        // Format time for display
+        function formatTime(timeString) {
+            if (timeString.includes('T')) {
+                const date = new Date(timeString);
+                return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} Kick-off`;
+            }
+            return `${timeString} Kick-off`;
+        }
+
+        // Get result class for styling
+        function getResultClass(result) {
+            if (result.toLowerCase().includes('win') || result.toLowerCase().includes('won')) {
+                return 'win';
+            } else if (result.toLowerCase().includes('loss') || result.toLowerCase().includes('lost')) {
+                return 'loss';
+            } else if (result.toLowerCase().includes('draw')) {
+                return 'draw';
+            }
+            return '';
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeButton = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+            
+            // Update tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            const activePanel = document.getElementById(`${tabName}-tab`);
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+        }
+
+        // Score calculation
+        function setupScoreCalculation() {
+            const ourScore = document.getElementById('ourScore');
+            const theirScore = document.getElementById('theirScore');
+            
+            if (ourScore && theirScore) {
+                ourScore.addEventListener('input', updateResultDisplay);
+                theirScore.addEventListener('input', updateResultDisplay);
+                console.log('Score calculation set up successfully');
+            } else {
+                setTimeout(setupScoreCalculation, 500);
+            }
+        }
+
+        function updateResultDisplay() {
+            const ourScoreEl = document.getElementById('ourScore');
+            const theirScoreEl = document.getElementById('theirScore');
+            const resultDisplay = document.getElementById('resultDisplay');
+            
+            if (!ourScoreEl || !theirScoreEl || !resultDisplay) {
+                return;
+            }
+            
+            const ourScore = parseInt(ourScoreEl.value) || 0;
+            const theirScore = parseInt(theirScoreEl.value) || 0;
+            
+            if (ourScore === 0 && theirScore === 0) {
+                resultDisplay.value = '';
+                return;
+            }
+            
+            let result;
+            if (ourScore > theirScore) {
+                result = `WON ${ourScore}-${theirScore}`;
+            } else if (ourScore < theirScore) {
+                result = `LOST ${ourScore}-${theirScore}`;
+            } else {
+                result = `DRAW ${ourScore}-${theirScore}`;
+            }
+            
+            resultDisplay.value = result;
+        }
+
+        // Team selection functions
+        function handleSelection(position, playerId) {
+    if (playerId) {
+        teamSelection[position] = playerId;
+        console.log(`Position ${position} assigned to ${playerId}`);
+        saveTeamSelection(); // ← Make sure this line exists
+    } else {
+        delete teamSelection[position];
+        console.log(`Position ${position} cleared`);
+    }
+}
+
+        function handleReserveSelection(reserveNumber, playerId) {
+            if (playerId) {
+                reserves[reserveNumber] = playerId;
+                console.log(`Reserve ${reserveNumber} assigned to ${playerId}`);
+                saveTeamSelection();
+            } else {
+                delete reserves[reserveNumber];
+                console.log(`Reserve ${reserveNumber} cleared`);
+            }
+        }
+
+        function addReserve() {
+            reserveCount++;
+            const reservesGrid = document.getElementById('reservesGrid');
+            
+            const reserveDiv = document.createElement('div');
+            reserveDiv.className = 'reserve-selector';
+            reserveDiv.innerHTML = `
+                <div class="reserve-label">
+                    Reserve ${reserveCount}
+                    <button onclick="removeReserve(${reserveCount}, this.parentElement.parentElement)" 
+                            class="remove-reserve">×</button>
+                </div>
+                <select class="player-dropdown" onchange="handleReserveSelection(${reserveCount}, this.value)">
+                    <option value="">Select Player...</option>
+                </select>
+            `;
+            
+            reservesGrid.appendChild(reserveDiv);
+            
+            // Populate the new dropdown
+            const newDropdown = reserveDiv.querySelector('.player-dropdown');
+            availablePlayers.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.playerId;
+                option.className = player.availability || 'no-response';
+                
+                const indicator = {
+                    'available': '✓',
+                    'maybe': '?',
+                    'unavailable': '✗',
+                    'no-response': '⏳'
+                }[player.availability] || '⏳';
+                
+                option.textContent = `${indicator} ${player.firstName} ${player.lastName} (${player.irfuNumber || 'No ID'})`;
+                newDropdown.appendChild(option);
+            });
+        }
+
+        function removeReserve(reserveNumber, element) {
+            if (confirm(`Remove Reserve ${reserveNumber}?`)) {
+                delete reserves[reserveNumber];
+                element.remove();
+                console.log(`Removed Reserve ${reserveNumber}`);
+                saveTeamSelection();
+            }
+        }
+
+        // Save functions
+        async function saveMatchResult() {
+            const ourScore = document.getElementById('ourScore').value;
+            const theirScore = document.getElementById('theirScore').value;
+            const result = document.getElementById('resultDisplay').value;
+            
+            if (!ourScore || !theirScore) {
+                alert('Please enter both scores');
+                return;
+            }
+            
+            try {
+                const response = await fetch(window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveMatchResult',
+                        matchId: currentMatch.matchId,
+                        ourScore: parseInt(ourScore),
+                        theirScore: parseInt(theirScore),
+                        result: result
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showSuccessMessage('Match result saved successfully!');
+                    currentMatch.ourScore = parseInt(ourScore);
+                    currentMatch.theirScore = parseInt(theirScore);
+                    currentMatch.result = result;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Error saving match result:', error);
+                alert('Failed to save match result. Please try again.');
+            }
+        }
+
+    async function savePreMatchNotes() {
+    console.log('🔍 Starting savePreMatchNotes...');
+    
+    const teamInstructions = document.getElementById('teamInstructions').value;
+    const oppositionAnalysis = document.getElementById('oppositionAnalysis').value;
+    const matchStrategy = document.getElementById('matchStrategy').value;
+    
+    console.log('🔍 Form values collected:', { teamInstructions, oppositionAnalysis, matchStrategy });
+    
+    try {
+        console.log('🔍 About to call fetchData...');
+        const result = await fetchData('savePreMatchNotes', {
+            matchId: currentMatch.matchId,
+            teamInstructions: teamInstructions,
+            oppositionAnalysis: oppositionAnalysis,
+            matchStrategy: matchStrategy
+        });
+        
+        console.log('🔍 fetchData completed, result:', result);
+        
+        if (result.success) {
+            console.log('✅ Pre-match notes saved successfully!');
+            console.log('🔍 About to return from function...');
+        } else {
+            console.log('🔍 Result was not successful, throwing error...');
+            throw new Error(result.error);
+        }
+        console.log('🔍 End of try block reached');
+    } catch (error) {
+        console.log('🔍 Caught error:', error);
+        console.error('❌ Error saving pre-match notes:', error);
+        alert('Failed to save pre-match notes: ' + error.message);
+    }
+    console.log('🔍 Function ending...');
+}
+        async function saveTeamSelection() {
+            if (!currentMatch) return;
+            
+            try {
+               const result = await fetchData('saveTeamSelection', {
+    matchId: currentMatch.matchId,
+    startingXV: JSON.stringify(teamSelection),
+    reserves: JSON.stringify(reserves)
+});
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Team selection auto-saved');
+                } else {
+                    console.error('Failed to auto-save team selection:', data.error);
+                }
+            } catch (error) {
+                console.error('Error auto-saving team selection:', error);
+            }
+        }
+
+        function saveTeamDraft() {
+            alert('Team draft saved! You can continue editing later.');
+        }
+
+        function publishTeam() {
+            if (Object.keys(teamSelection).length < 15) {
+                if (!confirm('You haven\'t selected a full starting XV. Publish anyway?')) {
+                    return;
+                }
+            }
+            
+            generateTeamSheetPreview();
+        }
+
+        // Team sheet generation
+       function generateTeamSheetPreview() {
+    const teamSheetData = {
+        match: currentMatch,
+        startingXV: [],
+        reserves: []
+    };
+    
+    // Collect starting XV
+    for (let i = 1; i <= 15; i++) {
+        const playerId = teamSelection[i];
+        // Find player by email (Player ID) in availablePlayers
+        const player = availablePlayers.find(p => 
+            (p['Player ID'] && p['Player ID'] === playerId) || 
+            (p['Email'] && p['Email'] === playerId)
+        );
+        
+        teamSheetData.startingXV.push({
+            position: i,
+            positionName: getPositionName(i),
+            player: player ? {
+                firstName: player['First Name'],
+                lastName: player['Last Name'],
+                irfuNumber: player['IRFU Number'] || player['Player ID'] || 'No ID'
+            } : null
+        });
+    }
+    
+    // Collect reserves
+    Object.keys(reserves).forEach(reserveNum => {
+        const playerId = reserves[reserveNum];
+        const player = availablePlayers.find(p => 
+            (p['Player ID'] && p['Player ID'] === playerId) || 
+            (p['Email'] && p['Email'] === playerId)
+        );
+        
+        if (player) {
+            teamSheetData.reserves.push({
+                number: reserveNum,
+                player: {
+                    firstName: player['First Name'],
+                    lastName: player['Last Name'],
+                    irfuNumber: player['IRFU Number'] || player['Player ID'] || 'No ID'
+                }
+            });
+        }
+    });
+    
+    console.log('Team sheet data prepared:', teamSheetData);
+    showTeamSheetModal(teamSheetData);
+}
+
+        function getPositionName(positionNumber) {
+            const positions = {
+                1: 'Loosehead Prop', 2: 'Hooker', 3: 'Tighthead Prop',
+                4: 'Lock', 5: 'Lock', 6: 'Blindside Flanker',
+                7: 'Openside Flanker', 8: 'Number 8', 9: 'Scrum-half',
+                10: 'Fly-half', 11: 'Left Wing', 12: 'Inside Centre',
+                13: 'Outside Centre', 14: 'Right Wing', 15: 'Fullback'
+            };
+            return positions[positionNumber] || `Position ${positionNumber}`;
+        }
+
+        function showTeamSheetModal(teamSheetData) {
+            let modal = document.getElementById('teamSheetModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'teamSheetModal';
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            
+            const fileName = generateFileName(teamSheetData.match);
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <button class="close-btn" onclick="closeTeamSheetModal()">&times;</button>
+                        <h2>Team Sheet Preview</h2>
+                        <p style="opacity: 0.9; margin-top: 0.5rem;">Ready to download and share</p>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div id="teamSheetPreview" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 2rem; font-family: Arial, sans-serif; max-height: 500px; overflow-y: auto;">
+                            ${generateTeamSheetHTML(teamSheetData)}
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-primary" style="flex: 1;" onclick="downloadTeamSheet('${fileName}')">
+                                <span>📱</span>
+                                Download Team Sheet
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeTeamSheetModal()">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function generateTeamSheetHTML(data) {
+            const match = data.match;
+            const dateStr = formatDate(match.date);
+            
+            let html = `
+                <div style="text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #1e3c72;">
+                    <h1 style="color: #1e3c72; margin-bottom: 0.5rem; font-size: 1.5rem;">
+                        CLONTARF ${match.squad.toUpperCase()} vs ${match.opponent.toUpperCase()}
+                    </h1>
+                    <p style="margin: 0.25rem 0; font-weight: 600; color: #333;">
+                        ${dateStr} • ${formatTime(match.time)}
+                    </p>
+                    <p style="margin: 0.25rem 0; color: #666;">
+                        ${match.location} • ${match.matchType} Match
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="color: #1e3c72; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">
+                        STARTING XV
+                    </h2>
+            `;
+            
+            // Starting XV
+            data.startingXV.forEach(pos => {
+                const playerName = pos.player ? `${pos.player.firstName} ${pos.player.lastName}` : 'TBD';
+                const irfuId = pos.player ? `(${pos.player.irfuNumber || 'No ID'})` : '';
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                        <span style="font-weight: 600;">${pos.position}. ${pos.positionName}</span>
+                        <span>${playerName} ${irfuId}</span>
+                    </div>
+                `;
+            });
+            
+            // Reserves
+            if (data.reserves.length > 0) {
+                html += `
+                    </div>
+                    
+                    <div>
+                        <h2 style="color: #dc2626; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem;">
+                            RESERVES
+                        </h2>
+                `;
+                
+                data.reserves.forEach(reserve => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">
+                            <span style="font-weight: 600;">Reserve ${reserve.number}</span>
+                            <span>${reserve.player.firstName} ${reserve.player.lastName} (${reserve.player.irfuNumber || 'No ID'})</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; color: #666; font-size: 0.875rem;">
+                    Generated ${new Date().toLocaleDateString()} • #WhoAreWe #ClontarfRugby
+                </div>
+            `;
+            
+            return html;
+        }
+
+        function generateFileName(match) {
+            const date = new Date(match.date);
+            const day = date.getDate();
+            const month = date.toLocaleString('default', { month: 'short' });
+            const opponent = match.opponent.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+            
+            return `Clontarf_${match.squad}_vs_${opponent}_${day}${month}.jpg`;
+        }
+
+       async function downloadTeamSheet(fileName) {
+    try {
+        const element = document.getElementById('teamSheetPreview');
+        console.log('📸 Starting team sheet image generation...');
+        
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: false,
+            // Remove fixed width/height - let it auto-calculate
+        });
+        
+        console.log(`📐 Generated canvas: ${canvas.width}px x ${canvas.height}px`);
+        
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            markTeamAsPublished();
+            closeTeamSheetModal();
+        }, 'image/jpeg', 0.9);
+        
+        console.log('✅ Team sheet download completed');
+        
+    } catch (error) {
+        console.error('Error generating team sheet image:', error);
+        alert('Failed to generate team sheet image');
+    }
+}
+
+        function markTeamAsPublished() {
+            const publishBtn = document.querySelector('[onclick*="publishTeam"]');
+            if (publishBtn) {
+                publishBtn.innerHTML = '<span>✏️</span> Edit Published Team';
+            }
+            
+            if (currentMatch) {
+                currentMatch.status = 'Team Selected';
+                const statusEl = document.getElementById('matchStatus');
+                if (statusEl) statusEl.textContent = 'Team Selected';
+            }
+        }
+
+        function closeTeamSheetModal() {
+            const modal = document.getElementById('teamSheetModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Quick team assignment functions
+        function assignTeam(teamType) {
+            alert(`Would assign all available ${teamType} players to positions based on their preferred roles`);
+        }
+
+        function clearTeam() {
+            if (confirm('Clear all position selections and reserves?')) {
+                document.querySelectorAll('.player-dropdown').forEach(dropdown => {
+                    dropdown.value = '';
+                });
+                teamSelection = {};
+                reserves = {};
+                saveTeamSelection();
+                alert('Team selections cleared');
+            }
+        }
+
+        // Load saved team selection from Google Sheets
+async function loadSavedTeamSelection() {
+    if (!currentMatch) {
+        console.log('No current match - skipping team selection load');
+        return;
+    }
+    
+    try {
+        console.log(`🔄 Loading saved team selection for match ${currentMatch.matchId}`);
+        
+        const result = await fetchData('getTeamSelection', {
+            matchId: currentMatch.matchId
+        });
+        
+        if (result.success) {
+            console.log('✅ Loaded saved team selection:', result);
+            
+            // Populate the global variables
+            teamSelection = {};
+            reserves = {};
+            
+            // Load starting XV selections
+            if (result.startingXV) {
+                Object.keys(result.startingXV).forEach(position => {
+                    const playerData = result.startingXV[position];
+                    if (playerData && playerData.email) {
+                        teamSelection[position] = playerData.email;
+                        console.log(`Restored position ${position}: ${playerData.name}`);
+                    }
+                });
+            }
+            
+            // Load reserve selections  
+            if (result.reserves) {
+                Object.keys(result.reserves).forEach(reserveNum => {
+                    const playerData = result.reserves[reserveNum];
+                    if (playerData && playerData.email) {
+                        reserves[reserveNum] = playerData.email;
+                        console.log(`Restored reserve ${reserveNum}: ${playerData.name}`);
+                    }
+                });
+            }
+            
+            // Update the dropdowns to show selected players
+            updateDropdownSelections();
+            
+            console.log(`✅ Restored ${Object.keys(teamSelection).length} starting positions and ${Object.keys(reserves).length} reserves`);
+            
+        } else {
+            console.log('⚪ No saved team selection found');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading saved team selection:', error);
+    }
+}
+
+// Update dropdown selections to show saved choices
+function updateDropdownSelections() {
+    console.log('🔄 Updating dropdown selections...');
+    
+    // Update starting XV dropdowns
+    for (let position = 1; position <= 15; position++) {
+        const playerId = teamSelection[position];
+        if (playerId) {
+            const dropdown = document.querySelector(`select[onchange*="handleSelection(${position}"]`);
+            if (dropdown) {
+                dropdown.value = playerId;
+                console.log(`Set position ${position} dropdown to: ${playerId}`);
+            }
+        }
+    }
+    
+    // Update reserve dropdowns
+    Object.keys(reserves).forEach(reserveNum => {
+        const playerId = reserves[reserveNum];
+        if (playerId) {
+            const dropdown = document.querySelector(`select[onchange*="handleReserveSelection(${reserveNum}"]`);
+            if (dropdown) {
+                dropdown.value = playerId;
+                console.log(`Set reserve ${reserveNum} dropdown to: ${playerId}`);
+            }
+        }
+    });
+    
+    console.log('✅ Dropdown selections updated');
+}
+
+              // Utility functions
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            
+            const container = document.querySelector('.overview-container') || document.querySelector('.tab-content');
+            container.insertBefore(successDiv, container.firstChild);
+            
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        // State management
+      // Update your showLoading function to initialize the fancy loader
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'flex';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('matchContent').style.display = 'none';
+    
+    // Reset loader state
+    currentLoadingStep = 0;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) progressBar.style.width = '0%';
+    
+    // Reset all steps to pending
+    loadingSteps.forEach(step => {
+        const stepEl = document.getElementById(step.id);
+        if (stepEl) {
+            stepEl.classList.remove('active', 'completed');
+            stepEl.classList.add('pending');
+            // Reset icon based on step
+            const icons = ['🏉', '📊', '👥', '⚡', '📝'];
+            const stepIndex = loadingSteps.findIndex(s => s.id === step.id);
+            stepEl.querySelector('.step-icon').textContent = icons[stepIndex] || '⚪';
+        }
+    });
+    
+    // Set initial status
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    if (statusTextEl) statusTextEl.innerHTML = 'Initializing connection<span class="loading-dots"><span></span><span></span><span></span></span>';
+    if (statusDetailEl) statusDetailEl.textContent = 'Preparing to load match data...';
+}
+
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('matchContent').style.display = 'none';
+            
+            if (message) {
+                document.querySelector('#errorState p').textContent = message;
+            }
+        }
+
+        function showMatchContent() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('matchContent').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
