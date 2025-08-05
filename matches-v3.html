@@ -2006,17 +2006,17 @@
                     break;
                 case 'Availability Sent':
                     buttons.push(`<a href="#" class="action-btn warning" onclick="sendReminder('${match.matchId}', '${match.squad}')"><span>🔔</span>Send Reminder</a>`);
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
+                    buttons.push(`<a href="match-detail-v2.html?matchId=${match.matchId}" class="action-btn primary"><span>👥</span>Select Team</a>`);
                     break;
                 case 'Team Selected':
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
+                    buttons.push(`<a href="match-detail-v2.html?matchId=${match.matchId}" class="action-btn success"><span>👥</span>View Team Sheet</a>`);
                     break;
                 case 'Completed':
-                    buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
+                    buttons.push(`<a href="match-detail-v2.html?matchId=${match.matchId}" class="action-btn"><span>📊</span>View Match Report</a>`);
                     break;
             }
             
-            buttons.push(`<a href="match-detail.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
+            buttons.push(`<a href="match-detail-v2.html?matchId=${match.matchId}" class="action-btn"><span>📋</span>Match Details</a>`);
             
             return buttons.join('');
         }
