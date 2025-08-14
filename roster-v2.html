@@ -172,7 +172,7 @@
             
             // Open popup immediately with loading state
             document.getElementById('notesPopup').classList.add('active');
-            document.getElementById('notesPopupTitle').textContent = `Notes for ${PlayerName}`;
+            document.getElementById('notesPopupTitle').textContent = `Notes for ${playerName}`;
             
             // Reset form to defaults
             document.getElementById('popupNoteCategory').value = 'general';
@@ -224,7 +224,7 @@
                 
                 if (result.success) {
                     displayNotesInPopup(result.data);
-                    console.log(`Loaded ${result.data.length} notes for ${PlayerName}`);
+                    console.log(`Loaded ${result.data.length} notes for ${playerName}`);
                 } else {
                     console.error('Error loading notes:', result.error);
                     showNotesError('Error loading notes');
