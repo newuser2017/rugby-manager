@@ -1223,12 +1223,13 @@
                     <div class="message-preview">
                         <div class="form-group">
                             <label class="form-label">Email Subject</label>
-                            <input type="text" id="emailSubject" class="form-input" readonly>
+                            <input type="text" id="emailSubject" class="form-input">
                         </div>
                         
                         <div class="form-group">
                             <label class="form-label">Message Preview</label>
-                            <textarea id="messagePreview" class="form-textarea" rows="8" readonly></textarea>
+                            <textarea id="messagePreview" class="form-textarea" rows="8"
+                                oninput="updateCharacterCount()"></textarea>
                         </div>
                         
                         <div class="form-group">
