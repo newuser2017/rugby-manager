@@ -666,6 +666,224 @@
             }
         }
     </style>
+  <style>
+/* Enhanced Loading Styles - Add these to your existing styles */
+.fancy-loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.loading-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.loading-title {
+    font-size: 1.5rem;
+    color: #1e3c72;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.loading-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Progress Bar */
+.progress-container {
+    width: 100%;
+    background: #f1f5f9;
+    border-radius: 8px;
+    height: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+    border-radius: 8px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.4) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Loading Steps */
+.loading-steps {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.loading-step {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.loading-step.active {
+    background: #e3f2fd;
+    border-left: 4px solid #1e3c72;
+    transform: translateX(4px);
+}
+
+.loading-step.completed {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.loading-step.pending .step-icon {
+    background: #e5e7eb;
+    color: #9ca3af;
+}
+
+.loading-step.active .step-icon {
+    background: #1e3c72;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.loading-step.completed .step-icon {
+    background: #22c55e;
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.loading-step.active .step-title {
+    color: #1e3c72;
+}
+
+.loading-step.completed .step-title {
+    color: #166534;
+}
+
+.step-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.loading-step.active .step-description {
+    color: #1e40af;
+}
+
+.loading-step.completed .step-description {
+    color: #15803d;
+}
+
+/* Current Status */
+.current-status {
+    text-align: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.status-text {
+    font-weight: 500;
+    color: #1e3c72;
+    margin-bottom: 0.5rem;
+}
+
+.status-detail {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Loading Animation */
+.loading-dots {
+    display: inline-flex;
+    margin-left: 0.5rem;
+}
+
+.loading-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1e3c72;
+    margin: 0 1px;
+    animation: loadingDots 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes loadingDots {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .fancy-loading {
+        margin: 1rem;
+        padding: 2rem 1rem;
+    }
+    
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+}
+</style>
 </head>
 <body>
     <!-- Header -->
@@ -696,10 +914,72 @@
         </div>
 
         <!-- Loading State -->
-        <div id="loadingState" class="loading">
-            <div class="loading-spinner"></div>
-            <p style="margin-left: 1rem;">Loading match details...</p>
+        <div id="loadingState" class="fancy-loading">
+    <div class="loading-header">
+        <div class="loading-title">Loading Match Details</div>
+        <div class="loading-subtitle">Preparing your rugby management dashboard</div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+    </div>
+
+    <div class="loading-steps">
+        <div class="loading-step pending" id="step1">
+            <div class="step-icon">🏉</div>
+            <div class="step-content">
+                <div class="step-title">Loading Match Information</div>
+                <div class="step-description">Fetching match details from Google Sheets</div>
+            </div>
         </div>
+
+        <div class="loading-step pending" id="step2">
+            <div class="step-icon">📊</div>
+            <div class="step-content">
+                <div class="step-title">Loading Player Availability</div>
+                <div class="step-description">Checking who's available for selection</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step3">
+            <div class="step-icon">👥</div>
+            <div class="step-content">
+                <div class="step-title">Loading Team Roster</div>
+                <div class="step-description">Getting complete player database</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step4">
+            <div class="step-icon">⚡</div>
+            <div class="step-content">
+                <div class="step-title">Loading Saved Selections</div>
+                <div class="step-description">Restoring previously selected team</div>
+            </div>
+        </div>
+
+        <div class="loading-step pending" id="step5">
+            <div class="step-icon">📝</div>
+            <div class="step-content">
+                <div class="step-title">Finalizing Display</div>
+                <div class="step-description">Loading notes and preparing interface</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="current-status">
+        <div class="status-text" id="statusText">
+            Initializing connection
+            <span class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </div>
+        <div class="status-detail" id="statusDetail">
+            Connecting to Google Sheets database...
+        </div>
+    </div>
+</div>
 
         <!-- Error State -->
         <div id="errorState" class="error-state" style="display: none;">
@@ -1125,6 +1405,107 @@
     </div>
 
     <script>
+
+      // Global loader state
+let currentLoadingStep = 0;
+const loadingSteps = [
+    { id: 'step1', progress: 20, title: 'Loading Match Information', description: 'Fetching match details from Google Sheets' },
+    { id: 'step2', progress: 40, title: 'Loading Player Availability', description: 'Checking who\'s available for selection' },
+    { id: 'step3', progress: 60, title: 'Loading Team Roster', description: 'Getting complete player database' },
+    { id: 'step4', progress: 80, title: 'Loading Saved Selections', description: 'Restoring previously selected team' },
+    { id: 'step5', progress: 100, title: 'Finalizing Display', description: 'Loading notes and preparing interface' }
+];
+
+// Update loader progress
+function updateLoadingProgress(stepNumber, statusText = null, statusDetail = null) {
+    console.log(`🔄 Loading Step ${stepNumber}: ${loadingSteps[stepNumber - 1]?.title}`);
+    
+    // Mark previous steps as completed
+    for (let i = 0; i < stepNumber - 1; i++) {
+        const stepElement = document.getElementById(loadingSteps[i].id);
+        if (stepElement) {
+            stepElement.classList.remove('pending', 'active');
+            stepElement.classList.add('completed');
+            stepElement.querySelector('.step-icon').textContent = '✅';
+        }
+    }
+    
+    // Mark current step as active
+    if (stepNumber <= loadingSteps.length) {
+        const currentStep = loadingSteps[stepNumber - 1];
+        const stepElement = document.getElementById(currentStep.id);
+        
+        if (stepElement) {
+            stepElement.classList.remove('pending', 'completed');
+            stepElement.classList.add('active');
+        }
+        
+        // Update progress bar
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = currentStep.progress + '%';
+        }
+        
+        // Update status text
+        const statusTextEl = document.getElementById('statusText');
+        const statusDetailEl = document.getElementById('statusDetail');
+        
+        if (statusTextEl) {
+            statusTextEl.innerHTML = (statusText || currentStep.title) + 
+                '<span class="loading-dots"><span></span><span></span><span></span></span>';
+        }
+        
+        if (statusDetailEl) {
+            statusDetailEl.textContent = statusDetail || currentStep.description;
+        }
+    }
+    
+    currentLoadingStep = stepNumber;
+}
+
+// Complete the loading process
+function completeLoading() {
+    console.log('✅ Loading completed successfully');
+    
+    // Mark final step as completed
+    const finalStep = document.getElementById('step5');
+    if (finalStep) {
+        finalStep.classList.remove('active');
+        finalStep.classList.add('completed');
+        finalStep.querySelector('.step-icon').textContent = '✅';
+    }
+    
+    // Update final status
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    
+    if (statusTextEl) statusTextEl.innerHTML = 'Match details loaded successfully! 🎉';
+    if (statusDetailEl) statusDetailEl.textContent = 'Preparing match dashboard...';
+    
+    // Hide loader after brief delay
+    setTimeout(() => {
+        showMatchContent();
+    }, 800);
+}
+
+// Show error in loader
+function showLoadingError(errorMessage) {
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    
+    if (statusTextEl) statusTextEl.innerHTML = '❌ Loading failed';
+    if (statusDetailEl) statusDetailEl.textContent = errorMessage;
+    
+    // Mark current step as failed
+    const currentStepEl = document.getElementById(loadingSteps[currentLoadingStep - 1]?.id);
+    if (currentStepEl) {
+        currentStepEl.classList.remove('active');
+        currentStepEl.style.background = '#fef2f2';
+        currentStepEl.style.borderLeft = '4px solid #dc2626';
+        currentStepEl.querySelector('.step-icon').textContent = '❌';
+        currentStepEl.querySelector('.step-icon').style.background = '#dc2626';
+    }
+}
         // Global variables
         let currentMatch = null;
         let teamSelection = {};
@@ -1171,78 +1552,102 @@
         });
 
         // Load match data from Google Sheets
-       async function loadMatchData(matchId) {
+    async function loadMatchData(matchId) {
     try {
-        showLoading();
+        showLoading(); // Initialize the fancy loader
         console.log('Loading match data for:', matchId);
         
-        // Load match details
+        // ===== STEP 1: Load Match Details =====
+        updateLoadingProgress(1, 'Connecting to database...', 'Fetching match information from Google Sheets');
+        
         const response = await fetch(`${window.RUGBY_CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getMatch&matchId=${matchId}`);
         const data = await response.json();
         
-        if (data.success) {
-            currentMatch = data;
-            console.log('API response data:', data);
-            
-            // Load availability data for team selection
-            await loadMatchAvailabilityData();
-            
-            // Load players for team selection
-            await loadAvailablePlayers();
-            
-            // Load saved team selection
-            await loadSavedTeamSelection();
-            
-            // Load other match data
-            await loadMatchNotes();
-            
-          // Display match information directly
-const matchTitle = data.homeAway === 'Home' 
-    ? `Clontarf ${data.squad} vs ${data.opponent}`
-    : `${data.opponent} vs Clontarf ${data.squad}`;
-
-const titleElement = document.getElementById('matchTitle');
-if (titleElement) titleElement.textContent = matchTitle;
-
-// Update basic match info
-const matchDateEl = document.getElementById('matchDate');
-if (matchDateEl) matchDateEl.textContent = formatDate(data.date);
-
-const matchTimeEl = document.getElementById('matchTime');
-if (matchTimeEl) matchTimeEl.textContent = formatTime(data.time);
-
-const venueNameEl = document.getElementById('venueName');
-if (venueNameEl) venueNameEl.textContent = data.location;
-
-const venueType = document.getElementById('venueType');
-if (venueType) {
-    venueType.textContent = data.homeAway.toUpperCase();
-    venueType.className = `venue-badge ${data.homeAway.toLowerCase()}`;
-}
-
-const matchTypeEl = document.getElementById('matchType');
-if (matchTypeEl) matchTypeEl.textContent = data.matchType;
-
-const matchStatusEl = document.getElementById('matchStatus');
-if (matchStatusEl) matchStatusEl.textContent = data.status;
-
-// Update team badge
-const teamBadge = document.getElementById('teamBadge');
-if (teamBadge) {
-    teamBadge.textContent = data.squad;
-    teamBadge.className = `team-badge ${data.squad === '4ths' ? 'j4' : 'j5'}`;
-}
-
-console.log('✅ Match info displayed successfully');
-            showMatchContent();
-            
-        } else {
+        if (!data.success) {
             throw new Error(data.error || 'Failed to load match data');
         }
         
+        currentMatch = data;
+        console.log('✅ Step 1 complete: Match data loaded');
+        console.log('API response data:', data);
+        
+        // ===== STEP 2: Load Player Availability =====
+        updateLoadingProgress(2, 'Analyzing player responses...', 'Processing availability form data for team selection');
+        
+        await loadMatchAvailabilityData();
+        console.log('✅ Step 2 complete: Availability data loaded');
+        
+        // ===== STEP 3: Load Team Roster =====
+        updateLoadingProgress(3, 'Loading team roster...', 'Fetching complete player database for dropdowns');
+        
+        await loadAvailablePlayers();
+        console.log('✅ Step 3 complete: Players loaded');
+        
+        // ===== STEP 4: Load Saved Selections =====
+        updateLoadingProgress(4, 'Restoring team selection...', 'Loading previously saved team choices and formations');
+        
+        await loadSavedTeamSelection();
+        console.log('✅ Step 4 complete: Team selection loaded');
+        
+        // ===== STEP 5: Final Setup =====
+        updateLoadingProgress(5, 'Preparing interface...', 'Loading match notes and finalizing display');
+        
+        await loadMatchNotes();
+        
+        // Display match information directly
+        const matchTitle = data.homeAway === 'Home' 
+            ? `Clontarf ${data.squad} vs ${data.opponent}`
+            : `${data.opponent} vs Clontarf ${data.squad}`;
+        
+        const titleElement = document.getElementById('matchTitle');
+        if (titleElement) titleElement.textContent = matchTitle;
+        
+        // Update basic match info
+        const matchDateEl = document.getElementById('matchDate');
+        if (matchDateEl) matchDateEl.textContent = formatDate(data.date);
+        
+        const matchTimeEl = document.getElementById('matchTime');
+        if (matchTimeEl) matchTimeEl.textContent = formatTime(data.time);
+        
+        const venueNameEl = document.getElementById('venueName');
+        if (venueNameEl) venueNameEl.textContent = data.location;
+        
+        const venueType = document.getElementById('venueType');
+        if (venueType) {
+            venueType.textContent = data.homeAway.toUpperCase();
+            venueType.className = `venue-badge ${data.homeAway.toLowerCase()}`;
+        }
+        
+        const matchTypeEl = document.getElementById('matchType');
+        if (matchTypeEl) matchTypeEl.textContent = data.matchType;
+        
+        const matchStatusEl = document.getElementById('matchStatus');
+        if (matchStatusEl) matchStatusEl.textContent = data.status;
+        
+        // Update team badge
+        const teamBadge = document.getElementById('teamBadge');
+        if (teamBadge) {
+            teamBadge.textContent = data.squad;
+            teamBadge.className = `team-badge ${data.squad === '4ths' ? 'j4' : 'j5'}`;
+        }
+        
+        console.log('✅ Step 5 complete: Interface ready');
+        console.log('✅ Match info displayed successfully');
+        
+        // ===== COMPLETE LOADING =====
+        // Complete the loading process with success animation
+        completeLoading();
+        
     } catch (error) {
-        console.error('Error loading match data:', error);
-        showError(`Unable to load match data: ${error.message}`);
+        console.error('❌ Error loading match data:', error);
+        
+        // Show error in the fancy loader
+        showLoadingError(`Unable to load match data: ${error.message}`);
+        
+        // After showing the error in loader, transition to error state
+        setTimeout(() => {
+            showError(`Unable to load match data: ${error.message}`);
+        }, 2500); // Give users time to see the error in the loader
     }
 }
 
@@ -1728,13 +2133,13 @@ function smartSortPlayersForPosition(players, targetPosition) {
         const canPlayPosition = targetPosition ? playerPositions.includes(targetPosition) : false;
         
         return {
-            ...player,  // Include all original player data
-            positions: player.Positions || '',
-            parsedPositions: playerPositions,
-            availability: availability,
-            canPlayPosition: canPlayPosition,
-            sortPriority: calculateSortPriority(availability, canPlayPosition)
-        };
+    ...player,  // Include all original player data
+    positions: player.Positions || '',
+    parsedPositions: playerPositions,
+    availability: availability,
+    canPlayPosition: canPlayPosition,
+    sortPriority: calculateSortPriority(availability, canPlayPosition, player, currentMatch)
+};
     });
     
     // Sort by priority, then by name
@@ -1766,13 +2171,18 @@ function smartSortPlayersForPosition(players, targetPosition) {
 }
 
 // Calculate sort priority (lower = higher priority)
-function calculateSortPriority(availability, canPlayPosition) {
-    const isAvailable = availability === 'Available';
+function calculateSortPriority(availability, canPlayPosition, player, currentMatch) {
+    const isAvailable = availability === 'Available' || availability === 'Maybe';
+    const isUnavailable = availability === 'Unavailable';
+    const isNoResponse = availability === 'No Response' || !player.hasResponded;
+    const isInMatchSquad = currentMatch && player['Squad Tags'] && player['Squad Tags'].includes(currentMatch.squad);
     
-    if (isAvailable && canPlayPosition) return 1;  // 🟢 Available + Right Position
-    if (isAvailable && !canPlayPosition) return 2; // 🟡 Available + Any Position  
-    if (!isAvailable && canPlayPosition) return 3; // 🔵 Any Availability + Right Position
-    return 4; // ⚪ Everyone Else
+    if (isAvailable && canPlayPosition) return 1;  // 🟢 Available/Maybe + Right Position
+    if (isNoResponse && canPlayPosition) return 2; // ⏳ Pending Response + Right Position  
+    if (isInMatchSquad && canPlayPosition && !isUnavailable) return 3; // 🔄 Squad + Right Position + Not Unavailable
+    if (isUnavailable && canPlayPosition) return 4; // ❌ Unavailable + Right Position
+    if (isAvailable && !canPlayPosition) return 5; // 🟡 Available + Any Position
+    return 6; // ⚪ Everyone Else
 }
 
 // Get section header text
@@ -1781,9 +2191,11 @@ function getSectionHeader(priority, targetPosition) {
     
     switch(priority) {
         case 1: return `🟢 Available ${positionName}s`;
-        case 2: return `🟡 Available (Other Positions)`;
-        case 3: return `🔵 ${positionName}s (Any Availability)`;
-        case 4: return `⚪ Other Players`;
+        case 2: return `⏳ Pending Response (${positionName}s)`;
+        case 3: return `🔄 Squad Fallbacks (${positionName}s)`;
+        case 4: return `❌ Unavailable ${positionName}s`;
+        case 5: return `🟡 Available (Other Positions)`;
+        case 6: return `⚪ Other Players`;
         default: return `Players`;
     }
 }
@@ -1791,10 +2203,12 @@ function getSectionHeader(priority, targetPosition) {
 // Get section color for styling
 function getSectionColor(priority) {
     switch(priority) {
-        case 1: return '#28a745'; // Green
-        case 2: return '#ffc107'; // Yellow/Orange
-        case 3: return '#007bff'; // Blue
-        case 4: return '#6c757d'; // Grey
+        case 1: return '#28a745'; // Green - Available
+        case 2: return '#17a2b8'; // Teal - Pending  
+        case 3: return '#007bff'; // Blue - Squad Fallback
+        case 4: return '#dc3545'; // Red - Unavailable
+        case 5: return '#ffc107'; // Yellow - Available Other
+        case 6: return '#6c757d'; // Grey - Others
         default: return '#333';
     }
 }
@@ -2495,11 +2909,36 @@ function updateDropdownSelections() {
         }
 
         // State management
-        function showLoading() {
-            document.getElementById('loadingState').style.display = 'flex';
-            document.getElementById('errorState').style.display = 'none';
-            document.getElementById('matchContent').style.display = 'none';
+      // Update your showLoading function to initialize the fancy loader
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'flex';
+    document.getElementById('errorState').style.display = 'none';
+    document.getElementById('matchContent').style.display = 'none';
+    
+    // Reset loader state
+    currentLoadingStep = 0;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) progressBar.style.width = '0%';
+    
+    // Reset all steps to pending
+    loadingSteps.forEach(step => {
+        const stepEl = document.getElementById(step.id);
+        if (stepEl) {
+            stepEl.classList.remove('active', 'completed');
+            stepEl.classList.add('pending');
+            // Reset icon based on step
+            const icons = ['🏉', '📊', '👥', '⚡', '📝'];
+            const stepIndex = loadingSteps.findIndex(s => s.id === step.id);
+            stepEl.querySelector('.step-icon').textContent = icons[stepIndex] || '⚪';
         }
+    });
+    
+    // Set initial status
+    const statusTextEl = document.getElementById('statusText');
+    const statusDetailEl = document.getElementById('statusDetail');
+    if (statusTextEl) statusTextEl.innerHTML = 'Initializing connection<span class="loading-dots"><span></span><span></span><span></span></span>';
+    if (statusDetailEl) statusDetailEl.textContent = 'Preparing to load match data...';
+}
 
         function showError(message) {
             document.getElementById('loadingState').style.display = 'none';
