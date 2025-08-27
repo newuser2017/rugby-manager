@@ -2269,7 +2269,34 @@ if (karlFitzpatrick) {
     console.log('Karl Fitzpatrick response found:', karlResponse);
 }
 
+            // ADD THIS ADDITIONAL DEBUG CODE after the previous debug code
+
+// Check who has the emails krushe@yahoo.com and stephenr92@gmail.com
+const kevinByEmail = allPlayersForAvailability.find(p => 
+    p.email && p.email.toLowerCase().includes('krushe@yahoo.com')
+);
+const stephenByEmail = allPlayersForAvailability.find(p => 
+    p.email && p.email.toLowerCase().includes('stephenr92@gmail.com')
+);
+
+console.log('Player with krushe@yahoo.com:', kevinByEmail);
+console.log('Player with stephenr92@gmail.com:', stephenByEmail);
+
+// Show all players with "Kevin" or "Stephen" in their name
+const kevins = allPlayersForAvailability.filter(p => 
+    p.name && p.name.toLowerCase().includes('kevin')
+);
+const stephens = allPlayersForAvailability.filter(p => 
+    p.name && p.name.toLowerCase().includes('stephen')
+);
+
+console.log('All Kevins:', kevins);
+console.log('All Stephens:', stephens);
+
+// Show what emails are in the responses
+console.log('Response emails:', responses.map(r => r.email).slice(0, 10));
 console.log('=== END DEBUG ===');
+            
             
             console.log('Displaying players with availability data:', {
                 responses: responses.length,
