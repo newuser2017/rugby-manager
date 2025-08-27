@@ -2225,6 +2225,51 @@ Please confirm your availability:
             const responses = currentMatchAvailability?.availability || [];
             const summary = currentMatchAvailability?.summary || {};
             const sentEmails = currentMatchAvailability?.sentEmails || [];
+            // ADD THIS DEBUG CODE to your displayPlayersForSelection() function
+// Place it right after this line: const sentEmails = currentMatchAvailability?.sentEmails || [];
+
+console.log('=== DEBUGGING PLAYER MATCHING ===');
+console.log('Total responses:', responses.length);
+console.log('First 5 responses:', responses.slice(0, 5));
+
+// Check specific players
+const kevinRushe = allPlayersForAvailability.find(p => p.name.includes('Kevin Rushe'));
+const stephenRyan = allPlayersForAvailability.find(p => p.name.includes('Stephen Ryan'));
+const karlFitzpatrick = allPlayersForAvailability.find(p => p.name.includes('Karl Fitzpatrick'));
+
+console.log('Kevin Rushe player data:', kevinRushe);
+console.log('Stephen Ryan player data:', stephenRyan);
+console.log('Karl Fitzpatrick player data:', karlFitzpatrick);
+
+// Check if their responses exist
+if (kevinRushe) {
+    const kevinResponse = responses.find(r => 
+        r.playerName === kevinRushe.name || 
+        r.email === kevinRushe.email ||
+        r.playerName.toLowerCase().includes(kevinRushe.name.toLowerCase())
+    );
+    console.log('Kevin Rushe response found:', kevinResponse);
+}
+
+if (stephenRyan) {
+    const stephenResponse = responses.find(r => 
+        r.playerName === stephenRyan.name || 
+        r.email === stephenRyan.email ||
+        r.playerName.toLowerCase().includes(stephenRyan.name.toLowerCase())
+    );
+    console.log('Stephen Ryan response found:', stephenResponse);
+}
+
+if (karlFitzpatrick) {
+    const karlResponse = responses.find(r => 
+        r.playerName === karlFitzpatrick.name || 
+        r.email === karlFitzpatrick.email ||
+        r.playerName.toLowerCase().includes(karlFitzpatrick.name.toLowerCase())
+    );
+    console.log('Karl Fitzpatrick response found:', karlResponse);
+}
+
+console.log('=== END DEBUG ===');
             
             console.log('Displaying players with availability data:', {
                 responses: responses.length,
