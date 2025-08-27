@@ -2304,72 +2304,102 @@ console.log('=== END DEBUG ===');
                 sentEmails: sentEmails
             });
             
-            // Process and categorize all players
-            const categorizedPlayers = allPlayersForAvailability.map(player => {
-                const isSelected = selectedPlayers.includes(player.email);
-                
-                // Check if player has responded
-                const playerResponse = responses.find(r => 
-                    r.playerName === player.name || 
-                    r.email === player.email ||
-                    r.playerName.toLowerCase().includes(player.name.toLowerCase())
+          const categorizedPlayers = allPlayersForAvailability.map(player => {
+    const isSelected = selectedPlayers.includes(player.email);
+    
+    // IMPROVED PLAYER RESPONSE MATCHING - handles spaces and case sensitivity
+    const playerResponse = responses.find(r => {
+        // Method 1: Direct email match (case insensitive)
+        if (r.email && player.email) {
+            if (r.email.toLowerCase().trim() === player.email.toLowerCase().trim()) {
+                return true;
+            }
+        }
+        
+        // Method 2: Name matching (normalize spaces and case)
+        if (r.playerName && player.name) {
+            const responseName = r.playerName.toLowerCase().trim().replace(/\s+/g, ' '); // normalize spaces
+            const playerName = player.name.toLowerCase().trim().replace(/\s+/g, ' '); // normalize spaces
+            
+            if (responseName === playerName) {
+                return true;
+            }
+            
+            // Method 3: Partial name matching (for cases like "Kevin" matching "Kevin Rushe")
+            const responseNameWords = responseName.split(' ');
+            const playerNameWords = playerName.split(' ');
+            
+            // Check if all words from response name are in player name
+            if (responseNameWords.length >= 2 && playerNameWords.length >= 2) {
+                const allWordsMatch = responseNameWords.every(word => 
+                    playerNameWords.some(pWord => pWord.includes(word) || word.includes(pWord))
                 );
-                
-                let statusClass, statusText, isDisabled = false, sortPriority = 4;
-                
-                if (playerResponse) {
-                    // Player has responded
-                    const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
-                    const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
-                    
-                    if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
-                        statusClass = 'status-responded-available';
-                        statusText = `✅ Available (${responseDate})`;
-                        sortPriority = 1;
-                    } else if (responseStatus.toLowerCase().includes('unavailable')) {
-                        statusClass = 'status-responded-unavailable';
-                        statusText = `❌ Unavailable (${responseDate})`;
-                        sortPriority = 2;
-                    } else {
-                        statusClass = 'status-responded-maybe';
-                        statusText = `❓ ${responseStatus} (${responseDate})`;
-                        sortPriority = 2;
-                    }
-                    isDisabled = true;
-                    
-                } else {
-                    // Player hasn't responded - check if they were ACTUALLY sent a request
-                    const wasSentRequest = sentEmails.includes(player.email);
-                    
-                    if (!player.isActive) {
-                        statusClass = 'status-unavailable';
-                        statusText = player.status;
-                        isDisabled = true;
-                        sortPriority = 5;
-                    } else if (wasSentRequest) {
-                        statusClass = 'status-pending';
-                        statusText = '⏳ Pending Response';
-                        sortPriority = 3;
-                    } else if (player.isInMatchSquad) {
-                        statusClass = 'status-squad';
-                        statusText = 'Squad Player - No Request Sent';
-                        sortPriority = 4;
-                    } else {
-                        statusClass = 'status-additional';
-                        statusText = 'Additional Player';
-                        sortPriority = 5;
-                    }
+                if (allWordsMatch) {
+                    return true;
                 }
-                
-                return {
-                    ...player,
-                    isSelected,
-                    statusClass,
-                    statusText,
-                    isDisabled,
-                    sortPriority
-                };
-            });
+            }
+        }
+        
+        return false;
+    });
+    
+    let statusClass, statusText, isDisabled = false, sortPriority = 4;
+    
+    if (playerResponse) {
+        // Player has responded
+        const responseStatus = playerResponse.availabilityStatus || playerResponse.availability || 'Unknown';
+        const responseDate = playerResponse.responseDate ? new Date(playerResponse.responseDate).toLocaleDateString() : 'Recently';
+        
+        if (responseStatus.toLowerCase().includes('available') && !responseStatus.toLowerCase().includes('unavailable')) {
+            statusClass = 'status-responded-available';
+            statusText = `✅ Available (${responseDate})`;
+            sortPriority = 1;
+        } else if (responseStatus.toLowerCase().includes('unavailable')) {
+            statusClass = 'status-responded-unavailable';
+            statusText = `❌ Unavailable (${responseDate})`;
+            sortPriority = 2;
+        } else {
+            statusClass = 'status-responded-maybe';
+            statusText = `❓ ${responseStatus} (${responseDate})`;
+            sortPriority = 2;
+        }
+        isDisabled = true;
+        
+    } else {
+        // Player hasn't responded - check if they were ACTUALLY sent a request
+        const wasSentRequest = sentEmails.some(sentEmail => 
+            sentEmail.toLowerCase().trim() === player.email.toLowerCase().trim()
+        );
+        
+        if (!player.isActive) {
+            statusClass = 'status-unavailable';
+            statusText = player.status;
+            isDisabled = true;
+            sortPriority = 5;
+        } else if (wasSentRequest) {
+            statusClass = 'status-pending';
+            statusText = '⏳ Pending Response';
+            sortPriority = 3;
+        } else if (player.isInMatchSquad) {
+            statusClass = 'status-squad';
+            statusText = 'Squad Player - No Request Sent';
+            sortPriority = 4;
+        } else {
+            statusClass = 'status-additional';
+            statusText = 'Additional Player';
+            sortPriority = 5;
+        }
+    }
+    
+    return {
+        ...player,
+        isSelected,
+        statusClass,
+        statusText,
+        isDisabled,
+        sortPriority
+    };
+});
             
             // Sort by priority: Available → Unavailable → Pending → Squad Players → Additional Players
             categorizedPlayers.sort((a, b) => {
